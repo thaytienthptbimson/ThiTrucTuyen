@@ -1,0 +1,707 @@
+{
+  "version": "2.0",
+  "generator": "Single-File Exam Builder",
+  "exported_at": "2026-10-08T16:42:24.434Z",
+  "total_exams": 2,
+  "library_name": "Thư viện đề thi THPT",
+  "exams": [
+    {
+      "id": "exam_1791477634895_jlwrb",
+      "title": "ĐỀ THI THỬ TIẾNG ANH TEST PHẦN MỀM",
+      "subject": "Tiếng Anh",
+      "grade": "12",
+      "duration": 50,
+      "total_questions": 40,
+      "created_date": "2026-10-08",
+      "data": {
+        "questions": [
+          {
+            "id": 1,
+            "question": "Question 1.",
+            "options": [
+              "a. Inhabitants of coastal regions housing large-scale facilities have reported that the low hum of the constant rotation impairs their sleep quality.",
+              "b. Nevertheless, the argument for transitioning is not entirely convincing when the implications for residents in the immediate vicinity are taken into account.",
+              "c. With the infrastructure in place, operational expenditures of wind mills are substantially lower than those of coal or gas facilities.",
+              "d. Wind power has been promoted as a notably clean and economically viable substitute for fossil fuels.",
+              "A. e - b - a - c - d \tB. c - e - d - b - a \tC. d - c - b - a - e \tD. a - d - c - e - b"
+            ],
+            "answer": "",
+            "explanation": "e. Progress on a country's renewable targets necessitates balancing each proposed initiative against the burdens imposed upon local populations."
+          },
+          {
+            "id": 2,
+            "question": "Question 2.",
+            "options": [
+              "a. Diner: Excuse me, I've been waiting so long for my order.",
+              "b. Diner: Thanks for your help.",
+              "c. Waiter: I'm sorry! I'll check with the kitchen and get back to you immediately.",
+              "A. a - b - c \tB. b - c - a \tC. c - b - a \tD. a - c - b"
+            ],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 3,
+            "question": "Question 3. Dear Ms Hoang,",
+            "options": [
+              "a. A payment of $5,000 will be released in the beginning, and the remaining balance after the submission of your mid-term report.",
+              "b. Failure to respond by the stated date will result in the offer being granted to the next qualified candidate.",
+              "c. We are delighted to inform you that you have been awarded the Young Researcher Grant.",
+              "d. To confirm your acceptance, please sign the attached form and submit it by 31 August.",
+              "A. c - a - b - e - d \tB. c - e - a - d - b \tC. c - b - e - d - a \tD. c - a - b - d - e"
+            ],
+            "answer": "",
+            "explanation": "e. The funding is intended to support your fieldwork and must not be used for equipment purchases without prior approval.\nYours sincerely,"
+          },
+          {
+            "id": 4,
+            "question": "Question 4.",
+            "options": [
+              "a. Customer: What if I don't keep the original packaging?",
+              "b. Customer: Great. I'll bring the item and receipt tomorrow.",
+              "c. Customer: I'd like to exchange the electric fan I bought yesterday.",
+              "d. Manager: Sold items can be exchanged within five days, but we don't give refunds.",
+              "A. c - d - a - e - b \tB. a - d - c - e - b \tC. c - e - a - d - b \tD. a - e - c - d - b"
+            ],
+            "answer": "",
+            "explanation": "e. Manager: No problem, only your receipt is needed."
+          },
+          {
+            "id": 5,
+            "question": "Question 5.",
+            "options": [
+              "a. Initial results were impressive, as villagers reported broadband speeds comparable to city standards with significantly improved reliability.",
+              "b. For years, the isolated villages of central Marsh County struggled with unreliable copper cables that could not handle increasing bandwidth demands.",
+              "c. Consequently, the local council, partnering with two providers, committed to laying fibre optic cables to every household within a year.",
+              "d. To minimise disruption, cables were placed along existing verges, while community halls served as temporary installation hubs.",
+              "A. b - c - d - a - e \tB. d - a - e - c - b \tC. a - e - d - b - c \tD. e - b - a - c - d"
+            ],
+            "answer": "",
+            "explanation": "e. Encouraged by the villagers' satisfaction, neighbouring counties have requested guidance on adopting the model for their remote villages.\nRead the following passage and mark the letter A, B, C or D on your answer sheet to indicate the option that best fits each of the numbered blanks from 6 to 10.\nMoney has many ironies, and here is an important one: wealth is what you do not see. On spotting a Ferrari driving around, ________(6). In reality, however, many drivers of expensive cars turn out to be only mediocre successes who spend a huge percentage of their paycheck on a vehicle. Someone driving a hundred-thousand-dollar car might indeed be wealthy. Yet the only firm data point you have about their wealth is that they have a hundred thousand dollars less than they did before they bought the car or a hundred thousand dollars more in debt. _________(7).\nWe tend to judge wealth by what we see _______(8). We cannot peer into people's bank accounts or brokerage statements, so we rely on outward appearances to gauge financial success: cars, houses, photographs on social media. Modern capitalism has turned helping people fake it until they make it into a cherished industry. _________(9). Wealth hides in the nice car not purchased, the diamonds left in the shop and the first-class upgrade declined. Wealth is the financial assets that have not yet been converted into the stuff you see.\nHence, we should be careful (10)______. It is more than mere semantics; not knowing the difference is the source of countless poor money decisions.\n(Adapted from Psychology of Money)"
+          },
+          {
+            "id": 6,
+            "question": "Question 6.",
+            "options": [
+              "A. you might assume that the owner of the car must be rich",
+              "B. you might be assumed to be the rich owner of the car",
+              "C. people might assume you must be the rich owner of the car",
+              "D. the car might be assumed to be owned by a rich person"
+            ],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 7,
+            "question": "Question 7.",
+            "options": [
+              "A. What you know is about them all",
+              "B. You know what they are all about",
+              "C. All that you know is about them",
+              "D. That is all you know about them"
+            ],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 8,
+            "question": "Question 8.",
+            "options": [
+              "A. unless we only have external clues as the information to work with",
+              "B. because external clues are the only information we have to work with",
+              "C. other than external clues as the information that we only have to work with",
+              "D. rather than by external clues as the only information we have to work with"
+            ],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 9,
+            "question": "Question 9.",
+            "options": [
+              "A. However, the truth remains that authentic wealth keeps its existence a secret",
+              "B. Authentic wealth, similarly, keeps its existence by secretly remaining truthful",
+              "C. Authentic wealth, as a consequence, secretly exists by remaining truthful",
+              "D. Likewise, the truth is that the existence of authentic wealth remains a secret"
+            ],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 10,
+            "question": "Question 10.",
+            "options": [
+              "A. for being wealthy to be distinguished from being rich",
+              "B. to distinguish between being wealthy and being rich",
+              "C. being wealthy is distinguishing itself from being rich",
+              "D. being wealthy and being rich distinguish themselves"
+            ],
+            "answer": "",
+            "explanation": "Read the passage and mark the letter A, B, C or D on your answer sheet to indicate the best answer to each of the following questions from 11 to 20.\nEnvironmental services, even when they arise without any human labour, are by no means cost-free. Every cost should be understood in terms of opportunity cost. For environmental services, the opportunity cost amounts to the net gain relinquished because the resources are no longer available for their second-best application. Whenever a resource has alternative uses, it cannot legitimately be deemed free.\nFor instance, a section of river might serve as a site used for either white-water canoeing or hydroelectric generation. Constructing a dam to produce electricity would flood the rapids, so this makes white-water canoeing here out of the question. The opportunity cost of preserving the river for canoeing equals the net benefit of the electricity that would otherwise have been produced, once the expenses of generation and distribution have been subtracted. By the same token, the opportunity cost of erecting the dam involves everything the river in its natural state would have provided – leisure activities, wildlife, scenic beauty, and whatever worth future generations might attach to experiencing the rapids.\nThis understanding carries considerable weight for planning development. [I] Numerous decisions initially appearing to be cost-free moves in favour of growth prove, when examined carefully, to be against something else. [II] Clearing a forest to make way for crops is hardly without cost; it is paid for through losses in carbon storage, biological diversity, and all the functions the forest once performed unnoticed. [III] Channelling a river for irrigation has its price – namely, whatever the river was doing before its course was altered. [IV] Even leaving a swathe of land alone exacts a cost, since the earnings that intensive exploitation might have produced are equally sacrificed.\nFrom this perspective, economic development can never be reduced to whether a project delivers a positive return. Rather, what must be asked is whether that return outweighs the value of sacrifices. Policies considering this – by pricing scarce environmental services, or obliging those in charge to consider both sides – are not against development. What they demand is that development should be worth its true cost. The danger lies not in counting too much, but in counting too little.\n(Adapted from Environmental Economics and Policy)"
+          },
+          {
+            "id": 11,
+            "question": "Question 11. The word relinquished in paragraph 1 is closest in meaning to ______.",
+            "options": [
+              "A. made up \tB. given up \tC. filled up \tD. ended up"
+            ],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 12,
+            "question": "Question 12. According to paragraph 1, the costs of environmental services are ______.",
+            "options": [
+              "A. minimal because these services are nearly labour-free",
+              "B. existent even in the absence of human involvement",
+              "C. determined by financial investment in natural resources",
+              "D. included in the market value of natural resources"
+            ],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 13,
+            "question": "Question 13. Which of the following is NOT implied in paragraph 2?",
+            "options": [
+              "A. The intrinsic value of the river is not confined to generating hydroelectricity only.",
+              "B. Intangible benefits also constitute the opportunity cost of the dam construction.",
+              "C. It is impossible to exploit one stretch of river for both hydroelectric generation and white-water canoeing.",
+              "D. The strains on the ecosystem of the river imposed by recreational activities and power generation are similar."
+            ],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 14,
+            "question": "Question 14. Where in paragraph 3 does the following sentence best fit?\nSuch hidden costs only come to light when one stops to think about the roles nature itself is quietly playing.",
+            "options": [
+              "A. [IV] \tB. [III] \tC. [II] \tD. [I]"
+            ],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 15,
+            "question": "Question 15. Which of the following best summarises paragraph 3?",
+            "options": [
+              "A. Ecological preservation exerts negligible influence on economic development.",
+              "B. Economic benefits should never take precedence over forest and river preservation.",
+              "C. Untouched and cultivated lands both produce benefits in the long term.",
+              "D. Apparently harmless developments actually come at an underlying price."
+            ],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 16,
+            "question": "Question 16. The word they in paragraph 4 refers to ______.",
+            "options": [
+              "A. sacrifices \tB. sides \tC. services \tD. policies"
+            ],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 17,
+            "question": "Question 17. What conclusion can be drawn from paragraph 4?",
+            "options": [
+              "A. Both excessive caution and complete ignorance regarding environmental costs cause permanent damage.",
+              "B. Due consideration for opportunity costs is crucial for the genuine success of development.",
+              "C. Initiatives are required by law to deduct the hidden costs before claiming to have a positive return.",
+              "D. Putting a price on environmental services is aimed at slowing down economic projects."
+            ],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 18,
+            "question": "Question 18. Which of the following is true according to the passage?",
+            "options": [
+              "A. The positive return of every economic development must be worth what is sacrificed.",
+              "B. Cost-free resources can be put to alternative uses as long as this is legally permitted.",
+              "C. Assigning a specific price tag to a resource is a prerequisite for calculating opportunity costs.",
+              "D. Keeping land intact is free of opportunity cost as there is no resource consumption."
+            ],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 19,
+            "question": "Question 19. Which of the following can be inferred from the passage?",
+            "options": [
+              "A. The scale of economic development inevitably suffers from strict regulations on environmental services.",
+              "B. The value of preserved environmental services far outweighs the benefits of industrial development.",
+              "C. Projects are mandated to make up for the economic losses in return for environmental preservation.",
+              "D. Decisions that overlook environmental opportunity costs risk overestimating the net gains they produce."
+            ],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 20,
+            "question": "Question 20. Which of the following would be the best title for the passage?",
+            "options": [
+              "A. Development: Factoring in Sacrifices",
+              "B. Natural Preservation: Ushering in a New Era",
+              "C. Sustainable Development: A Pipe Dream",
+              "D. Environment: A Tower of Strength"
+            ],
+            "answer": "",
+            "explanation": "Read the passage and mark the letter A, B, C or D on your answer sheet to indicate the best answer to each of the following questions from 21 to 28.\nFor most undergraduates today, opening a laptop at the start of a lecture has become as automatic as sitting down. The device is no longer a tool consciously chosen; it is simply there, blinking softly, ready to absorb every word that the instructor utters. Yet researchers who study students' attention argue that this convenience comes at a price most learners are unaware that they are paying.\nA recent multi-campus study tracked the in-class behaviour of nearly two thousand undergraduates across humanities and science courses. Even when students claimed to be \"fully focused,\" eye-tracking data showed that they shifted between unrelated tabs an average of fourteen times per fifty-minute session. The students themselves were astounded when they were shown the results. Many had believed that they were absorbing every point made in class.\nThe findings underline an unsettling truth: digital multitasking is not just inefficient; it is invisible to those engaged in it. Cognitive scientists describe this as \"the illusion of competence\" – the false sense that because information has passed beneath one's eyes, it has been understood and stored. Tests administered a week after the lectures consistently revealed otherwise, with laptop-using students recalling roughly a third less than those taking handwritten notes.\nThings go from bad to worse when we take into account the fact that the very tools that distract students are also genuinely essential for some forms of academic work. Annotating digital texts, accessing research databases and recording lectures all benefit from screen-based learning. The crucial question for tertiary institutions, then, is not to get rid of devices altogether but to teach students when and how to set them aside. Until that skill is cultivated, the lecture hall may continue to function less as a place of collective inquiry and more as a quiet place of solitary screens.\n(Adapted from https://vanderbilthustler.com)"
+          },
+          {
+            "id": 21,
+            "question": "Question 21. In paragraph 1, the writer is ______.",
+            "options": [
+              "A. questioning the real worth of costly laptops",
+              "B. arguing in favour of undergraduates' use of laptops",
+              "C. contrasting different methods of notetaking",
+              "D. warning against a common habit among students"
+            ],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 22,
+            "question": "Question 22. The word tracked in paragraph 2 is closest in meaning to ______.",
+            "options": [
+              "A. controlled \tB. represented \tC. examined \tD. copied"
+            ],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 23,
+            "question": "Question 23. The word astounded in paragraph 2 is OPPOSITE in meaning to ______.",
+            "options": [
+              "A. brave \tB. honest \tC. calm \tD. anxious"
+            ],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 24,
+            "question": "Question 24. The word those in paragraph 3 refers to ______.",
+            "options": [
+              "A. students \tB. scientists \tC. lectures \tD. tests"
+            ],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 25,
+            "question": "Question 25. Which of the following best paraphrases the underlined sentence in paragraph 4?",
+            "options": [
+              "A. It is the digital devices used for certain complicated academic tasks at university that are distracting students from more important assignments.",
+              "B. Some academic work at university requires students' genuine concentration, which has become a complicated matter with bad-quality digital tools.",
+              "C. Not only certain academic assignments at university but also the digital tools useful for these tasks are causing complicated problems for students.",
+              "D. What complicates matters is that digital devices necessary for completing some university work can interfere with students' concentration."
+            ],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 26,
+            "question": "Question 26. Which of the following statements would the writer NOT agree with?",
+            "options": [
+              "A. Those switching between tasks on digital devices are aware of its adverse impacts on productivity.",
+              "B. University students' use of laptops in classrooms has become a practice performed unconsciously.",
+              "C. Students have become more isolated in lecture halls because of the widespread use of laptops.",
+              "D. Providing students with guidance for proper use of laptops is better than imposing a blanket ban."
+            ],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 27,
+            "question": "Question 27. In which paragraph does the writer mention a mismatch between self-report and scientific findings? A. Paragraph 1 \tB. Paragraph 3 \tC. Paragraph 2 \tD. Paragraph 4",
+            "options": [],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 28,
+            "question": "Question 28. In which paragraph does the writer provide examples for a general term?",
+            "options": [
+              "A. Paragraph 2 \tB. Paragraph 1 \tC. Paragraph 3 \tD. Paragraph 4"
+            ],
+            "answer": "",
+            "explanation": "Read the following flyer and mark the letter A, B, C or D on your answer sheet to indicate the option that best fits each of the numbered blanks from 29 to 34.\nLET'S WARM THEIR HEARTS!\nIn many remote regions, children face the harsh cold, which affects their health and education. Your kindness can warm their hearts. Let's work together to give them a better winter. Our project includes:\n• Collection: Please (29)______ out your old winter clothes by size and ensure that the items are dry and in good _______(30). You can drop them off at our collection points. This helps us organise the donations faster.\n• Cleaning: We will have all donations __________(31) to ensure that they are fresh. We use eco-friendly detergents to (32)______ the sensitive skin of the children.\n• Distribution: We (33)______ with local schools to distribute the clothes directly to the students in need. If everyone (34)______ a hand, we will help thousands of children stay warm this winter. Your small act of kindness will create a big change!"
+          },
+          {
+            "id": 29,
+            "question": "Question 29. A. fill \tB. catch \tC. sort \tD. turn",
+            "options": [],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 30,
+            "question": "Question 30. A. condition \tB. relation \tC. situation \tD. position",
+            "options": [],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 31,
+            "question": "Question 31. A. washing \tB. wash \tC. being washed \tD. washed",
+            "options": [],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 32,
+            "question": "Question 32. A. protect \tB. provide \tC. promote \tD. produce",
+            "options": [],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 33,
+            "question": "Question 33. A. cooperative \tB. cooperatively \tC. cooperation \tD. cooperate",
+            "options": [],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 34,
+            "question": "Question 34. A. give \tB. gave \tC. gives \tD. have given\nRead the following leaflet and mark the letter A, B, C or D on your answer sheet to indicate the option that best fits each of the numbered blanks from 35 to 40.\nGREEN HANDS, CLEAN LAND\nThe theme for Green Week 2026, \"Green Hands, Clean Land\", puts (35)______ on the role of our community in protecting the environment. For several decades, climate change has had direct effects on our daily life. (36)______, unless action is taken, we will face food insecurity, water shortages, and higher energy prices.\nSince 2018, our annual campaigns have been coming up (37)______. This year, we are planning two activities: clean-up and tree-planting. Participation in (38) activity is open to all residents. Completed forms (39)______ be submitted by 30 June.\nIt is time to make a big difference to our surroundings. The harder we try, (40)______ our future will be! Apply now!",
+            "options": [],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 35,
+            "question": "Question 35. A. intention \tB. influence \tC. emphasis \tD. example",
+            "options": [],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 36,
+            "question": "Question 36. A. Finally \tB. Instead \tC. However \tD. Therefore",
+            "options": [],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 37,
+            "question": "Question 37. A. roses \tB. sky \tC. goods \tD. gold",
+            "options": [],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 38,
+            "question": "Question 38. A. either \tB. neither \tC. other \tD. both",
+            "options": [],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 39,
+            "question": "Question 39. A. should \tB. should not \tC. ought \tD. ought not",
+            "options": [],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 40,
+            "question": "Question 40. A. greener \tB. greenest \tC. the greenest \tD. the greener",
+            "options": [],
+            "answer": "",
+            "explanation": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "exam_1791477663489_mnsac",
+      "title": "ÔN TẬP GIỮA KỲ 1 -  SỐ 1",
+      "subject": "Tiếng Anh",
+      "grade": "12",
+      "duration": 50,
+      "total_questions": 28,
+      "created_date": "2026-10-08",
+      "data": {
+        "questions": [
+          {
+            "id": 1,
+            "question": "Câu 1. Một vật chuyển động thẳng đều với vận tốc ban đầu 3 m/s thì tăng tốc, chuyển động nhanh dần đều với gia tốc 2 m/s². Vận tốc của vật sau 5 s tăng tốc bằng",
+            "options": [
+              "A. 6 m/s.\tB. 12 m/s.\tC. 13 m/s.\tD. 15 m/s."
+            ],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 2,
+            "question": "Câu 2. Dụng cụ ở hình bên là",
+            "options": [
+              "A. Đồng hồ cần rung.",
+              "B. Cảm biến chuyển động.",
+              "C. Đồng hồ đo thời gian hiện số.",
+              "D. Cổng quang điện."
+            ],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 3,
+            "question": "Câu 3. Chọn đáp án đúng? Công thức tính vận tốc của chuyển động thẳng nhanh dần đều \\[v={{v}_{0}}+at\\] thì.",
+            "options": [
+              "A. v luôn dương. \t\tB. a luôn dương.",
+              "C. a luôn cùng dấu với v.\tD. a luôn ngược dấu với v."
+            ],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 4,
+            "question": "Câu 4. Vận tốc trung bình cho biết",
+            "options": [
+              "A. mức độ nhanh hay chậm của chuyển động theo một hướng.",
+              "B. đoạn đường vật đi được dài hay ngắn.",
+              "C. mức độ nhanh hay chậm của chuyển động trên một đoạn đường.",
+              "D. vật tăng tốc nhanh hay chậm."
+            ],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 5,
+            "question": "Câu 5. Một ô tô đang chuyển động với vận tốc 10 m/s thì bắt đầu tăng tốc. Biết rằng sau 10 s kể từ khi tăng tốc, xe đạt vận tốc là 15 m/s. Gia tốc của xe là",
+            "options": [
+              "A. 0,5 m/s².\tB. 0,4 m/s².\tC. 0,6 m/s2.\tD. 0,7 m/s2."
+            ],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 6,
+            "question": "Câu 6. Tại một nơi ở gần mặt đất, bỏ qua mọi lực cản thì",
+            "options": [
+              "A. Vật nhẹ rơi nhanh hơn vật nặng.",
+              "B. Vật nặng và vật nhẹ rơi như nhau.",
+              "C. Vật nặng rơi nhanh hơn vật nhẹ.",
+              "D. Các vật rơi với vận tốc không đổi."
+            ],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 7,
+            "question": "Câu 7. Đơn vị của gia tốc là",
+            "options": [
+              "A. m/s2.\tB. km/h.\tC. N.\tD. m/s."
+            ],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 8,
+            "question": "Câu 8. Gia tốc của chuyển động thẳng nhanh dần đều",
+            "options": [
+              "A. giảm đều theo thời gian.\tB. tăng đều theo thời gian.",
+              "C. có phương, chiều và độ lớn không đổi.\tD. luôn có giá trị dương."
+            ],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 9,
+            "question": "Câu 9. Biển báo dưới đây có ý nghĩa gì?",
+            "options": [
+              "A. Cho phép sử dụng lửa.",
+              "B. Cảnh báo bề mặt nóng.",
+              "C. Cảnh báo nguy cơ dễ cháy.",
+              "D. Cảnh báo chất độc."
+            ],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 10,
+            "question": "Câu 10. Vận tốc của một chất điểm chuyển động dọc theo trục Ox cho bởi hệ thức $v=10-2t$ (t tính theo s, v tính theo m/s) Vận tốc của chất điểm ở t₁=2 s là",
+            "options": [
+              "A. 2 m/s.\tB. 6 m/s.\tC. 1 m/s.\tD. 4 m/s."
+            ],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 11,
+            "question": "Câu 11. Cho kết quả của thí nghiệm đo gia tốc rơi tự do là \\[g=\\left( 9,882\\pm 0,002 \\right)\\,\\text{ }m/{{s}^{2}}\\] Sai số tỉ đối (tương đối) của phép đo là",
+            "options": [
+              "A. 0,030%.\tB. 0,040%.\tC. 0,010%.\tD. 0,020%."
+            ],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 12,
+            "question": "Câu 12. Kết luận nào sau đây là đúng khi nói về độ dịch chuyển và quãng đường đi được của một vật?",
+            "options": [
+              "A. Độ dịch chuyển và quãng đường đi được đều là đại lượng không âm.",
+              "B. Độ dịch chuyển và quãng đường đi được đều là đại lượng vectơ.",
+              "C. Độ dịch chuyển là đại lượng vectơ còn quãng đường đi được là đại lượng vô hướng.",
+              "D. Độ dịch chuyển và quãng đường đi được đều là đại lượng vô hướng."
+            ],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 13,
+            "question": "Câu 13. Đại lượng nào cho biết tại một thời điểm vật chuyển động nhanh hay chậm",
+            "options": [
+              "A. tốc độ trung bình.\tB. tốc độ tức thời.\tC. vận tốc trung bình.\t\tD. gia tốc."
+            ],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 14,
+            "question": "Câu 14. Nhờ việc khám phá ra hiện tượng nào sau đây của nhà vật lí Faraday mà sau đó các máy phát điện ra đời, mở đầu cho kỉ nguyên sử dụng điện năng của nhân loại?",
+            "options": [
+              "A. Sự nở vì nhiệt của vật rắn.\tB. Hiện tượng cảm ứng điện từ.",
+              "C. Hiện tượng biển dạng cơ của vật rắn.\tD. Hiện tượng hóa hơi."
+            ],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 15,
+            "question": "Câu 15. Sai số phép đó bao gồm",
+            "options": [
+              "A. Sai số ngẫu nhiên và sai số đơn vị.\tB. Sai số hệ thống và sai số đơn vị.",
+              "C. Sai số ngẫu nhiên và sai số hệ thống.\tD. Sai số đơn vị và sai số dụng cụ."
+            ],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 16,
+            "question": "Câu 16. Một vật chuyển động thẳng không đổi chiều. Trên quãng đường AB, vật đi nửa quãng đường đầu với tốc độ v1=20 m/s, nửa quãng đường sau vật đi với tốc độ v2 = 5 m/s. Tốc độ trung bình trên cả quãng đường là",
+            "options": [
+              "A. 12,5 m/s .\tB. 8 m/s.\tC. 4 m/s.\tD. 0,2 m/s."
+            ],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 17,
+            "question": "Câu 17. Một thuyền đi từ bến A đến bến B cách nhau 6 km. Biết rằng vận tốc thuyền trong nước yên lặng là 5 km/h, vận tốc nước chảy là 1 km/h. Vận tốc của thuyền so với bờ khi thuyền đi xuôi dòng là",
+            "options": [
+              "A. 6 km/h.\tB. 4 km/h.\tC. 6 m/s.\tD. 4 m/s."
+            ],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 18,
+            "question": "Câu 18. Hành động nào không tuân thủ quy tắc an toàn trong phòng thực hành?",
+            "options": [
+              "A. Trước khi làm thí nghiệm với bình thủy tinh, cần kiểm tra bình có bị nứt vỡ hay không.",
+              "B. Dùng tay không để làm thí nghiệm.",
+              "C. Trước khi cắm, tháo thiết bị điện, sẽ tắt công tắc nguồn.",
+              "D. Bố trí dây điện gọn gàng."
+            ],
+            "answer": "",
+            "explanation": "PHẦN II. CÂU TRẮC NGHIỆM ĐÚNG SAI. Thí sinh trả lời từ câu 19 đến câu 22. Trong mỗi ý a), b), c), d) ở mỗi câu, thí sinh chọn đúng hoặc sai."
+          },
+          {
+            "id": 19,
+            "question": "Câu 1. Dựa trên các quy tắc an toàn trong phòng thực hành, hãy xét tính đúng/sai của các hoạt động đã nêu dưới đây?\nCho các hoạt động ở trong phòng thực hành dưới đây:",
+            "options": [
+              "a) Đ. Mặc áo blouse, mang bao tay, kính bảo hộ trước khi vào phòng thí nghiệm.",
+              "b) S. Dùng tay ướt cắm điện vào nguồn điện.",
+              "c) Đ. Buộc tóc gọn gàng, tránh để tóc tiếp xúc với hóa chất và dụng cụ thí nghiệm.",
+              "d) S. Mang đồ ăn, thức uống vào phòng thí nghiệm."
+            ],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 20,
+            "question": "Câu 2. Theo thứ tự trên đường thẳng lần lượt là ba điểm A, B,C. Biết AB = 800 m, BC = 200 m. Một người đi từ A qua điểm B để đến điểm C mất 2 phút, sau đó mất 30 s để quay về điểm\tB.",
+            "options": [
+              "a) S. Quãng đường người đó đi được bằng 1000 m.",
+              "b) Đ. Độ dịch chuyển của người đó có độ lớn bằng 800 m.",
+              "c) Đ. Tốc độ đi được của người đó bằng 8,0 m/s.",
+              "d) S. Độ lớn vận tốc đi được của người đó bằng 4 m/s."
+            ],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 21,
+            "question": "Câu 3. Hình bên là đồ thị vận tốc – thời gian của hai vật cùng chuyển động thẳng. Nhận xét nào sau đây là đúng?\nt",
+            "options": [
+              "a) S. Hai vật đều chuyển động đều.",
+              "b) S. Vật (2) chuyển động chậm dần.",
+              "c) Đ. Tại thời điểm t hai vật có cùng vận tốc.",
+              "d) S. Vật (1) có đi qua gốc tọa độ."
+            ],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 22,
+            "question": "Câu 4. Một ô tô đang qua A với vận tốc 36 km/h thì tăng tốc sau 10 giây thì đến B với vận tốc đạt 25 m/s.",
+            "options": [
+              "a) Đ. Gia tốc của ô tô trên đoạn đường AB bằng 1,5 m/s2.",
+              "b) S. Độ dài đoạn đường AB bằng 157 m.",
+              "c) S. Gọi M là trung điểm của đoạn đường AB, vận tốc của ô tô khi qua M bằng 18 m/s.",
+              "d) Đ. Khi đến B, ô tô tiếp tục chuyển động thẳng đều trên đoạn đường BC dài 125 m. Vận tốc trung bình của ô tô trên đoạn đường AC bằng 20,8 m/s."
+            ],
+            "answer": "",
+            "explanation": "PHẦN III. CÂU TRẮC NGHIỆM TRẢ LỜI NGẮN. Thí sinh trả lời từ câu 23 đến câu 28."
+          },
+          {
+            "id": 23,
+            "question": "Câu 1. Một người lái ô tô đi thẳng 6 km theo hướng Tây, sau đó rẽ trái đi thẳng theo hướng Nam 4 km rồi quay sang hướng Đông 3 km. Độ lớn độ dịch chuyển tổng hợp của ô tô bằng bao nhiêu km?\nĐÁP ÁN: 5",
+            "options": [],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 24,
+            "question": "Câu 2. Hình bên là ảnh chụp đồng hồ đo tốc độ trên ô tô đang chuyển động.\nTốc độ của ô tô tại thời điểm chụp ảnh là bao nhiêu km/h?\nĐÁP ÁN: 60",
+            "options": [],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 25,
+            "question": "Câu 3. Một chiếc xe bắt đầu tăng tốc độ từ v₁ = 36 km/h đến v₂ = 54 km/h trong khoảng thời gian 2 s. Quãng đường xe chạy được trong thời gian tăng tốc bằng bao nhiêu m?\nĐÁP ÁN: 25",
+            "options": [],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 26,
+            "question": "Câu 4. Hai vật cùng xuất phát, chuyển động thẳng nhanh dần đều từ một vị trí. Sau cùng một thời gian thì vật tốc của vật (2) lớn gấp đôi vận tốc của vật (1). Tỉ số hai quăng đường đi của vật (1) so với vật (2) bằng bao nhiêu?\nĐÁP ÁN: 0,5",
+            "options": [],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 27,
+            "question": "Câu 5. Một phần thước đo độ dài có độ chia như hình bên. Sai số dụng cụ của thước này thường được lấy bằng bao nhiêu mm?\nĐÁP ÁN: 0,5",
+            "options": [],
+            "answer": "",
+            "explanation": ""
+          },
+          {
+            "id": 28,
+            "question": "Câu 6. Duy đang di chuyển với vận tốc có độ lớn 1 m/s trên tàu (Hình vẽ), biết tàu chạy với vận tốc có độ lớn 8,5 m/s. Nếu chọn chiều dương ngược với chiều chuyển động của tàu thì vận tốc của Duy so với đường bằng bao nhiêu m/s?\nĐÁP ÁN: -0,9",
+            "options": [],
+            "answer": "",
+            "explanation": ""
+          }
+        ]
+      }
+    }
+  ]
+}
