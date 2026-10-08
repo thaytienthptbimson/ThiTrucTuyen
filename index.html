@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản Lý & Xuất Thư Viện Đề Thi (exams.json)</title>
+  <!-- Mammoth.js để trích xuất nội dung DOCX trực tiếp tại trình duyệt -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --success: #16a34a;
+      --danger: #dc2626;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --border: #e2e8f0;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 24px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    header {
+      background: var(--card-bg);
+      padding: 20px 28px;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      background: #e0e7ff;
+      color: #3730a3;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 24px;
+    }
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      border: 1px solid var(--border);
+    }
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .drop-zone {
+      border: 2px dashed #94a3b8;
+      border-radius: 8px;
+      padding: 28px 16px;
+      text-align: center;
+      cursor: pointer;
+      background: #f1f5f9;
+      transition: all 0.2s ease;
+      margin-bottom: 16px;
+    }
+    .drop-zone:hover, .drop-zone.dragover {
+      background: #e2e8f0;
+      border-color: var(--primary);
+    }
+    .drop-zone p {
+      font-size: 0.9rem;
+      color: #64748b;
+      margin-top: 6px;
+    }
+    input[type="file"] {
+      display: none;
+    }
+    .form-group {
+      margin-bottom: 14px;
+    }
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #334155;
+    }
+    input[type="text"], select, input[type="number"] {
+      width: 100%;
+      padding: 9px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      outline: none;
+      font-size: 0.9rem;
+    }
+    input:focus, select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(37,99,235,0.2);
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 9px 16px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+      width: 100%;
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-success:hover { background: #15803d; }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: #475569;
+    }
+    .btn-outline:hover { background: #f1f5f9; }
+    .btn-sm {
+      padding: 5px 10px;
+      font-size: 0.8rem;
+      width: auto;
+    }
+    .actions-bar {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .table-container {
+      overflow-x: auto;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.9rem;
+    }
+    th, td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    th {
+      background: #f8fafc;
+      font-weight: 600;
+      color: #475569;
+    }
+    tbody tr:hover {
+      background: #f8fafc;
+    }
+    .action-group {
+      display: flex;
+      gap: 6px;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 40px 16px;
+      color: #94a3b8;
+    }
+    /* Modal Preview */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 1000;
+    }
+    .modal.active { display: flex; }
+    .modal-box {
+      background: #fff;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 750px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      font-size: 0.9rem;
+    }
+    .modal-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      text-align: right;
+    }
+    .q-card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+      background: #fafafa;
+    }
+    .q-key {
+      display: inline-block;
+      margin-top: 6px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: #dcfce7;
+      color: #166534;
+      font-weight: 600;
+      font-size: 0.8rem;
+    }
+    footer {
+      margin-top: 32px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div>
+      <h1>Bộ Biên Tập & Xuất Thư Viện Đề Thi Độc Lập</h1>
+      <p style="font-size: 0.85rem; color: #64748b; margin-top: 4px;">Chuẩn hóa dữ liệu đa nguồn (.json, .docx, .txt) & xuất tập tin <strong>exams.json</strong> chuẩn</p>
+    </div>
+    <div>
+      <span class="badge" id="stats-badge">0 đề thi trong kho</span>
+    </div>
+  </header>
+
+  <div class="grid">
+    <!-- Cột tải lên & Cấu hình -->
+    <div class="card">
+      <div class="card-title">
+        <span>Nạp Đề Vào Kho</span>
+      </div>
+
+      <div class="drop-zone" id="dropZone">
+        <strong>Kéo thả file đề vào đây</strong>
+        <p>Hỗ trợ nhiều file: .json, .docx, .txt</p>
+        <button type="button" class="btn btn-outline btn-sm" style="margin-top: 10px;" onclick="document.getElementById('fileInput').click()">Chọn tệp</button>
+        <input type="file" id="fileInput" multiple accept=".json,.txt,.docx">
+      </div>
+
+      <div class="form-group">
+        <label for="defaultSubject">Môn học mặc định (khi file không có):</label>
+        <input type="text" id="defaultSubject" value="Tiếng Anh">
+      </div>
+
+      <div class="form-group">
+        <label for="defaultDuration">Thời gian làm bài (phút):</label>
+        <input type="number" id="defaultDuration" value="50" min="5" max="180">
+      </div>
+
+      <div style="border-top: 1px solid var(--border); padding-top: 16px; margin-top: 16px;">
+        <button class="btn btn-success" id="btnExportAll" onclick="exportExamsLibrary()">
+          📥 Xuất Thư Viện (exams.json)
+        </button>
+        <p style="font-size: 0.78rem; color: #64748b; margin-top: 6px; text-align: center;">
+          Gom tất cả đề thi thành 1 file độc lập, dùng ngay cho trang thi online.
+        </p>
+      </div>
+    </div>
+
+    <!-- Cột danh sách đề thi hiện tại -->
+    <div class="card">
+      <div class="card-title">
+        <span>Danh Sách Đề Đã Nạp</span>
+        <button class="btn btn-danger btn-sm" onclick="clearAllExams()">Xóa tất cả</button>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Tên Đề Thi</th>
+              <th>Môn / Thời gian</th>
+              <th>Số Câu</th>
+              <th style="text-align: right;">Thao Tác</th>
+            </tr>
+          </thead>
+          <tbody id="examTableBody">
+            <tr>
+              <td colspan="5" class="empty-state">Chưa có đề thi nào được nạp. Hãy tải lên file đề!</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Bản quyền thuộc về số ĐT: 0943.930.787 • Tự do triển khai độc lập trên GitHub Pages.
+  </footer>
+</div>
+
+<!-- Modal Xem Chi Tiết Đề -->
+<div class="modal" id="previewModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="modalExamTitle" style="font-size: 1rem; font-weight: 700;">Chi tiết đề thi</h3>
+      <button class="btn btn-outline btn-sm" onclick="closeModal()">Đóng</button>
+    </div>
+    <div class="modal-body" id="modalExamContent"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline btn-sm" onclick="closeModal()">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Kho lưu trữ danh sách đề thi độc lập trong bộ nhớ
+  let examLibrary = [];
+
+  const dropZone = document.getElementById('dropZone');
+  const fileInput = document.getElementById('fileInput');
+  const examTableBody = document.getElementById('examTableBody');
+  const statsBadge = document.getElementById('stats-badge');
+
+  // Sự kiện kéo thả file
+  dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('dragover');
+  });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+  dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    if (e.dataTransfer.files.length > 0) {
+      handleFiles(e.dataTransfer.files);
+    }
+  });
+  fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+      handleFiles(e.target.files);
+      fileInput.value = ''; // Reset input để có thể chọn lại file cũ
+    }
+  });
+
+  // Xử lý nạp nhiều file cùng lúc
+  async function handleFiles(files) {
+    for (let file of files) {
+      const ext = file.name.split('.').pop().toLowerCase();
+      try {
+        if (ext === 'json') {
+          await processJsonFile(file);
+        } else if (ext === 'txt') {
+          await processTxtFile(file);
+        } else if (ext === 'docx') {
+          await processDocxFile(file);
+        } else {
+          alert(`Không hỗ trợ định dạng .${ext} (${file.name})`);
+        }
+      } catch (err) {
+        console.error("Lỗi khi đọc file:", file.name, err);
+        alert(`Lỗi xử lý file ${file.name}: ${err.message}`);
+      }
+    }
+    renderExamTable();
+  }
+
+  // 1. Xử lý file JSON (Có thể là 1 đề lẻ hoặc 1 file thư viện exams.json trước đó)
+  function processJsonFile(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const json = JSON.parse(e.target.result);
+          if (json.exams && Array.isArray(json.exams)) {
+            // Nạp thư viện exams.json có sẵn
+            json.exams.forEach(item => addStandardizedExam(item));
+          } else if (Array.isArray(json)) {
+            // Danh sách nhiều đề
+            json.forEach(item => addStandardizedExam(item));
+          } else {
+            // File 1 đề đơn lẻ
+            if (!json.title) json.title = file.name.replace(/\.[^/.]+$/, "");
+            addStandardizedExam(json);
+          }
+          resolve();
+        } catch (err) {
+          reject(err);
+        }
+      };
+      reader.onerror = reject;
+      reader.readAsText(file, "UTF-8");
+    });
+  }
+
+  // 2. Xử lý file TXT
+  function processTxtFile(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const text = e.target.result;
+          const questions = parseTextToQuestions(text);
+          const title = file.name.replace(/\.[^/.]+$/, "");
+          addStandardizedExam({
+            title: title,
+            questions: questions
+          });
+          resolve();
+        } catch (err) {
+          reject(err);
+        }
+      };
+      reader.onerror = reject;
+      reader.readAsText(file, "UTF-8");
+    });
+  }
+
+  // 3. Xử lý file DOCX qua Mammoth
+  async function processDocxFile(file) {
+    if (typeof mammoth === 'undefined') {
+      throw new Error("Thư viện Mammoth chưa được tải.");
+    }
+    const arrayBuffer = await file.arrayBuffer();
+    const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
+    const text = result.value;
+    const questions = parseTextToQuestions(text);
+    const title = file.name.replace(/\.[^/.]+$/, "");
+    addStandardizedExam({
+      title: title,
+      questions: questions
+    });
+  }
+
+  // Bộ bóc tách câu hỏi từ văn bản thô (Hỗ trợ cấu trúc Câu 1: ... A. ... B. ... C. ... D. ... Đáp án: ...)
+  function parseTextToQuestions(rawText) {
+    const lines = rawText.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+    const questions = [];
+    let currentQ = null;
+
+    const qRegex = /^(Câu|Question)\s+(\d+)[:.]/i;
+    const optRegex = /^([A-D])[\.\)]\s*(.*)/i;
+    const keyRegex = /^(Đáp án|Key|Answer)[:\s]*([A-D])/i;
+
+    for (let line of lines) {
+      const qMatch = line.match(qRegex);
+      if (qMatch) {
+        if (currentQ) questions.push(currentQ);
+        currentQ = {
+          id: questions.length + 1,
+          question: line,
+          options: [],
+          answer: "",
+          explanation: ""
+        };
+        continue;
+      }
+
+      if (!currentQ) continue;
+
+      const keyMatch = line.match(keyRegex);
+      if (keyMatch) {
+        currentQ.answer = keyMatch[2].toUpperCase();
+        continue;
+      }
+
+      const optMatch = line.match(optRegex);
+      if (optMatch) {
+        currentQ.options.push(line);
+        continue;
+      }
+
+      // Nếu là văn bản tiếp theo của câu hỏi
+      if (currentQ.options.length === 0) {
+        currentQ.question += "\n" + line;
+      } else {
+        // Dòng giải thích hoặc mô tả phụ
+        currentQ.explanation += (currentQ.explanation ? "\n" : "") + line;
+      }
+    }
+    if (currentQ) questions.push(currentQ);
+    return questions;
+  }
+
+  // Chuẩn hóa và thêm đề thi vào thư viện đảm bảo tính độc lập
+  function addStandardizedExam(raw) {
+    const defaultSub = document.getElementById('defaultSubject').value || 'Tiếng Anh';
+    const defaultDur = parseInt(document.getElementById('defaultDuration').value) || 50;
+
+    // Chuẩn hóa danh sách câu hỏi
+    let qList = [];
+    if (Array.isArray(raw.questions)) {
+      qList = raw.questions;
+    } else if (raw.data && Array.isArray(raw.data.questions)) {
+      qList = raw.data.questions;
+    }
+
+    const uniqueId = raw.id || 'exam_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+
+    const standardizedExam = {
+      id: uniqueId,
+      title: raw.title || 'Đề thi không tên',
+      subject: raw.subject || defaultSub,
+      grade: raw.grade || '12',
+      duration: parseInt(raw.duration) || defaultDur,
+      total_questions: qList.length,
+      created_date: raw.created_date || new Date().toISOString().split('T')[0],
+      data: {
+        questions: qList
+      }
+    };
+
+    // Kiểm tra xem đã tồn tại đề cùng ID chưa
+    const existingIndex = examLibrary.findIndex(e => e.id === standardizedExam.id);
+    if (existingIndex >= 0) {
+      examLibrary[existingIndex] = standardizedExam;
+    } else {
+      examLibrary.push(standardizedExam);
+    }
+  }
+
+  // Hiển thị danh sách đề thi ra bảng
+  function renderExamTable() {
+    statsBadge.textContent = `${examLibrary.length} đề thi trong kho`;
+    if (examLibrary.length === 0) {
+      examTableBody.innerHTML = `<tr><td colspan="5" class="empty-state">Chưa có đề thi nào được nạp. Hãy tải lên file đề!</td></tr>`;
+      return;
+    }
+
+    examTableBody.innerHTML = examLibrary.map((exam, index) => `
+      <tr>
+        <td><strong>${index + 1}</strong></td>
+        <td>
+          <input type="text" value="${escapeHtml(exam.title)}" 
+                 style="font-weight: 600; padding: 4px 8px;" 
+                 onchange="updateExamTitle('${exam.id}', this.value)">
+        </td>
+        <td>${escapeHtml(exam.subject)} (${exam.duration}p)</td>
+        <td><span class="badge" style="background:#e2e8f0; color:#334155;">${exam.total_questions} câu</span></td>
+        <td style="text-align: right;">
+          <div class="action-group" style="justify-content: flex-end;">
+            <button class="btn btn-outline btn-sm" onclick="previewExam('${exam.id}')">Xem</button>
+            <button class="btn btn-outline btn-sm" onclick="exportSingleExam('${exam.id}')">Xuất lẻ</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteExam('${exam.id}')">Xóa</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function updateExamTitle(id, newTitle) {
+    const exam = examLibrary.find(e => e.id === id);
+    if (exam) exam.title = newTitle;
+  }
+
+  function deleteExam(id) {
+    examLibrary = examLibrary.filter(e => e.id !== id);
+    renderExamTable();
+  }
+
+  function clearAllExams() {
+    if (examLibrary.length === 0) return;
+    if (confirm("Bạn có chắc chắn muốn xóa tất cả đề thi hiện có trong bảng?")) {
+      examLibrary = [];
+      renderExamTable();
+    }
+  }
+
+  // TÍNH NĂNG TRỌNG TÂM: Xuất toàn bộ thư viện thành exams.json độc lập
+  function exportExamsLibrary() {
+    if (examLibrary.length === 0) {
+      alert("Chưa có đề thi nào trong danh sách để xuất!");
+      return;
+    }
+
+    // Đóng gói cấu trúc thư viện độc lập
+    const outputData = {
+      version: "2.0",
+      generator: "Single-File Exam Builder",
+      exported_at: new Date().toISOString(),
+      total_exams: examLibrary.length,
+      library_name: "Thư viện đề thi THPT",
+      exams: examLibrary // Mỗi đề bên trong giữ trọn vẹn metadata và data.questions độc lập
+    };
+
+    downloadJson(outputData, 'exams.json');
+  }
+
+  // Xuất 1 đề lẻ độc lập
+  function exportSingleExam(id) {
+    const exam = examLibrary.find(e => e.id === id);
+    if (!exam) return;
+    const cleanFilename = (exam.title.replace(/[^a-zA-Z0-9_-]/g, '_') || 'exam') + '.json';
+    downloadJson(exam, cleanFilename);
+  }
+
+  function downloadJson(dataObj, filename) {
+    const blob = new Blob([JSON.stringify(dataObj, null, 2)], { type: 'application/json;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
+  // Modal Xem trước đề
+  function previewExam(id) {
+    const exam = examLibrary.find(e => e.id === id);
+    if (!exam) return;
+
+    document.getElementById('modalExamTitle').textContent = `${exam.title} (${exam.total_questions} câu)`;
+    const container = document.getElementById('modalExamContent');
+    
+    if (exam.data.questions.length === 0) {
+      container.innerHTML = '<p class="empty-state">Đề thi này không có câu hỏi nào hoặc cấu trúc câu hỏi chưa nhận diện được.</p>';
+    } else {
+      container.innerHTML = exam.data.questions.map((q, idx) => `
+        <div class="q-card">
+          <div style="font-weight: 600; white-space: pre-wrap;">${escapeHtml(q.question)}</div>
+          <div style="margin-top: 8px;">
+            ${(q.options || []).map(opt => `<div style="margin-left: 12px; margin-top: 2px;">• ${escapeHtml(opt)}</div>`).join('')}
+          </div>
+          ${q.answer ? `<div class="q-key">Đáp án đúng: ${escapeHtml(q.answer)}</div>` : ''}
+          ${q.explanation ? `<div style="font-size:0.8rem; color:#64748b; margin-top:4px;"><em>Giải thích: ${escapeHtml(q.explanation)}</em></div>` : ''}
+        </div>
+      `).join('');
+    }
+
+    document.getElementById('previewModal').classList.add('active');
+  }
+
+  function closeModal() {
+    document.getElementById('previewModal').classList.remove('active');
+  }
+
+  function escapeHtml(text) {
+    if (!text) return '';
+    return String(text)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+</script>
+</body>
+</html>
