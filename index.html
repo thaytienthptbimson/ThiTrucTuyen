@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="google" content="notranslate">
 <title>Hệ thống Thi & Ôn luyện Trắc nghiệm</title>
 <!-- Tích hợp MathJax 3 thay cho KaTeX để hỗ trợ tốt nhất trên Github Pages & Đọc giọng nói -->
 <script>
@@ -180,23 +179,6 @@ main{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env
   .q-panel { width: 100%; position: static; }
   .q-grid { max-height: 200px; }
 }
-
-/* ===== CHỐNG TRA TỪ ĐIỂN (chỉ bật khi đang làm bài) ===== */
-body.exam-lock #app-student,
-body.exam-lock #app-student *{
-  -webkit-user-select:none!important;-moz-user-select:none!important;-ms-user-select:none!important;user-select:none!important;
-  -webkit-touch-callout:none!important;-webkit-tap-highlight-color:transparent;
-}
-body.exam-lock #app-student input,
-body.exam-lock #app-student textarea{
-  -webkit-user-select:text!important;-moz-user-select:text!important;user-select:text!important;
-}
-body.exam-lock ::selection{background:transparent!important;color:inherit!important}
-body.exam-lock ::-moz-selection{background:transparent!important;color:inherit!important}
-body.exam-lock #app-student img{-webkit-user-drag:none;pointer-events:auto}
-#ad-cover{display:none;position:fixed;inset:0;z-index:99999;background:#0f172a;color:#fff;align-items:center;justify-content:center;text-align:center;padding:24px;font-size:20px;line-height:1.6}
-#ad-cover.show{display:flex}
-#ad-cover small{display:block;margin-top:10px;font-size:14px;opacity:.75}
 </style>
 </head>
 <body>
@@ -331,7 +313,6 @@ body.exam-lock #app-student img{-webkit-user-drag:none;pointer-events:auto}
   <div class="copyright">Bản quyền thuộc về số ĐT: 0943.930.787</div>
 </div>
 
-<div id="ad-cover" role="alert">⚠️ Bạn đã rời khỏi trang làm bài.<small>Hành vi này đã được ghi nhận. Quay lại trang để tiếp tục làm bài.</small></div>
 <div id="toast" class="toast hide" role="status"></div>
 
 <script>
@@ -1082,7 +1063,6 @@ function startStudentExam(sv) {
     }
     examEndAt = endAt;
     examRunning = true;
-    if (window.AntiDict) AntiDict.start();
     saveProg();
     runTimer();
 }
@@ -1328,7 +1308,6 @@ async function processSubmission() {
         studentClass: studentData.class,
         timeTaken: Math.floor((Date.now() - studentData.startTime) / 1000), 
         scoreStr: `${score}/10 điểm`,
-        violations: (window.AntiDict ? AntiDict.summary() : ''),
         details: JSON.stringify({ 
             score, 
             mc: `${correctMC}/${totalMC}`, 
@@ -1349,7 +1328,6 @@ async function processSubmission() {
         
         if (rotLocked) exitLandscape();
         examRunning = false;
-        if (window.AntiDict) AntiDict.stop();
         $('list-student').style.pointerEvents = 'none';$('list-student').setAttribute('inert', '');
         try { sessionStorage.setItem(progKey(), JSON.stringify({ done: true })); } catch(e) {}
         $('loading-box').innerHTML = `
@@ -1435,217 +1413,6 @@ window.reviewExam = function() {
     });
     triggerMathJax();
 };
-
-// ===================== CHỐNG TRA TỪ ĐIỂN / DỊCH / SAO CHÉP =====================
-const AntiDict = (function () {
-    // ---- Cấu hình ----
-    const CFG = {
-        MAX_LEAVE: 0,          // Số lần rời tab tối đa trước khi tự nộp bài (0 = chỉ ghi nhận, không tự nộp)
-        WARN_TOAST: true,      // Hiện thông báo nhắc nhở khi vi phạm
-        COVER_ON_BLUR: true,   // Che nội dung đề khi rời khỏi cửa sổ làm bài
-        DETECT_EXT_DOM: true,  // Phát hiện và gỡ phần tử do tiện ích tra từ chèn vào trang
-    };
-
-    let on = false, mo = null, coverTimer = null, lastBlurAt = 0;
-    const log = [];                         // [{t, type}]
-    const cnt = { leave: 0, copy: 0, menu: 0, sel: 0, ext: 0, key: 0 };
-    const root = () => document.getElementById('app-student');
-    const inInput = el => !!(el && el.closest && el.closest('input, textarea'));
-    const inExam = el => { const r = root(); return !!(r && el && r.contains(el)); };
-    const storeKey = () => 'antidict_' + (window.exam && exam.id);
-
-    function persist() { try { sessionStorage.setItem(storeKey(), JSON.stringify({ cnt, log })); } catch (e) {} }
-    function restore() {
-        try {
-            const d = JSON.parse(sessionStorage.getItem(storeKey()) || 'null');
-            if (d) { Object.assign(cnt, d.cnt || {}); (d.log || []).forEach(x => log.push(x)); }
-        } catch (e) {}
-    }
-    function note(type, msg) {
-        cnt[type] = (cnt[type] || 0) + 1;
-        log.push({ t: Date.now(), type });
-        if (log.length > 200) log.shift();
-        persist();
-        if (CFG.WARN_TOAST && msg && typeof showToast === 'function') showToast('⚠️ ' + msg, 4000);
-    }
-
-    // ---- 1. Chặn bôi đen / sao chép / chuột phải / kéo thả ----
-    const stop = e => { e.preventDefault(); e.stopPropagation(); };
-
-    function onSelectStart(e) { if (!on || inInput(e.target)) return; stop(e); }
-    function onCopyCut(e)     { if (!on || inInput(e.target)) return; stop(e); note('copy', 'Không được sao chép nội dung đề thi.'); }
-    function onPaste(e)       { if (!on) return; stop(e); }
-    function onDrag(e)        { if (!on) return; stop(e); }
-    function onMenu(e) {
-        if (!on) return;
-        if (inInput(e.target) && e.type === 'contextmenu') { stop(e); return; }  // cả ô nhập cũng không cho menu chuột phải
-        stop(e); note('menu', 'Đã tắt menu chuột phải.');
-    }
-
-    // Nhấp đúp / nhấp ba / giữ chuột kéo: tiện ích tra từ thường kích hoạt bằng các thao tác này
-    function onMouseDown(e) {
-        if (!on || inInput(e.target) || !inExam(e.target)) return;
-        if (e.detail > 1) stop(e);
-    }
-    function onDblClick(e) { if (!on || inInput(e.target)) return; stop(e); clearSel(); }
-
-    // Chạm giữ lâu (di động): chặn menu "Tra cứu / Dịch"
-    function onTouchStart(e) {
-        if (!on || e.touches.length < 2) return;       // không cho 2 ngón chọn text
-        if (!inInput(e.target)) e.preventDefault();
-    }
-
-    // ---- 2. Nếu vẫn lọt vùng chọn (do tiện ích) thì xóa ngay ----
-    function clearSel() {
-        try {
-            const s = window.getSelection();
-            if (s && s.rangeCount && s.toString().trim() && !inInput(document.activeElement)) {
-                s.removeAllRanges();
-                return true;
-            }
-        } catch (e) {}
-        return false;
-    }
-    function onSelChange() { if (on && clearSel()) note('sel', null); }
-    function onMouseUp()   { if (on) setTimeout(clearSel, 0); }
-
-    // ---- 3. Chặn phím tắt ----
-    function onKey(e) {
-        if (!on) return;
-        const k = (e.key || '').toLowerCase();
-        const mod = e.ctrlKey || e.metaKey;
-        const bad =
-            (mod && !inInput(e.target) && ['c', 'x', 'a', 'u', 's', 'p', 'f', 'g'].includes(k)) ||
-            (mod && ['u', 's', 'p'].includes(k)) ||
-            (mod && e.shiftKey && ['i', 'j', 'c', 'k'].includes(k)) ||
-            k === 'f12' || k === 'printscreen' ||
-            (e.altKey && e.shiftKey && ['i'].includes(k)) ||
-            (e.ctrlKey && e.altKey && ['z', 'd'].includes(k));          // phím tắt thường gặp của tiện ích tra từ/dịch
-        if (bad) { stop(e); note('key', 'Phím tắt này đã bị vô hiệu hóa.'); }
-    }
-    function onKeyUp(e) {
-        if (on && (e.key === 'PrintScreen')) {
-            try { navigator.clipboard.writeText(''); } catch (err) {}
-            note('key', 'Không được chụp màn hình khi làm bài.');
-        }
-    }
-
-    // ---- 4. Phát hiện rời tab / mất focus ----
-    function showCover(v) {
-        const c = document.getElementById('ad-cover');
-        if (c) c.classList.toggle('show', !!v && CFG.COVER_ON_BLUR);
-    }
-    function leave(why) {
-        if (!on) return;
-        const now = Date.now();
-        if (now - lastBlurAt < 1500) { showCover(true); return; }   // tránh đếm trùng blur + visibilitychange
-        lastBlurAt = now;
-        cnt.leave++; log.push({ t: now, type: 'leave:' + why }); persist();
-        showCover(true);
-        if (CFG.MAX_LEAVE > 0 && cnt.leave >= CFG.MAX_LEAVE && !submitted) {
-            alert('Bạn đã rời khỏi trang làm bài quá ' + CFG.MAX_LEAVE + ' lần. Hệ thống tự động nộp bài.');
-            if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
-            processSubmission();
-        }
-    }
-    function back() {
-        showCover(false);
-        if (on && cnt.leave && CFG.WARN_TOAST && typeof showToast === 'function')
-            showToast('⚠️ Đã ghi nhận ' + cnt.leave + ' lần rời khỏi trang làm bài.', 5000);
-    }
-    function onVis()  { document.hidden ? leave('tab') : back(); }
-    function onBlur() { leave('blur'); }
-    function onFocus(){ back(); }
-
-    // ---- 5. Phát hiện tiện ích chèn nội dung (popup từ điển, dịch...) ----
-    const SUS = /dict|translat|lingoes|lingvo|immersive|tippy|popup|tooltip|lookup|youdao|baidu|deepl|bing|google|gtx|goog-|yomi|rikai|zhongwen|saladict|eudic|oxford|cambridge|wiktionary/i;
-    function legit(n) {
-        if (n.nodeType !== 1) return true;
-        const tag = (n.tagName || '').toLowerCase();
-        if (['script', 'style', 'link', 'meta', 'noscript'].includes(tag)) return true;
-        const id = n.id || '', cls = (typeof n.className === 'string' ? n.className : '') || '';
-        if (/^mjx|^MJX|^MathJax/.test(tag) || /^MJX|^MathJax|^mjx/.test(id)) return true;
-        if (n.dataset && n.dataset.adSeen) return true;
-        return false;
-    }
-    function inspectNode(n) {
-        if (!on || legit(n)) return;
-        const id = n.id || '', cls = (typeof n.className === 'string' ? n.className : '') || '';
-        const blob = id + ' ' + cls + ' ' + (n.tagName || '');
-        const st = getComputedStyle(n);
-        const floating = (st.position === 'fixed' || st.position === 'absolute') && (parseInt(st.zIndex, 10) || 0) > 100;
-        if (SUS.test(blob) || floating || n.shadowRoot || n.tagName === 'IFRAME') {
-            n.style.setProperty('display', 'none', 'important');
-            try { n.remove(); } catch (e) {}
-            note('ext', 'Phát hiện tiện ích tra từ/dịch. Vui lòng tắt tiện ích khi làm bài.');
-        }
-    }
-    function startObserver() {
-        if (!CFG.DETECT_EXT_DOM || mo || !window.MutationObserver) return;
-        // Đánh dấu các phần tử có sẵn của trang
-        Array.from(document.body.children).forEach(n => { if (n.dataset) n.dataset.adSeen = '1'; });
-        mo = new MutationObserver(list => {
-            list.forEach(m => m.addedNodes.forEach(inspectNode));
-            // Google Dịch gắn class "translated-ltr/rtl" lên <html>
-            const h = document.documentElement.className;
-            if (/translated-(ltr|rtl)/.test(h)) {
-                document.documentElement.className = h.replace(/translated-(ltr|rtl)/g, '').trim();
-                note('ext', 'Không được dịch trang khi làm bài.');
-            }
-        });
-        mo.observe(document.body, { childList: true });
-        mo.observe(document.documentElement, { childList: true, attributes: true, attributeFilter: ['class'] });
-    }
-
-    // ---- Gắn / gỡ sự kiện ----
-    const EV = [
-        ['selectstart', onSelectStart, true], ['copy', onCopyCut, true], ['cut', onCopyCut, true],
-        ['paste', onPaste, true], ['dragstart', onDrag, true], ['drop', onDrag, true],
-        ['contextmenu', onMenu, true], ['mousedown', onMouseDown, true], ['dblclick', onDblClick, true],
-        ['mouseup', onMouseUp, true], ['touchstart', onTouchStart, { capture: true, passive: false }],
-        ['selectionchange', onSelChange, false], ['keydown', onKey, true], ['keyup', onKeyUp, true],
-    ];
-
-    function start() {
-        if (on) return;
-        on = true;
-        restore();
-        document.body.classList.add('exam-lock');
-        document.documentElement.setAttribute('translate', 'no');
-        document.documentElement.classList.add('notranslate');
-        document.querySelectorAll('#app-student input').forEach(i => {
-            i.setAttribute('autocomplete', 'off'); i.setAttribute('autocorrect', 'off');
-            i.setAttribute('autocapitalize', 'off'); i.setAttribute('spellcheck', 'false');
-        });
-        EV.forEach(([n, f, o]) => document.addEventListener(n, f, o));
-        document.addEventListener('visibilitychange', onVis);
-        window.addEventListener('blur', onBlur);
-        window.addEventListener('focus', onFocus);
-        startObserver();
-    }
-
-    function stopAll() {
-        if (!on) return;
-        on = false;
-        document.body.classList.remove('exam-lock');
-        EV.forEach(([n, f, o]) => document.removeEventListener(n, f, o));
-        document.removeEventListener('visibilitychange', onVis);
-        window.removeEventListener('blur', onBlur);
-        window.removeEventListener('focus', onFocus);
-        if (mo) { mo.disconnect(); mo = null; }
-        showCover(false);
-    }
-
-    function summary() {
-        return 'rời tab: ' + cnt.leave + ', sao chép: ' + cnt.copy + ', chuột phải: ' + cnt.menu +
-               ', bôi đen: ' + cnt.sel + ', tiện ích: ' + cnt.ext + ', phím tắt: ' + cnt.key;
-    }
-
-    // Khi giáo viên bấm "Xoay ngang"/toàn màn hình, trình duyệt có thể bắn blur: bỏ qua trong 1,5s sau thao tác
-    document.addEventListener('fullscreenchange', () => { lastBlurAt = Date.now(); });
-
-    return { start, stop: stopAll, summary, cfg: CFG };
-})();
 </script>
 </body>
 </html>
