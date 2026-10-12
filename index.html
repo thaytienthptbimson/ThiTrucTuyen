@@ -185,6 +185,9 @@ main{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env
 #pg-st{padding:3px 4px}
 body.pg-lock,body.pg-lock *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 body.pg-lock input,body.pg-lock textarea{-webkit-user-select:text;user-select:text}
+body.pg-lock img{-webkit-user-drag:none}
+body.shot-hide #list-student,body.shot-hide #q-panel{visibility:hidden}
+@media print{body.sh-on>*{display:none!important}body.sh-on::before{content:"Bài thi không được phép in hoặc lưu thành PDF.";display:block;padding:40px;font-size:20px}}
 </style>
 </head>
 <body>
@@ -207,7 +210,7 @@ body.pg-lock input,body.pg-lock textarea{-webkit-user-select:text;user-select:te
     <h1 id="s-exam-name">Đang tải đề thi...</h1>
     <p>Vui lòng nhập thông tin để bắt đầu làm bài</p>
     <div id="s-schedule" class="sch-state hide"></div>
-    <div id="s-pg-note" class="sch-state wait hide">📷 Bài thi có giám sát: em cần cho phép camera và làm bài ở chế độ toàn màn hình. Rời màn hình, chuyển tab hoặc ra khỏi khung camera sẽ bị ghi nhận và có thể bị tự động nộp bài.</div>
+    <div id="s-pg-note" class="sch-state wait hide">📷 Bài thi có giám sát: em cần cho phép camera và làm bài ở chế độ toàn màn hình. Rời màn hình, chuyển tab hoặc ra khỏi khung camera sẽ bị ghi nhận và có thể bị tự động nộp bài. Trên màn hình luôn có hình mờ ghi tên và lớp của em: mọi ảnh chụp hoặc quay màn hình (kể cả chụp bằng điện thoại khác) đều truy ra được người làm bài.</div>
     <input type="text" id="s-name" placeholder="Họ và tên học sinh" required>
     <input type="text" id="s-class" placeholder="Lớp (Ví dụ: 12A1)" required>
     <button class="btn gr" type="submit" id="btn-start-exam" disabled>Bắt đầu làm bài</button>
@@ -272,7 +275,7 @@ body.pg-lock input,body.pg-lock textarea{-webkit-user-select:text;user-select:te
         </div>
 
         <div class="sch-box" style="margin:15px 0 0">
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin:0;font-weight:600"><input type="checkbox" id="chk-proctor"> 🛡 Chống gian lận: bắt buộc toàn màn hình + camera, ghi nhận khi rời màn hình</label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin:0;font-weight:600"><input type="checkbox" id="chk-proctor"> 🛡 Chống gian lận: bắt buộc toàn màn hình + camera, ghi nhận khi rời màn hình, hình mờ tên học sinh chống chụp màn hình</label>
           <div><label for="max-viol">Vi phạm tối đa trước khi tự nộp (0 = chỉ ghi nhận)</label><input type="number" id="max-viol" min="0" style="width:120px;margin:0"></div>
         </div>
         <div class="sch-box">
@@ -1515,6 +1518,7 @@ function pgStop(force) {
   const was = PG.on;
   PG.on = 0; clearInterval(PG.tm);
   document.body.classList.remove('pg-lock'); if (PG.mo) { PG.mo.disconnect(); PG.mo = null; }
+  shBlur(0);
   if (PG.stream) { PG.stream.getTracks().forEach(t => { t.onended = null; t.stop(); }); PG.stream = null; }
   $('pg-cam-box').classList.add('hide'); $('pg').classList.add('hide');
   if ((was || force) && pgIsFs()) { try { (document.exitFullscreen || document.webkitExitFullscreen).call(document); } catch (e) {} }
@@ -1523,7 +1527,7 @@ function pgStop(force) {
 function pgBegin(sv) {
   PG.on = 1; PG.last = 0; PG.none = PG.many = PG.lostF = PG.manyF = 0;
   PG.viol = (sv && sv.viol) || [];
-  document.body.classList.add('pg-lock'); pgGuard();
+  document.body.classList.add('pg-lock'); pgGuard(); shStart();
   pgDetectInit();
   clearInterval(PG.tm); PG.tm = setInterval(pgTick, 1000);
   // Tải lại trang: tính 1 lần vi phạm, bắt buộc bấm tiếp tục để bật lại camera + toàn màn hình
@@ -1628,6 +1632,71 @@ document.addEventListener('selectionchange', () => {
   const sel = getSelection();
   if (sel && !sel.isCollapsed) sel.removeAllRanges();
 });
+
+
+// ===================== CHỐNG CHỤP MÀN HÌNH =====================
+// Lưu ý: trình duyệt KHÔNG cho phép chặn hẳn việc chụp màn hình (nhất là trên điện thoại), nên dùng 3 lớp răn đe:
+//  1) Hình mờ tên + lớp + giờ phủ kín màn hình (giữ cả lúc xem lại bài) -> ảnh chụp/quay/chụp bằng máy khác đều truy ra người làm.
+//  2) Phát hiện phím chụp màn hình / in trên máy tính -> ghi vi phạm, xóa clipboard, chặn in.
+//  3) Rời cửa sổ (kể cả mở công cụ chụp, ứng dụng khác) -> nội dung đề bị ẩn cho đến khi quay lại.
+const SH = { on: 0, tm: null, n: 0 };
+
+function shWmSvg() {
+  const d = new Date(), t = p2(d.getHours()) + ':' + p2(d.getMinutes());
+  const x = v => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const txt = (studentData.name || '') + ' · ' + (studentData.class || '') + ' · ' + t;
+  const w = Math.max(280, Math.min(560, txt.length * 9 + 90)), h = 170;
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '"><text x="' + w / 2 + '" y="' + h / 2 +
+    '" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#475569" fill-opacity=".2" transform="rotate(-24 ' +
+    w / 2 + ' ' + h / 2 + ')">' + x(txt) + '</text></svg>';
+  return 'url("data:image/svg+xml,' + encodeURIComponent(svg) + '")';
+}
+
+function shWmMake() {
+  let el = $('sh-wm');
+  if (!el) { el = document.createElement('div'); el.id = 'sh-wm'; document.body.appendChild(el); }
+  el.style.cssText = 'position:fixed;inset:0;z-index:90;pointer-events:none;display:block;visibility:visible;opacity:1;background-repeat:repeat;background-image:' + shWmSvg();
+}
+
+function shWmOk() {
+  const el = $('sh-wm');
+  if (!el || !document.body.contains(el)) return false;
+  const cs = getComputedStyle(el);
+  return cs.display !== 'none' && cs.visibility === 'visible' && +cs.opacity >= 0.9 && cs.position === 'fixed' && +cs.zIndex >= 90 && el.offsetWidth > 0;
+}
+
+function shStart() {
+  SH.on = 1;
+  document.body.classList.add('sh-on');
+  shWmMake();
+  clearInterval(SH.tm);
+  SH.tm = setInterval(() => {
+    if (!shWmOk()) { shWmMake(); pgViol('Gỡ hoặc che hình mờ chống chụp màn hình'); }
+    else if (++SH.n % 30 === 0) shWmMake(); // cập nhật giờ trên hình mờ
+  }, 1000);
+}
+
+const shBlur = on => document.body.classList.toggle('shot-hide', !!on);
+window.addEventListener('blur', () => { if (pgOn() && !PG.mute) shBlur(1); });
+window.addEventListener('focus', () => shBlur(0));
+document.addEventListener('visibilitychange', () => { if (!document.hidden) shBlur(0); else if (pgOn() && !PG.mute) shBlur(1); });
+
+function shShot(reason) {
+  // Xóa ảnh vừa chụp khỏi clipboard (làm được tới đâu hay tới đó)
+  const wipe = () => { try { navigator.clipboard && navigator.clipboard.writeText('Không được chụp màn hình bài thi').catch(() => {}); } catch (e) {} };
+  wipe(); setTimeout(wipe, 300);
+  pgViol(reason);
+}
+
+['keydown', 'keyup'].forEach(ev => document.addEventListener(ev, e => {
+  if (!SH.on) return;
+  const k = e.key || '', c = e.code || '';
+  if (k === 'PrintScreen' || c === 'PrintScreen' || (e.metaKey && e.shiftKey && (c === 'KeyS' || c === 'Digit3' || c === 'Digit4' || c === 'Digit5'))) {
+    e.preventDefault(); shShot('Phát hiện phím chụp màn hình'); return;
+  }
+  if (ev === 'keydown' && (e.ctrlKey || e.metaKey) && !e.altKey && c === 'KeyP') { e.preventDefault(); shShot('Cố in hoặc lưu PDF bài thi'); }
+}, true));
+window.addEventListener('beforeprint', () => { if (SH.on) shShot('Cố in hoặc lưu PDF bài thi'); });
 </script>
 </body>
 </html>
