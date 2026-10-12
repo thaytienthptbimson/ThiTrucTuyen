@@ -183,6 +183,8 @@ main{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env
 #pg-cam-box{position:fixed;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:60;width:132px;background:#0f172a;color:#fff;border-radius:10px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.35);font-size:11px;text-align:center}
 #pg-cam{display:block;width:100%;height:auto;transform:scaleX(-1);background:#000}
 #pg-st{padding:3px 4px}
+body.pg-lock,body.pg-lock *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+body.pg-lock input,body.pg-lock textarea{-webkit-user-select:text;user-select:text}
 </style>
 </head>
 <body>
@@ -1445,7 +1447,7 @@ const pgMax = () => exam.maxViol == null ? 3 : exam.maxViol;
 const pgFsOk = () => !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
 const pgIsFs = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
 const pgCamOk = () => !!PG.stream && PG.stream.getVideoTracks().some(t => t.readyState === 'live');
-const pgOk = () => (!pgFsOk() || pgIsFs()) && pgCamOk() && !document.hidden;
+const pgOk = () => (!pgFsOk() || pgIsFs()) && pgCamOk() && !document.hidden && !pgTrans();
 const pgFsReq = () => {
   const d = document.documentElement, f = d.requestFullscreen || d.webkitRequestFullscreen;
   return f ? Promise.resolve(f.call(d)).catch(() => {}) : Promise.resolve();
@@ -1480,6 +1482,7 @@ async function pgStart() {
 function pgStop(force) {
   const was = PG.on;
   PG.on = 0; clearInterval(PG.tm);
+  document.body.classList.remove('pg-lock'); if (PG.mo) { PG.mo.disconnect(); PG.mo = null; }
   if (PG.stream) { PG.stream.getTracks().forEach(t => { t.onended = null; t.stop(); }); PG.stream = null; }
   $('pg-cam-box').classList.add('hide'); $('pg').classList.add('hide');
   if ((was || force) && pgIsFs()) { try { (document.exitFullscreen || document.webkitExitFullscreen).call(document); } catch (e) {} }
@@ -1488,6 +1491,7 @@ function pgStop(force) {
 function pgBegin(sv) {
   PG.on = 1; PG.last = 0; PG.none = PG.many = PG.lostF = PG.manyF = 0;
   PG.viol = (sv && sv.viol) || [];
+  document.body.classList.add('pg-lock'); pgGuard();
   pgDetectInit();
   clearInterval(PG.tm); PG.tm = setInterval(pgTick, 1000);
   // Tải lại trang: tính 1 lần vi phạm, bắt buộc bấm tiếp tục để bật lại camera + toàn màn hình
@@ -1548,8 +1552,50 @@ $('pg-btn').onclick = async () => {
   await pgFsReq(); await pgCam();
   PG.mute = 0; PG.last = Date.now();
   if (pgOk()) $('pg').classList.add('hide');
-  else $('pg-msg').textContent = pgCamOk() ? 'Chưa vào được toàn màn hình. Hãy bấm lại nút bên dưới.' : 'Camera chưa hoạt động. Hãy cho phép camera cho trang này rồi bấm lại.';
+  else $('pg-msg').textContent = pgTrans() ? 'Trang đang bị dịch. Hãy chọn "Hiển thị bản gốc" của trình duyệt rồi bấm lại.' : pgCamOk() ? 'Chưa vào được toàn màn hình. Hãy bấm lại nút bên dưới.' : 'Camera chưa hoạt động. Hãy cho phép camera cho trang này rồi bấm lại.';
 };
+
+
+// ===================== CHẶN BÔI ĐEN / TRA TỪ ĐIỂN =====================
+const pgEl = t => t && (t.nodeType === 1 ? t : t.parentElement);
+const pgEdit = t => { const el = pgEl(t); return !!(el && el.closest('input,textarea')); };
+const pgTrans = () => /translated-(ltr|rtl)/.test(document.documentElement.className) || !!document.querySelector('#list-student font');
+const pgOn = () => PG.on && !submitted;
+
+function pgGuard() {
+  document.documentElement.setAttribute('translate', 'no');
+  if (!document.querySelector('meta[name=google]')) {
+    const m = document.createElement('meta'); m.name = 'google'; m.content = 'notranslate'; document.head.appendChild(m);
+  }
+  if (PG.mo) return;
+  PG.mo = new MutationObserver(() => { if (pgTrans()) pgViol('Dịch trang / tra từ điển bằng trình duyệt hoặc tiện ích'); });
+  PG.mo.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+  PG.mo.observe($('list-student'), { childList: true, subtree: true });
+}
+
+// Mỗi lần cố bôi đen / sao chép / chuột phải: bị chặn + nhắc; cố 5 lần mới tính 1 vi phạm
+function pgBlock() {
+  PG.sel = (PG.sel || 0) + 1;
+  if (PG.sel >= 5) { PG.sel = 0; pgViol('Cố bôi đen văn bản / tra từ điển nhiều lần'); return; }
+  showToast('🔒 Trong giờ thi không được bôi đen, sao chép hay tra từ điển (' + PG.sel + '/5).', 3000);
+}
+
+['selectstart', 'dragstart', 'copy', 'cut'].forEach(ev => document.addEventListener(ev, e => { if (pgOn() && !pgEdit(e.target)) e.preventDefault(); }, true));
+document.addEventListener('contextmenu', e => { if (pgOn() && !pgEdit(e.target)) { e.preventDefault(); pgBlock(); } }, true);
+document.addEventListener('mousedown', e => {
+  if (pgOn() && e.detail > 1 && !pgEdit(e.target)) { e.preventDefault(); if (!pgEl(e.target).closest('.o,.btn,.q-btn')) pgBlock(); }
+}, true);
+document.addEventListener('keydown', e => {
+  if (!pgOn()) return;
+  const k = (e.key || '').toLowerCase();
+  if (e.ctrlKey && e.metaKey && k === 'd') { e.preventDefault(); pgViol('Dùng từ điển của máy (Look Up)'); }
+  else if ((e.ctrlKey || e.metaKey) && (k === 'a' || k === 'c' || k === 'x') && !pgEdit(e.target)) { e.preventDefault(); pgBlock(); }
+}, true);
+document.addEventListener('selectionchange', () => {
+  if (!pgOn() || pgEdit(document.activeElement)) return;
+  const sel = getSelection();
+  if (sel && !sel.isCollapsed) sel.removeAllRanges();
+});
 </script>
 </body>
 </html>
