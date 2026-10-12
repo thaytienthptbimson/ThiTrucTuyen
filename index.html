@@ -179,6 +179,10 @@ main{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env
   .q-panel { width: 100%; position: static; }
   .q-grid { max-height: 200px; }
 }
+
+#pg-cam-box{position:fixed;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:60;width:132px;background:#0f172a;color:#fff;border-radius:10px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.35);font-size:11px;text-align:center}
+#pg-cam{display:block;width:100%;height:auto;transform:scaleX(-1);background:#000}
+#pg-st{padding:3px 4px}
 </style>
 </head>
 <body>
@@ -201,6 +205,7 @@ main{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env
     <h1 id="s-exam-name">Đang tải đề thi...</h1>
     <p>Vui lòng nhập thông tin để bắt đầu làm bài</p>
     <div id="s-schedule" class="sch-state hide"></div>
+    <div id="s-pg-note" class="sch-state wait hide">📷 Bài thi có giám sát: em cần cho phép camera và làm bài ở chế độ toàn màn hình. Rời màn hình, chuyển tab hoặc ra khỏi khung camera sẽ bị ghi nhận và có thể bị tự động nộp bài.</div>
     <input type="text" id="s-name" placeholder="Họ và tên học sinh" required>
     <input type="text" id="s-class" placeholder="Lớp (Ví dụ: 12A1)" required>
     <button class="btn gr" type="submit" id="btn-start-exam" disabled>Bắt đầu làm bài</button>
@@ -264,6 +269,10 @@ main{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env
             </label>
         </div>
 
+        <div class="sch-box" style="margin:15px 0 0">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin:0;font-weight:600"><input type="checkbox" id="chk-proctor"> 🛡 Chống gian lận: bắt buộc toàn màn hình + camera, ghi nhận khi rời màn hình</label>
+          <div><label for="max-viol">Vi phạm tối đa trước khi tự nộp (0 = chỉ ghi nhận)</label><input type="number" id="max-viol" min="0" style="width:120px;margin:0"></div>
+        </div>
         <div class="sch-box">
             <div>
                 <label for="open-at">🟢 Giờ mở đề (bắt đầu)</label>
@@ -313,6 +322,15 @@ main{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env
   <div class="copyright">Bản quyền thuộc về số ĐT: 0943.930.787</div>
 </div>
 
+<div id="pg" class="overlay hide" style="z-index:200;background:rgba(15,23,42,.96)">
+  <div class="box">
+    <div class="ic">⚠️</div>
+    <h2 id="pg-title" style="margin:0 0 8px"></h2>
+    <p id="pg-msg"></p>
+    <button class="btn" id="pg-btn" type="button">Quay lại làm bài</button>
+  </div>
+</div>
+<div id="pg-cam-box" class="hide"><video id="pg-cam" muted playsinline autoplay></video><div id="pg-st">📷 Camera đang bật</div></div>
 <div id="toast" class="toast hide" role="status"></div>
 
 <script>
@@ -338,6 +356,7 @@ let base=[], cur=[], lib=[], exam=null;
 let studentData = { name: '', class: '', startTime: 0 };
 let timerInterval, timeLeft = 0, submitted = false;
 let examEndAt = Infinity, examRunning = false;
+const PG = { on: 0, mute: 0, busy: 0, viol: [], stream: null, det: null, tm: null, last: 0, none: 0, many: 0, lostF: 0, manyF: 0 };
 const LK = 'exams_v2';
 const L4 = 'ABCD';
 
@@ -432,7 +451,8 @@ window.openExam = (id) => {
     $('exam-scale').value = exam.scale || 'english';
     $('chk-shuf-grp').checked = !!exam.shufGrp; 
     $('chk-shuf-q').checked = exam.shufQ !== false; 
-    $('chk-shuf-opt').checked = exam.shufOpt !== false; 
+    $('chk-shuf-opt').checked = exam.shufOpt !== false;
+    $('chk-proctor').checked = !!exam.proctor; $('max-viol').value = exam.maxViol == null ? 3 : exam.maxViol; 
 
     cur = JSON.parse(JSON.stringify(exam.items)); 
     renderTeacherPreview();
@@ -450,6 +470,7 @@ $('btn-save-settings').onclick = () => {
         exam.shufGrp = $('chk-shuf-grp').checked;
         exam.shufQ = $('chk-shuf-q').checked;
         exam.shufOpt = $('chk-shuf-opt').checked;
+        exam.proctor = $('chk-proctor').checked; exam.maxViol = Math.max(0, parseInt($('max-viol').value) || 0);
         saveLib();
         alert('Đã lưu cài đặt! Nhớ xuất lại file exams.json của đề này để cập nhật lên Github.');
     }
@@ -499,7 +520,7 @@ function normExam(x, fallbackId) {
         scale: (x.scale === 'math' || x.scale === 'english' || x.scale === 'other') ? x.scale : 'english',
         openAt: +x.openAt || 0,
         closeAt: +x.closeAt || 0,
-        shufGrp: !!x.shufGrp, shufQ: x.shufQ !== false, shufOpt: x.shufOpt !== false
+        shufGrp: !!x.shufGrp, shufQ: x.shufQ !== false, shufOpt: x.shufOpt !== false, proctor: !!x.proctor, maxViol: x.maxViol == null ? 3 : Math.max(0, parseInt(x.maxViol) || 0)
     };
 }
 
@@ -776,7 +797,7 @@ $('file').onchange = async e => {
         shufGrp: false, shufQ: true, shufOpt: true
     };
     const old=lib.find(y=>y.name===ex.name);
-    if(old){ ex.id=old.id; ex.time=old.time||0; ex.openAt=old.openAt||0; ex.closeAt=old.closeAt||0; ex.scale=old.scale||'english'; ex.shufGrp=!!old.shufGrp; ex.shufQ=old.shufQ!==false; ex.shufOpt=old.shufOpt!==false; }
+    if(old){ ex.id=old.id; ex.time=old.time||0; ex.openAt=old.openAt||0; ex.closeAt=old.closeAt||0; ex.scale=old.scale||'english'; ex.shufGrp=!!old.shufGrp; ex.shufQ=old.shufQ!==false; ex.shufOpt=old.shufOpt!==false; ex.proctor=!!old.proctor; ex.maxViol=old.maxViol; }
     lib=lib.filter(y=>y.name!==ex.name); lib.push(ex); saveLib();
     openExam(ex.id);
     
@@ -973,6 +994,7 @@ async function initStudentFlow(id) {
     }
 
     $('s-exam-name').textContent = exam.name;
+    $('s-pg-note').classList.toggle('hide', !exam.proctor);
 
     const sv = loadProg();
     if(sv && sv.done) {
@@ -988,11 +1010,12 @@ async function initStudentFlow(id) {
     updateGate();
     if(exam.openAt || exam.closeAt) gateTimer = setInterval(updateGate, 1000);
     
-    $('sf').onsubmit = (e) => {
+    $('sf').onsubmit = async (e) => {
         e.preventDefault();
         if(gateState() !== 'open') { updateGate(); return; }
         studentData.name = $('s-name').value.trim();
         studentData.class = $('s-class').value.trim();
+        if(exam.proctor && !(await pgStart())) return;
         startStudentExam();
     };
 }
@@ -1063,6 +1086,7 @@ function startStudentExam(sv) {
     }
     examEndAt = endAt;
     examRunning = true;
+    if(exam.proctor) pgBegin(sv);
     saveProg();
     runTimer();
 }
@@ -1194,7 +1218,7 @@ async function enterLandscape() {
 
 async function exitLandscape() {
     try { screen.orientation.unlock(); } catch (e) {}
-    try { if (document.fullscreenElement) await document.exitFullscreen(); } catch (e) {}
+    try { if (document.fullscreenElement && !PG.on) await document.exitFullscreen(); } catch (e) {}
     rotLocked = false; updateRotBtn();
 }
 
@@ -1217,7 +1241,8 @@ $('btn-submit-exam').onclick = () => {
         q.qtype === 'sa' ? !q.studentAns :
         q.qtype === 'tf' ? (!q.studentAns || Object.keys(q.studentAns).length < 4) :
         q.studentAns === undefined)).length;
-    if(confirm(un ? `Bạn còn ${un} câu chưa trả lời. Vẫn nộp bài?` : 'Bạn có chắc chắn muốn nộp bài?')) {
+    PG.mute = 1; const okc = confirm(un ? `Bạn còn ${un} câu chưa trả lời. Vẫn nộp bài?` : 'Bạn có chắc chắn muốn nộp bài?'); PG.mute = 0;
+    if(okc) {
         if(timerInterval) clearInterval(timerInterval);
         processSubmission();
     }
@@ -1225,7 +1250,7 @@ $('btn-submit-exam').onclick = () => {
 
 function autoSubmit() {
     if(submitted) return;
-    alert('Đã hết thời gian làm bài (hoặc đã đến giờ đóng đề)! Hệ thống tự động nộp bài.');
+    PG.mute = 1; alert('Đã hết thời gian làm bài (hoặc đã đến giờ đóng đề)! Hệ thống tự động nộp bài.');
     processSubmission();
 }
 
@@ -1250,7 +1275,7 @@ function isSAOk(q) {
 
 const progKey = () => 'prog_' + (exam && exam.id);
 function saveProg(extra) {
-    try { sessionStorage.setItem(progKey(), JSON.stringify(Object.assign({ studentData, cur, endAt: isFinite(examEndAt) ? examEndAt : 0 }, extra || {}))); } catch(e) {}
+    try { sessionStorage.setItem(progKey(), JSON.stringify(Object.assign({ studentData, cur, endAt: isFinite(examEndAt) ? examEndAt : 0, viol: PG.viol }, extra || {}))); } catch(e) {}
 }
 function loadProg() { try { return JSON.parse(sessionStorage.getItem(progKey()) || 'null'); } catch(e) { return null; } }
 window.addEventListener('beforeunload', e => { if(examRunning && !submitted) { e.preventDefault(); e.returnValue = ''; } });
@@ -1311,7 +1336,7 @@ async function processSubmission() {
         details: JSON.stringify({ 
             score, 
             mc: `${correctMC}/${totalMC}`, 
-            tf_qs: tfQuestions, 
+            tf_qs: tfQuestions, violations: PG.viol.length, viol_log: PG.viol.map(v => new Date(v.t).toLocaleTimeString('vi-VN') + ' ' + v.r).join(' | '), 
             sa: `${correctSA}/${totalSA}` 
         })
     };
@@ -1328,7 +1353,7 @@ async function processSubmission() {
         
         if (rotLocked) exitLandscape();
         examRunning = false;
-        $('list-student').style.pointerEvents = 'none';$('list-student').setAttribute('inert', '');
+        pgStop(); $('list-student').style.pointerEvents = 'none';$('list-student').setAttribute('inert', '');
         try { sessionStorage.setItem(progKey(), JSON.stringify({ done: true })); } catch(e) {}
         $('loading-box').innerHTML = `
             <div class="ic">🎉</div>
@@ -1349,7 +1374,7 @@ async function processSubmission() {
         alert('Có lỗi mạng khi nộp bài. Vui lòng chụp màn hình báo cho giáo viên.');
         $('loading').classList.add('hide');
         submitted = false;
-        if(isFinite(examEndAt) && examEndAt - nowMs() > 0) runTimer();
+        PG.mute = 0; if(isFinite(examEndAt) && examEndAt - nowMs() > 0) runTimer();
     }
 }
 
@@ -1412,6 +1437,118 @@ window.reviewExam = function() {
         markReview(q, i, isCorrect);
     });
     triggerMathJax();
+};
+
+
+// ===================== CHỐNG GIAN LẬN: toàn màn hình + camera + rời màn hình =====================
+const pgMax = () => exam.maxViol == null ? 3 : exam.maxViol;
+const pgFsOk = () => !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
+const pgIsFs = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+const pgCamOk = () => !!PG.stream && PG.stream.getVideoTracks().some(t => t.readyState === 'live');
+const pgOk = () => (!pgFsOk() || pgIsFs()) && pgCamOk() && !document.hidden;
+const pgFsReq = () => {
+  const d = document.documentElement, f = d.requestFullscreen || d.webkitRequestFullscreen;
+  return f ? Promise.resolve(f.call(d)).catch(() => {}) : Promise.resolve();
+};
+
+async function pgCam() {
+  if (pgCamOk()) return true;
+  try {
+    PG.stream = await navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240, facingMode: 'user' }, audio: false });
+    const v = $('pg-cam'); v.srcObject = PG.stream;
+    $('pg-cam-box').classList.remove('hide');
+    PG.stream.getVideoTracks()[0].onended = () => pgViol('Camera bị tắt hoặc mất kết nối');
+    try { await v.play(); } catch (e) {}
+    return true;
+  } catch (e) { return false; }
+}
+
+// Gọi ngay khi học sinh bấm "Bắt đầu làm bài" (phải có thao tác bấm thì trình duyệt mới cho toàn màn hình)
+async function pgStart() {
+  if (PG.busy) return false;
+  PG.busy = 1;
+  const fs = pgFsReq();
+  const cam = await pgCam();
+  await fs;
+  PG.busy = 0;
+  if (cam && (!pgFsOk() || pgIsFs())) return true;
+  showToast(cam ? 'Không bật được chế độ toàn màn hình. Hãy thử lại.' : 'Không bật được camera. Hãy cho phép camera cho trang này (phải mở bằng https) rồi bấm lại.', 8000);
+  pgStop(true);
+  return false;
+}
+
+function pgStop(force) {
+  const was = PG.on;
+  PG.on = 0; clearInterval(PG.tm);
+  if (PG.stream) { PG.stream.getTracks().forEach(t => { t.onended = null; t.stop(); }); PG.stream = null; }
+  $('pg-cam-box').classList.add('hide'); $('pg').classList.add('hide');
+  if ((was || force) && pgIsFs()) { try { (document.exitFullscreen || document.webkitExitFullscreen).call(document); } catch (e) {} }
+}
+
+function pgBegin(sv) {
+  PG.on = 1; PG.last = 0; PG.none = PG.many = PG.lostF = PG.manyF = 0;
+  PG.viol = (sv && sv.viol) || [];
+  pgDetectInit();
+  clearInterval(PG.tm); PG.tm = setInterval(pgTick, 1000);
+  // Tải lại trang: tính 1 lần vi phạm, bắt buộc bấm tiếp tục để bật lại camera + toàn màn hình
+  if (sv) pgViol('Tải lại trang hoặc mở lại bài thi');
+}
+
+async function pgDetectInit() {
+  if (PG.det) return;
+  try {
+    const V = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
+    const M = await import(V + '/vision_bundle.mjs');
+    const fs = await M.FilesetResolver.forVisionTasks(V + '/wasm');
+    PG.det = await M.FaceDetector.createFromOptions(fs, {
+      baseOptions: { modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite' },
+      runningMode: 'VIDEO', minDetectionConfidence: 0.5
+    });
+  } catch (e) { PG.det = null; } // không tải được thư viện: chỉ giám sát camera bật/tắt, không phạt oan
+}
+
+function pgTick() {
+  const v = $('pg-cam');
+  if (!PG.on || submitted || !PG.det || document.hidden || !v.videoWidth) return;
+  let n;
+  try { n = PG.det.detectForVideo(v, performance.now()).detections.length; } catch (e) { return; }
+  $('pg-st').textContent = n === 0 ? '⚠ Không thấy mặt' : n > 1 ? '⚠ Có nhiều người' : '✔ Bình thường';
+  if (n === 0) { if (++PG.none >= 5 && !PG.lostF) { PG.lostF = 1; pgViol('Không thấy thí sinh trong khung camera'); } } else { PG.none = 0; PG.lostF = 0; }
+  if (n > 1) { if (++PG.many >= 3 && !PG.manyF) { PG.manyF = 1; pgViol('Phát hiện nhiều hơn 1 người trong khung camera'); } } else { PG.many = 0; PG.manyF = 0; }
+}
+
+function pgShow(reason) {
+  const max = pgMax(), n = PG.viol.length, fin = max && n > max;
+  $('pg-title').textContent = fin ? '⛔ Vượt quá số lần vi phạm' : '⚠️ Cảnh báo vi phạm ' + n + (max ? '/' + max : '');
+  $('pg-msg').textContent = fin
+    ? reason + '. Hệ thống đang tự động nộp bài của em.'
+    : reason + '. Mọi vi phạm đều được ghi lại và gửi cho giáo viên. Bấm nút bên dưới để tiếp tục làm bài.';
+  $('pg-btn').classList.toggle('hide', !!fin);
+  $('pg').classList.remove('hide');
+}
+
+function pgViol(reason) {
+  if (!PG.on || PG.mute || submitted || !examRunning) return;
+  const now = Date.now();
+  if (now - PG.last < 2000) return; // 1 sự cố có thể bắn nhiều sự kiện (blur + đổi tab + thoát toàn màn hình)
+  PG.last = now;
+  PG.viol.push({ t: now, r: reason });
+  saveProg();
+  pgShow(reason);
+  if (pgMax() && PG.viol.length > pgMax()) { clearInterval(timerInterval); processSubmission(); }
+}
+
+document.addEventListener('visibilitychange', () => { if (document.hidden) pgViol('Chuyển tab hoặc thu nhỏ cửa sổ'); });
+window.addEventListener('blur', () => pgViol('Rời khỏi cửa sổ làm bài'));
+['fullscreenchange', 'webkitfullscreenchange'].forEach(ev => document.addEventListener(ev, () => {
+  if (pgFsOk() && !pgIsFs()) pgViol('Thoát chế độ toàn màn hình');
+}));
+$('pg-btn').onclick = async () => {
+  PG.mute = 1;
+  await pgFsReq(); await pgCam();
+  PG.mute = 0; PG.last = Date.now();
+  if (pgOk()) $('pg').classList.add('hide');
+  else $('pg-msg').textContent = pgCamOk() ? 'Chưa vào được toàn màn hình. Hãy bấm lại nút bên dưới.' : 'Camera chưa hoạt động. Hãy cho phép camera cho trang này rồi bấm lại.';
 };
 </script>
 </body>
