@@ -1005,6 +1005,7 @@ async function initStudentFlow(id) {
         p.style.cssText = 'color:var(--ok);font-weight:bold';
         p.textContent = 'Em đã nộp bài thi này rồi. Cảm ơn em!';
         $('sf').insertBefore(p,$('sf').querySelector('.copyright'));
+        if(sv.res) { $('loading').classList.remove('hide'); showResult(sv.res, false); }
         return;
     }
     if(sv && sv.cur && sv.studentData) { startStudentExam(sv); return; }
@@ -1282,6 +1283,49 @@ function saveProg(extra) {
 function loadProg() { try { return JSON.parse(sessionStorage.getItem(progKey()) || 'null'); } catch(e) { return null; } }
 window.addEventListener('beforeunload', e => { if(examRunning && !submitted) { e.preventDefault(); e.returnValue = ''; } });
 
+// ===================== CHỈ CHO XEM ĐIỂM SAU KHI HẾT HẠN THỜI GIAN THI =====================
+// Mốc được xem điểm: giờ đóng đề (khi đó mọi học sinh đều đã hết giờ); nếu đề không đặt giờ đóng
+// thì lấy hạn làm bài của chính học sinh đó. Đề không giới hạn thời gian => 0 (xem ngay).
+function revealAtMs() {
+    if(exam.closeAt && exam.closeAt > 0) return exam.closeAt;
+    return isFinite(examEndAt) ? examEndAt : 0;
+}
+
+let resultTimer = null;
+function showResult(res, canReview) {
+    clearInterval(resultTimer);
+    const box = $('loading-box');
+    const head = `
+        <div class="ic">🎉</div>
+        <h2 style="color:var(--ok)">Nộp bài thành công!</h2>
+        <p>Cảm ơn em đã hoàn thành bài thi.</p>`;
+    const showScore = () => {
+        box.innerHTML = head + `
+            <div class="score-result">
+                <div style="font-size:24px; font-weight:900; color:var(--pri); text-align:center; margin-bottom:12px;">ĐIỂM: ${res.score}/10</div>
+                <div style="font-size:14px; color:var(--tx)">
+                    • Trắc nghiệm (0.25đ/câu): Đúng ${res.correctMC}/${res.totalMC} câu<br>
+                    • Đúng/Sai (Điểm lũy tiến): Đã làm ${res.tfQuestions} câu<br>
+                    • Trả lời ngắn (${res.isMath?'0.5đ':'0.25đ'}/câu): Đúng ${res.correctSA}/${res.totalSA} câu
+                </div>
+            </div>` + (canReview ? `<button class="btn" style="margin-top:16px" onclick="reviewExam()">Xem lại bài làm</button>` : '');
+    };
+    if(!(res.revealAt > nowMs())) { showScore(); return; }
+    box.innerHTML = head + `
+        <div class="score-result" style="text-align:center">
+            🔒 Điểm và số câu đúng sẽ được công bố sau khi hết thời gian thi, lúc <b>${fmtDT(res.revealAt)}</b>.
+            <span class="sch-count" id="reveal-count"></span>
+            <div class="note">Em vui lòng giữ nguyên trang này, kết quả sẽ tự hiện khi đến giờ.</div>
+        </div>`;
+    const tick = () => {
+        const left = Math.ceil((res.revealAt - nowMs()) / 1000);
+        if(left <= 0) { clearInterval(resultTimer); showScore(); return; }
+        const cd = $('reveal-count'); if(cd) cd.textContent = '⏳ Còn ' + fmtCountdown(left);
+    };
+    resultTimer = setInterval(tick, 1000);
+    tick();
+}
+
 async function processSubmission() {
     if(submitted) return;
     submitted = true;
@@ -1356,21 +1400,9 @@ async function processSubmission() {
         if (rotLocked) exitLandscape();
         examRunning = false;
         pgStop(); $('list-student').style.pointerEvents = 'none';$('list-student').setAttribute('inert', '');
-        try { sessionStorage.setItem(progKey(), JSON.stringify({ done: true })); } catch(e) {}
-        $('loading-box').innerHTML = `
-            <div class="ic">🎉</div>
-            <h2 style="color:var(--ok)">Nộp bài thành công!</h2>
-            <p>Cảm ơn em đã hoàn thành bài thi.</p>
-            <div class="score-result">
-                <div style="font-size:24px; font-weight:900; color:var(--pri); text-align:center; margin-bottom:12px;">ĐIỂM: ${score}/10</div>
-                <div style="font-size:14px; color:var(--tx)">
-                    • Trắc nghiệm (0.25đ/câu): Đúng ${correctMC}/${totalMC} câu<br>
-                    • Đúng/Sai (Điểm lũy tiến): Đã làm ${tfQuestions} câu<br>
-                    • Trả lời ngắn (${isMath?'0.5đ':'0.25đ'}/câu): Đúng ${correctSA}/${totalSA} câu
-                </div>
-            </div>
-            <button class="btn" style="margin-top:16px" onclick="reviewExam()">Xem lại bài làm</button>
-        `;
+        const res = { score, correctMC, totalMC, tfQuestions, correctSA, totalSA, isMath, revealAt: revealAtMs() };
+        try { sessionStorage.setItem(progKey(), JSON.stringify({ done: true, res })); } catch(e) {}
+        showResult(res, true);
     } catch(err) {
         console.error(err);
         alert('Có lỗi mạng khi nộp bài. Vui lòng chụp màn hình báo cho giáo viên.');
