@@ -193,13 +193,24 @@ body.shot-hide #list-student,body.shot-hide #q-panel{visibility:hidden}
 <body>
 
 <div id="login" class="center-screen hide">
-  <form class="box" id="lf">
+  <form class="box" id="lf" style="max-width:480px">
     <div class="ic">👨‍🏫</div>
-    <h1>Quản lý Thi Trắc nghiệm</h1>
-    <p>Dành cho giáo viên quản trị</p>
-    <input type="password" id="pw" placeholder="Nhập mật khẩu" autocomplete="current-password" autofocus>
-    <div class="err" id="err"></div>
-    <button class="btn" type="submit">Đăng nhập</button>
+    <h1>Hệ thống Thi &amp; Quản lý Đề</h1>
+    <p>Chọn đề thi cho học sinh hoặc đăng nhập quản trị</p>
+    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:14px;margin-bottom:18px;text-align:left">
+      <div style="font-weight:700;color:var(--pri);margin-bottom:8px;font-size:15px">🎓 Dành cho Học sinh làm bài:</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input type="text" id="quick-de-input" placeholder="Nhập mã file đề (VD: de1, de2...)" style="margin:0;flex:1">
+        <button class="btn gr" type="button" id="btn-open-quick-de" style="width:auto;padding:10px 16px;white-space:nowrap">Mở đề</button>
+      </div>
+      <div id="hub-exam-list" style="display:grid;gap:6px;max-height:180px;overflow-y:auto"></div>
+    </div>
+    <div style="border-top:1px solid var(--bd);padding-top:14px;text-align:left">
+      <div style="font-weight:600;color:var(--mut);margin-bottom:8px;font-size:13px;text-align:center">🔐 Quản trị viên / Giáo viên tạo đề</div>
+      <input type="password" id="pw" placeholder="Nhập mật khẩu giáo viên" autocomplete="current-password">
+      <div class="err" id="err"></div>
+      <button class="btn" type="submit">Đăng nhập</button>
+    </div>
     <div class="copyright">Bản quyền thuộc về số ĐT: 0943.930.787</div>
   </form>
 </div>
@@ -214,6 +225,7 @@ body.shot-hide #list-student,body.shot-hide #q-panel{visibility:hidden}
     <input type="text" id="s-name" placeholder="Họ và tên học sinh" required>
     <input type="text" id="s-class" placeholder="Lớp (Ví dụ: 12A1)" required>
     <button class="btn gr" type="submit" id="btn-start-exam" disabled>Bắt đầu làm bài</button>
+    <button class="btn sec" type="button" id="btn-back-hub" style="margin-top:8px">📚 Đổi đề thi khác</button>
     <div class="copyright">Bản quyền thuộc về số ĐT: 0943.930.787</div>
   </form>
 </div>
@@ -235,11 +247,17 @@ body.shot-hide #list-student,body.shot-hide #q-panel{visibility:hidden}
     <div class="card">
       <div class="bar">
         <label class="btn" for="file">📂 Tải file Word đề gốc (.docx)</label>
+        <label class="btn sec" for="li-multi">📥 Nhập thêm đề (.json)</label>
+        <button class="btn sec" type="button" id="btn-export-all">📦 Xuất tất cả (exams.json)</button>
         <input type="file" id="file" accept=".docx" hidden>
         <input type="file" id="li-one" accept=".json,application/json" hidden>
+        <input type="file" id="li-multi" accept=".json,application/json" multiple hidden>
       </div>
-      <p class="note"><b>Quy trình thi trực tuyến:</b><br>1. Tải đề lên &rarr; 2. Chọn Cài đặt &rarr; 3. Chọn <b>Xuất thư viện (exams.json)</b> ở Đề thi tương ứng và tải lên Github đè vào file cũ &rarr; 4. Gửi Link thi.</p>
-      <p class="note"><b>Sao lưu / chuyển đề:</b> Mỗi đề thi trong danh sách có mục <b>Xuất/Nhập thư viện riêng biệt</b>. Nút <b>Nhập thư viện</b> cho phép chọn file exams.json để ghi đè cập nhật nội dung cho duy nhất đề hiện tại.</p>
+      <p class="note"><b>Cách đưa nhiều đề lên cùng 1 Repository GitHub (dạng <code>de1.json</code>, <code>de2.json</code>...):</b><br>
+      1. Tải từng file Word (<code>.docx</code>) lên &rarr; Hệ thống tự động gán mã file <b><code>de1.json</code></b>, <b><code>de2.json</code></b>, <b><code>de3.json</code></b>... (có thể đổi tên tùy ý trong mục Cài đặt).<br>
+      2. Bấm <b>⬆️ Xuất file (de1.json)</b> ở từng đề để tải các file <code>de1.json</code>, <code>de2.json</code>... về máy và upload tất cả lên chung Repository GitHub.<br>
+      3. Bấm <b>🔗 Copy Link Thi</b> để lấy link riêng cho từng đề (ví dụ: <code>.../KIEM-TRA-THAY-TIEN-12/?de=de1</code> hoặc <code>?de=de2</code>) gửi cho học sinh.</p>
+      <p class="note"><b>Mẹo:</b> Thầy cũng có thể bấm <b>📦 Xuất tất cả (exams.json)</b> để tải 1 file <code>exams.json</code> chứa toàn bộ các đề, giúp trang chủ tự hiện danh sách tất cả các đề cho học sinh chọn.</p>
     </div>
 
     <details id="libbox" class="card" open>
@@ -251,7 +269,12 @@ body.shot-hide #list-student,body.shot-hide #q-panel{visibility:hidden}
       <div>
         <b>⚙ Cài đặt đề thi: <span id="cur-exam-name" style="color:var(--pri)"></span></b>
         
-        <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:12px;">
+        <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; align-items:center;">
+          <div style="display:flex; align-items:center; gap:6px; background:#eff6ff; padding:4px 10px; border-radius:10px; border:1px solid #bfdbfe;">
+            <label for="exam-file-key" style="font-weight:700; font-size:14px; color:var(--pri); white-space:nowrap;">📄 Tên file:</label>
+            <input type="text" id="exam-file-key" placeholder="de1" style="width:110px; margin:0; padding:6px 10px; font-weight:700; color:var(--pri);">
+            <span style="font-weight:700; color:var(--mut); font-size:14px;">.json</span>
+          </div>
           <input type="number" id="time-limit" placeholder="Phút (0 = tự do)" style="width:140px; margin:0">
           <select id="exam-scale" class="btn sec" style="padding:10px; margin:0; width:auto; text-align:left;">
               <option value="english" selected>Thang điểm: Môn Tiếng Anh</option>
@@ -259,7 +282,13 @@ body.shot-hide #list-student,body.shot-hide #q-panel{visibility:hidden}
               <option value="math">Thang điểm: Môn Toán</option>
           </select>
           <button class="btn sec" id="btn-save-settings">Lưu cài đặt</button>
+          <button class="btn sec" id="btn-export-cur" type="button">⬆️ Xuất file .json</button>
           <button class="btn gr" id="btn-copy-link">🔗 Copy Link Thi</button>
+        </div>
+
+        <div style="display:flex; flex-wrap:wrap; gap:20px; margin-top:15px; background:#eff6ff; padding:15px; border-radius:10px; border:1px solid var(--bd);">
+            <label style="width:100%; font-weight:600; font-size:14px; color:var(--pri)">🔗 Link lưu điểm Google Sheet riêng (Tùy chọn):</label>
+            <input type="text" id="exam-webhook" placeholder="Nhập URL Google Apps Script môn Địa lí 12 (để trống nếu dùng hệ thống cũ)" style="width:100%; margin:0">
         </div>
 
         <div style="display:flex; flex-wrap:wrap; gap:20px; margin-top:15px; background:#f8fafc; padding:15px; border-radius:10px; border:1px solid var(--bd);">
@@ -352,10 +381,24 @@ function triggerMathJax(tries) {
 }
 
 const PW = '28011981';
-const WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbyThYxetYYKy3OKCs0eIkkoS8enSVfUa8-oCOnrfPomwek0nYzsj5DTpw4bxsnFM889/exec';
+const WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbwb14F44kdAE2vV-d1mfyoqWrZxEFfL6Y79j6HgUhCzhGnI6TdUwRV3QmmScqySCCVd/exec';
+const DEFAULT_EXAMS = [{"id": "e1792253206168", "name": "DE KIEM TRA GIOI TU", "at": 1792253206168, "items": [{"k": "q", "no": 1, "qtype": "mc", "stem": [{"t": "I was born ______ 15th March, 2008.", "f": 0}], "opts": [{"runs": [{"t": "in", "f": 0}], "ok": false}, {"runs": [{"t": "at", "f": 0}], "ok": false}, {"runs": [{"t": "on", "f": 0}], "ok": true}, {"runs": [{"t": "by", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 2, "qtype": "mc", "stem": [{"t": "We usually have dinner ______ 7 p.m.", "f": 0}], "opts": [{"runs": [{"t": "in", "f": 0}], "ok": false}, {"runs": [{"t": "on", "f": 0}], "ok": false}, {"runs": [{"t": "for", "f": 0}], "ok": false}, {"runs": [{"t": "at", "f": 0}], "ok": true}], "g": 0}, {"k": "q", "no": 3, "qtype": "mc", "stem": [{"t": "My grandparents live ______ a small village near Thanh Hoa.", "f": 0}], "opts": [{"runs": [{"t": "on", "f": 0}], "ok": false}, {"runs": [{"t": "in", "f": 0}], "ok": true}, {"runs": [{"t": "at", "f": 0}], "ok": false}, {"runs": [{"t": "to", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 4, "qtype": "mc", "stem": [{"t": "The cat is hiding ______ the table.", "f": 0}], "opts": [{"runs": [{"t": "under", "f": 0}], "ok": true}, {"runs": [{"t": "during", "f": 0}], "ok": false}, {"runs": [{"t": "across", "f": 0}], "ok": false}, {"runs": [{"t": "since", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 5, "qtype": "mc", "stem": [{"t": "He has lived in Ha Noi ______ 2015.", "f": 0}], "opts": [{"runs": [{"t": "for", "f": 0}], "ok": false}, {"runs": [{"t": "from", "f": 0}], "ok": false}, {"runs": [{"t": "since", "f": 0}], "ok": true}, {"runs": [{"t": "during", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 6, "qtype": "mc", "stem": [{"t": "We have been learning English ______ five years.", "f": 0}], "opts": [{"runs": [{"t": "since", "f": 0}], "ok": false}, {"runs": [{"t": "in", "f": 0}], "ok": false}, {"runs": [{"t": "at", "f": 0}], "ok": false}, {"runs": [{"t": "for", "f": 0}], "ok": true}], "g": 0}, {"k": "q", "no": 7, "qtype": "mc", "stem": [{"t": "The bank is ______ the post office and the supermarket.", "f": 0}], "opts": [{"runs": [{"t": "among", "f": 0}], "ok": false}, {"runs": [{"t": "between", "f": 0}], "ok": true}, {"runs": [{"t": "over", "f": 0}], "ok": false}, {"runs": [{"t": "through", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 8, "qtype": "mc", "stem": [{"t": "There is a beautiful painting ______ the wall.", "f": 0}], "opts": [{"runs": [{"t": "in", "f": 0}], "ok": false}, {"runs": [{"t": "at", "f": 0}], "ok": false}, {"runs": [{"t": "on", "f": 0}], "ok": true}, {"runs": [{"t": "into", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 9, "qtype": "mc", "stem": [{"t": "Students are not allowed to use mobile phones ______ the exam.", "f": 0}], "opts": [{"runs": [{"t": "during", "f": 0}], "ok": true}, {"runs": [{"t": "while", "f": 0}], "ok": false}, {"runs": [{"t": "since", "f": 0}], "ok": false}, {"runs": [{"t": "among", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 10, "qtype": "mc", "stem": [{"t": "She is very good ______ playing the piano.", "f": 0}], "opts": [{"runs": [{"t": "in", "f": 0}], "ok": false}, {"runs": [{"t": "for", "f": 0}], "ok": false}, {"runs": [{"t": "with", "f": 0}], "ok": false}, {"runs": [{"t": "at", "f": 0}], "ok": true}], "g": 0}, {"k": "q", "no": 11, "qtype": "mc", "stem": [{"t": "My little brother is afraid ______ spiders.", "f": 0}], "opts": [{"runs": [{"t": "from", "f": 0}], "ok": false}, {"runs": [{"t": "of", "f": 0}], "ok": true}, {"runs": [{"t": "with", "f": 0}], "ok": false}, {"runs": [{"t": "at", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 12, "qtype": "mc", "stem": [{"t": "We have English lessons ______ Mondays and Fridays.", "f": 0}], "opts": [{"runs": [{"t": "in", "f": 0}], "ok": false}, {"runs": [{"t": "at", "f": 0}], "ok": false}, {"runs": [{"t": "for", "f": 0}], "ok": false}, {"runs": [{"t": "on", "f": 0}], "ok": true}], "g": 0}, {"k": "q", "no": 13, "qtype": "mc", "stem": [{"t": "He is interested ______ collecting stamps.", "f": 0}], "opts": [{"runs": [{"t": "on", "f": 0}], "ok": false}, {"runs": [{"t": "at", "f": 0}], "ok": false}, {"runs": [{"t": "in", "f": 0}], "ok": true}, {"runs": [{"t": "about", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 14, "qtype": "mc", "stem": [{"t": "We are looking forward ______ meeting you next week.", "f": 0}], "opts": [{"runs": [{"t": "to", "f": 0}], "ok": true}, {"runs": [{"t": "for", "f": 0}], "ok": false}, {"runs": [{"t": "at", "f": 0}], "ok": false}, {"runs": [{"t": "on", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 15, "qtype": "mc", "stem": [{"t": "I’ll wait for you ______ the bus stop in front of the school.", "f": 0}], "opts": [{"runs": [{"t": "in", "f": 0}], "ok": false}, {"runs": [{"t": "at", "f": 0}], "ok": true}, {"runs": [{"t": "on", "f": 0}], "ok": false}, {"runs": [{"t": "to", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 16, "qtype": "mc", "stem": [{"t": "They are going to travel to Hue ______ train.", "f": 0}], "opts": [{"runs": [{"t": "in", "f": 0}], "ok": false}, {"runs": [{"t": "with", "f": 0}], "ok": false}, {"runs": [{"t": "on", "f": 0}], "ok": false}, {"runs": [{"t": "by", "f": 0}], "ok": true}], "g": 0}, {"k": "q", "no": 17, "qtype": "mc", "stem": [{"t": "I am very proud ______ my daughter.", "f": 0}], "opts": [{"runs": [{"t": "of", "f": 0}], "ok": true}, {"runs": [{"t": "for", "f": 0}], "ok": false}, {"runs": [{"t": "with", "f": 0}], "ok": false}, {"runs": [{"t": "in", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 18, "qtype": "mc", "stem": [{"t": "She is married ______ a famous doctor.", "f": 0}], "opts": [{"runs": [{"t": "with", "f": 0}], "ok": false}, {"runs": [{"t": "to", "f": 0}], "ok": true}, {"runs": [{"t": "by", "f": 0}], "ok": false}, {"runs": [{"t": "for", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 19, "qtype": "mc", "stem": [{"t": "I usually get up early ______ the morning to do exercise.", "f": 0}], "opts": [{"runs": [{"t": "at", "f": 0}], "ok": false}, {"runs": [{"t": "on", "f": 0}], "ok": false}, {"runs": [{"t": "in", "f": 0}], "ok": true}, {"runs": [{"t": "by", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 20, "qtype": "mc", "stem": [{"t": "He apologised ______ being late for the meeting.", "f": 0}], "opts": [{"runs": [{"t": "of", "f": 0}], "ok": false}, {"runs": [{"t": "at", "f": 0}], "ok": false}, {"runs": [{"t": "for", "f": 0}], "ok": true}, {"runs": [{"t": "on", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 21, "qtype": "mc", "stem": [{"t": "The new policy is expected to result ______ a significant reduction in pollution.", "f": 0}], "opts": [{"runs": [{"t": "in", "f": 0}], "ok": true}, {"runs": [{"t": "from", "f": 0}], "ok": false}, {"runs": [{"t": "with", "f": 0}], "ok": false}, {"runs": [{"t": "by", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 22, "qtype": "mc", "stem": [{"t": "Most traffic accidents result ______ drivers’ carelessness.", "f": 0}], "opts": [{"runs": [{"t": "in", "f": 0}], "ok": false}, {"runs": [{"t": "to", "f": 0}], "ok": false}, {"runs": [{"t": "from", "f": 0}], "ok": true}, {"runs": [{"t": "of", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 23, "qtype": "mc", "stem": [{"t": "Many young people are still dependent ______ their parents for money.", "f": 0}], "opts": [{"runs": [{"t": "from", "f": 0}], "ok": false}, {"runs": [{"t": "on", "f": 0}], "ok": true}, {"runs": [{"t": "of", "f": 0}], "ok": false}, {"runs": [{"t": "to", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 24, "qtype": "mc", "stem": [{"t": "The man was accused ______ stealing a large sum of money.", "f": 0}], "opts": [{"runs": [{"t": "for", "f": 0}], "ok": false}, {"runs": [{"t": "of", "f": 0}], "ok": true}, {"runs": [{"t": "with", "f": 0}], "ok": false}, {"runs": [{"t": "about", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 25, "qtype": "mc", "stem": [{"t": "The heavy rain prevented us ______ going on the picnic.", "f": 0}], "opts": [{"runs": [{"t": "of", "f": 0}], "ok": false}, {"runs": [{"t": "against", "f": 0}], "ok": false}, {"runs": [{"t": "to", "f": 0}], "ok": false}, {"runs": [{"t": "from", "f": 0}], "ok": true}], "g": 0}, {"k": "q", "no": 26, "qtype": "mc", "stem": [{"t": "This old house is very similar ______ the one my grandparents used to own.", "f": 0}], "opts": [{"runs": [{"t": "to", "f": 0}], "ok": true}, {"runs": [{"t": "with", "f": 0}], "ok": false}, {"runs": [{"t": "as", "f": 0}], "ok": false}, {"runs": [{"t": "from", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 27, "qtype": "mc", "stem": [{"t": "We are extremely grateful ______ you for all your support.", "f": 0}], "opts": [{"runs": [{"t": "for", "f": 0}], "ok": false}, {"runs": [{"t": "of", "f": 0}], "ok": false}, {"runs": [{"t": "to", "f": 0}], "ok": true}, {"runs": [{"t": "with", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 28, "qtype": "mc", "stem": [{"t": "I’m fed up ______ doing the same work every day.", "f": 0}], "opts": [{"runs": [{"t": "of", "f": 0}], "ok": false}, {"runs": [{"t": "in", "f": 0}], "ok": false}, {"runs": [{"t": "for", "f": 0}], "ok": false}, {"runs": [{"t": "with", "f": 0}], "ok": true}], "g": 0}, {"k": "q", "no": 29, "qtype": "mc", "stem": [{"t": "Linh is very keen ______ learning foreign languages.", "f": 0}], "opts": [{"runs": [{"t": "on", "f": 0}], "ok": true}, {"runs": [{"t": "in", "f": 0}], "ok": false}, {"runs": [{"t": "at", "f": 0}], "ok": false}, {"runs": [{"t": "of", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 30, "qtype": "mc", "stem": [{"t": "The manager is responsible ______ training new staff.", "f": 0}], "opts": [{"runs": [{"t": "to", "f": 0}], "ok": false}, {"runs": [{"t": "for", "f": 0}], "ok": true}, {"runs": [{"t": "of", "f": 0}], "ok": false}, {"runs": [{"t": "with", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 31, "qtype": "mc", "stem": [{"t": "A good teacher is always patient ______ slow learners.", "f": 0}], "opts": [{"runs": [{"t": "to", "f": 0}], "ok": false}, {"runs": [{"t": "of", "f": 0}], "ok": false}, {"runs": [{"t": "at", "f": 0}], "ok": false}, {"runs": [{"t": "with", "f": 0}], "ok": true}], "g": 0}, {"k": "q", "no": 32, "qtype": "mc", "stem": [{"t": "There has been a sharp increase ______ the price of petrol recently.", "f": 0}], "opts": [{"runs": [{"t": "of", "f": 0}], "ok": false}, {"runs": [{"t": "on", "f": 0}], "ok": false}, {"runs": [{"t": "in", "f": 0}], "ok": true}, {"runs": [{"t": "at", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 33, "qtype": "mc", "stem": [{"t": "What is the reason ______ his sudden decision to leave?", "f": 0}], "opts": [{"runs": [{"t": "for", "f": 0}], "ok": true}, {"runs": [{"t": "of", "f": 0}], "ok": false}, {"runs": [{"t": "about", "f": 0}], "ok": false}, {"runs": [{"t": "to", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 34, "qtype": "mc", "stem": [{"t": "We still haven’t found a solution ______ this problem.", "f": 0}], "opts": [{"runs": [{"t": "of", "f": 0}], "ok": false}, {"runs": [{"t": "to", "f": 0}], "ok": true}, {"runs": [{"t": "at", "f": 0}], "ok": false}, {"runs": [{"t": "on", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 35, "qtype": "mc", "stem": [{"t": "She insisted ______ paying for the meal.", "f": 0}], "opts": [{"runs": [{"t": "in", "f": 0}], "ok": false}, {"runs": [{"t": "at", "f": 0}], "ok": false}, {"runs": [{"t": "on", "f": 0}], "ok": true}, {"runs": [{"t": "to", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 36, "qtype": "mc", "stem": [{"t": "I completely agree ______ what you have just said.", "f": 0}], "opts": [{"runs": [{"t": "to", "f": 0}], "ok": false}, {"runs": [{"t": "at", "f": 0}], "ok": false}, {"runs": [{"t": "in", "f": 0}], "ok": false}, {"runs": [{"t": "with", "f": 0}], "ok": true}], "g": 0}, {"k": "q", "no": 37, "qtype": "mc", "stem": [{"t": "This film is based ______ a true story.", "f": 0}], "opts": [{"runs": [{"t": "in", "f": 0}], "ok": false}, {"runs": [{"t": "on", "f": 0}], "ok": true}, {"runs": [{"t": "at", "f": 0}], "ok": false}, {"runs": [{"t": "with", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 38, "qtype": "mc", "stem": [{"t": "I broke my mother’s favourite vase ______ accident, so she wasn’t angry with me.", "f": 0}], "opts": [{"runs": [{"t": "on", "f": 0}], "ok": false}, {"runs": [{"t": "in", "f": 0}], "ok": false}, {"runs": [{"t": "by", "f": 0}], "ok": true}, {"runs": [{"t": "at", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 39, "qtype": "mc", "stem": [{"t": "The bus drivers have been ______ strike since Monday.", "f": 0}], "opts": [{"runs": [{"t": "on", "f": 0}], "ok": true}, {"runs": [{"t": "in", "f": 0}], "ok": false}, {"runs": [{"t": "at", "f": 0}], "ok": false}, {"runs": [{"t": "under", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 40, "qtype": "mc", "stem": [{"t": "My father is away ______ business this week.", "f": 0}], "opts": [{"runs": [{"t": "in", "f": 0}], "ok": false}, {"runs": [{"t": "at", "f": 0}], "ok": false}, {"runs": [{"t": "with", "f": 0}], "ok": false}, {"runs": [{"t": "on", "f": 0}], "ok": true}], "g": 0}, {"k": "h", "runs": [{"t": "PHẦN III. VẬN DỤNG (Questions 41–50)", "f": 2}]}, {"k": "q", "no": 41, "qtype": "mc", "stem": [{"t": "The company decided to cut costs ______ the economic downturn.", "f": 0}], "opts": [{"runs": [{"t": "in spite of", "f": 0}], "ok": false}, {"runs": [{"t": "instead of", "f": 0}], "ok": false}, {"runs": [{"t": "in view of", "f": 0}], "ok": true}, {"runs": [{"t": "on behalf of", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 42, "qtype": "mc", "stem": [{"t": "The chairman accepted the award ______ the whole team.", "f": 0}], "opts": [{"runs": [{"t": "in terms of", "f": 0}], "ok": false}, {"runs": [{"t": "on behalf of", "f": 0}], "ok": true}, {"runs": [{"t": "by means of", "f": 0}], "ok": false}, {"runs": [{"t": "in case of", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 43, "qtype": "mc", "stem": [{"t": "______ the efforts of the local government, the number of tourists remained low.", "f": 0}], "opts": [{"runs": [{"t": "Despite", "f": 0}], "ok": true}, {"runs": [{"t": "Thanks to", "f": 0}], "ok": false}, {"runs": [{"t": "Because of", "f": 0}], "ok": false}, {"runs": [{"t": "According to", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 44, "qtype": "mc", "stem": [{"t": "______ popular belief, goldfish can remember things for several months.", "f": 0}], "opts": [{"runs": [{"t": "Instead of", "f": 0}], "ok": false}, {"runs": [{"t": "In spite", "f": 0}], "ok": false}, {"runs": [{"t": "Regardless", "f": 0}], "ok": false}, {"runs": [{"t": "Contrary to", "f": 0}], "ok": true}], "g": 0}, {"k": "q", "no": 45, "qtype": "mc", "stem": [{"t": "Choose the sentence that has the closest meaning to: “The match was called off because of the storm.”", "f": 0}], "opts": [{"runs": [{"t": "The match was called off in spite of the storm.", "f": 0}], "ok": false}, {"runs": [{"t": "The match was called off owing to the storm.", "f": 0}], "ok": true}, {"runs": [{"t": "The match was called off instead of the storm.", "f": 0}], "ok": false}, {"runs": [{"t": "The match was called off regardless of the storm.", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 46, "qtype": "mc", "stem": [{"t": "The committee ______ I am a member has decided to hold the conference in Da Nang.", "f": 0}], "opts": [{"runs": [{"t": "of that", "f": 0}], "ok": false}, {"runs": [{"t": "which", "f": 0}], "ok": false}, {"runs": [{"t": "in which", "f": 0}], "ok": false}, {"runs": [{"t": "of which", "f": 0}], "ok": true}], "g": 0}, {"k": "q", "no": 47, "qtype": "mc", "stem": [{"t": "Scientists have long been concerned ______ the impact of plastic waste ______ marine life.", "f": 0}], "opts": [{"runs": [{"t": "about – on", "f": 0}], "ok": true}, {"runs": [{"t": "of – to", "f": 0}], "ok": false}, {"runs": [{"t": "with – at", "f": 0}], "ok": false}, {"runs": [{"t": "for – in", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 48, "qtype": "mc", "stem": [{"t": "The firefighters finally got the fire ______ control after six hours.", "f": 0}], "opts": [{"runs": [{"t": "over", "f": 0}], "ok": false}, {"runs": [{"t": "beyond", "f": 0}], "ok": false}, {"runs": [{"t": "under", "f": 0}], "ok": true}, {"runs": [{"t": "out of", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 49, "qtype": "mc", "stem": [{"t": "I’ll lend you the money ______ condition that you pay it back next month.", "f": 0}], "opts": [{"runs": [{"t": "at", "f": 0}], "ok": false}, {"runs": [{"t": "by", "f": 0}], "ok": false}, {"runs": [{"t": "for", "f": 0}], "ok": false}, {"runs": [{"t": "on", "f": 0}], "ok": true}], "g": 0}, {"k": "q", "no": 50, "qtype": "mc", "stem": [{"t": "The bridge was completed ______ time and ______ budget, which surprised everyone.", "f": 0}], "opts": [{"runs": [{"t": "on – within", "f": 0}], "ok": true}, {"runs": [{"t": "in – at", "f": 0}], "ok": false}, {"runs": [{"t": "by – on", "f": 0}], "ok": false}, {"runs": [{"t": "at – in", "f": 0}], "ok": false}], "g": 0}], "eq": [], "img": [], "time": 30, "scale": "english", "webhook": "https://script.google.com/macros/s/AKfycbzcRNqA4aDxJGmOf-pFlU8JXbuokG6GtogRQk3OubsCDrKKp1UTkvrJztYmyCv2keOO/exec", "openAt": 0, "closeAt": 0, "shufGrp": true, "shufQ": true, "shufOpt": true, "proctor": false, "maxViol": 3, "fileKey": "de1"}];
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+// Tương thích cả trình duyệt thật (GitHub Pages) và khung xem trước Canvas
+const _nativeAlert = typeof window.alert === 'function' ? window.alert.bind(window) : null;
+const _nativeConfirm = typeof window.confirm === 'function' ? window.confirm.bind(window) : null;
+const _inIframe = () => { try { return window.self !== window.top; } catch(e) { return true; } };
+function alert(msg) {
+    if (!_inIframe() && _nativeAlert) { try { _nativeAlert(msg); return; } catch(e) {} }
+    if (typeof showToast === 'function') showToast(String(msg), 6000);
+}
+function confirm(msg) {
+    if (!_inIframe() && _nativeConfirm) { try { return _nativeConfirm(msg); } catch(e) {} }
+    return true;
+}
 
 let base=[], cur=[], lib=[], exam=null;
 let studentData = { name: '', class: '', startTime: 0 };
@@ -380,62 +423,215 @@ const fmtCountdown = sec => {
     return (d ? d + ' ngày ' : '') + `${p2(h)}:${p2(m)}:${p2(s)}`;
 };
 
-const urlParams = new URLSearchParams(window.location.search);
-const studentExamId = urlParams.get('s');
+function normFileKey(v, fallbackIdx) {
+    const clean = String(v || '').trim().replace(/\.json$/i, '').replace(/[^A-Za-z0-9_-]/g, '');
+    return clean || ('de' + ((fallbackIdx != null ? fallbackIdx : 0) + 1));
+}
 
-if(studentExamId) {
-    initStudentFlow(studentExamId);
+function ensureFileKeys(arr) {
+    const used = new Set();
+    arr.forEach((x, idx) => {
+        let fk = normFileKey(x.fileKey, idx);
+        if (used.has(fk.toLowerCase())) {
+            let n = idx + 1;
+            while (used.has(('de' + n).toLowerCase())) n++;
+            fk = 'de' + n;
+        }
+        used.add(fk.toLowerCase());
+        x.fileKey = fk;
+    });
+}
+
+function copyTextSafe(text, okMsg) {
+    if (navigator.clipboard && navigator.clipboard.writeText && !_inIframe()) {
+        navigator.clipboard.writeText(text).then(() => alert(okMsg || ('Đã copy:\n' + text))).catch(() => fallbackCopy(text, okMsg));
+    } else {
+        fallbackCopy(text, okMsg);
+    }
+}
+function fallbackCopy(text, okMsg) {
+    try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.cssText = 'position:fixed;left:-9999px;top:0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        ta.remove();
+        alert(okMsg || ('Đã copy:\n' + text));
+    } catch(e) {
+        alert(okMsg || text);
+    }
+}
+
+const urlParams = new URLSearchParams(window.location.search);
+const studentDeParam = (urlParams.get('de') || urlParams.get('file') || '').trim();
+const studentExamId = (urlParams.get('s') || '').trim();
+
+if(studentDeParam || studentExamId) {
+    initStudentFlow(studentExamId, studentDeParam);
 } else {
     initTeacherFlow();
 }
 
 function initTeacherFlow() {
-    const ok = sessionStorage.getItem('auth') === '1';
+    let ok = false;
+    try { ok = sessionStorage.getItem('auth') === '1'; } catch(e) {}
     $('login').classList.toggle('hide', ok);
     $('app-teacher').classList.toggle('hide', !ok);
     
     $('lf').onsubmit = e => {
         e.preventDefault();
         if($('pw').value === PW) {
-            sessionStorage.setItem('auth', '1');
+            try { sessionStorage.setItem('auth', '1'); } catch(err) {}
             $('login').classList.add('hide');$('app-teacher').classList.remove('hide');
             loadLib();
         } else {
             $('err').textContent = 'Mật khẩu sai!';
         }
     };
-    $('out').onclick = () => { sessionStorage.removeItem('auth'); location.reload(); };
+    $('out').onclick = () => {
+        try { sessionStorage.removeItem('auth'); } catch(e) {}
+        $('app-teacher').classList.add('hide');
+        $('login').classList.remove('hide');
+        populateStudentHub();
+    };
+    $('btn-open-quick-de').onclick = () => {
+        const val = ($('quick-de-input').value || '').trim();
+        if(!val) { showToast('Vui lòng nhập mã file đề (ví dụ: de1, de2)'); return; }
+        openStudentExamByKey(val);
+    };
+    $('quick-de-input').addEventListener('keydown', e => {
+        if(e.key === 'Enter') { e.preventDefault(); $('btn-open-quick-de').click(); }
+    });
+    populateStudentHub();
     if(ok) loadLib();
+}
+
+window.openStudentExamByKey = (deKey, examId) => {
+    const cleanDe = String(deKey || '').trim().replace(/\.json$/i, '');
+    $('login').classList.add('hide');
+    $('app-teacher').classList.add('hide');
+    initStudentFlow(examId || '', cleanDe);
+};
+
+async function discoverAvailableExams() {
+    const found = [];
+    const seen = new Set();
+    const addExam = (x, sourceFile) => {
+        if(!x || !x.id || !Array.isArray(x.items)) return;
+        const fk = normFileKey(x.fileKey || sourceFile, found.length);
+        const key = (fk + '::' + x.id).toLowerCase();
+        if(seen.has(key)) return;
+        seen.add(key);
+        found.push(Object.assign({}, x, { fileKey: fk }));
+    };
+
+    // 1. Thử đọc từ exams.json và de1.json .. de10.json trên cùng repository
+    const candidateFiles = ['exams.json', 'de1.json', 'de2.json', 'de3.json', 'de4.json', 'de5.json', 'de6.json', 'de7.json', 'de8.json', 'de9.json', 'de10.json'];
+    await Promise.all(candidateFiles.map(async fname => {
+        try {
+            const res = await fetch(fname + '?t=' + Date.now(), { cache: 'no-store' });
+            if(!res.ok) return;
+            const data = await res.json();
+            const arr = Array.isArray(data) ? data : [data];
+            arr.forEach((item, idx) => {
+                const srcKey = fname === 'exams.json' ? (item.fileKey || ('de' + (idx + 1))) : fname.replace(/\.json$/i, '');
+                addExam(item, srcKey);
+            });
+        } catch(e) {}
+    }));
+
+    // 2. Đọc từ localStorage (nếu giáo viên vừa tạo trên máy này)
+    try {
+        const local = JSON.parse(localStorage.getItem(LK) || '[]');
+        if(Array.isArray(local)) local.forEach((x, idx) => addExam(x, x.fileKey || ('de' + (idx + 1))));
+    } catch(e) {}
+
+    // 3. Fallback đề mẫu nếu chưa có đề nào
+    if(!found.length && Array.isArray(DEFAULT_EXAMS)) {
+        DEFAULT_EXAMS.forEach((x, idx) => addExam(x, x.fileKey || ('de' + (idx + 1))));
+    }
+    return found;
+}
+
+async function populateStudentHub() {
+    const box = $('hub-exam-list');
+    if(!box) return;
+    box.innerHTML = '<div class="note" style="margin:0">⏳ Đang tìm danh sách đề thi...</div>';
+    const list = await discoverAvailableExams();
+    if(!list.length) {
+        box.innerHTML = '<div class="note" style="margin:0">Nhập mã đề (VD: <b>de1</b>, <b>de2</b>) ở ô trên rồi bấm <b>Mở đề</b>.</div>';
+        return;
+    }
+    box.innerHTML = list.map((x, i) => {
+        const fk = normFileKey(x.fileKey, i);
+        const qCount = (x.items || []).filter(k => k.k === 'q').length;
+        return `<div style="display:flex;justify-content:space-between;align-items:center;background:#fff;padding:8px 10px;border-radius:8px;border:1px solid var(--bd);gap:8px">
+            <div style="min-width:0;flex:1">
+                <div style="font-weight:700;font-size:14px;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(x.name)}</div>
+                <div style="font-size:12px;color:var(--mut)">Mã file: <b>${esc(fk)}.json</b> • ${qCount} câu • ${x.time ? x.time + ' phút' : 'Tự do'}</div>
+            </div>
+            <button class="btn gr" type="button" style="width:auto;padding:6px 12px;font-size:13px;flex:none" onclick="openStudentExamByKey('${esc(fk)}','${esc(x.id)}')">Vào thi</button>
+        </div>`;
+    }).join('');
 }
 
 function loadLib() {
     try { lib = JSON.parse(localStorage.getItem(LK) || '[]'); } catch(e) { lib = []; }
+    if(!Array.isArray(lib) || !lib.length) {
+        lib = JSON.parse(JSON.stringify(DEFAULT_EXAMS || []));
+        try { localStorage.setItem(LK, JSON.stringify(lib)); } catch(e) {}
+    }
+    ensureFileKeys(lib);
     showLib();
 }
 function saveLib() {
+    ensureFileKeys(lib);
     let ok = true;
     try { localStorage.setItem(LK, JSON.stringify(lib)); }
-    catch(e) { ok = false; alert('Lỗi bộ nhớ trình duyệt, vui lòng dọn dẹp hoặc xuất exams.json'); }
+    catch(e) { ok = false; alert('Lỗi bộ nhớ trình duyệt, vui lòng xuất file .json để sao lưu.'); }
     showLib();
     return ok;
 }
 
+function buildExamStudentLink(x, idx) {
+    const fk = normFileKey(x.fileKey, idx);
+    const baseUrl = window.location.origin + window.location.pathname;
+    return `${baseUrl}?de=${encodeURIComponent(fk)}`;
+}
+
+window.copyExamLink = (id) => {
+    const idx = lib.findIndex(y => y.id === id);
+    if(idx < 0) return;
+    const x = lib[idx];
+    const fk = normFileKey(x.fileKey, idx);
+    const link = buildExamStudentLink(x, idx);
+    copyTextSafe(link, `Đã copy link thi của "${x.name}":\n${link}\n\n📌 Lưu ý: Hãy xuất file "${fk}.json" (hoặc "exams.json") và tải lên GitHub.`);
+};
+
 function showLib() {
+    ensureFileKeys(lib);
     $('lt').textContent = `📚 Danh sách đề thi (${lib.length})`;
     $('libl').innerHTML = lib.length ? lib.map((x, i) => {
         const tScale = x.scale === 'math' ? 'Toán' : (x.scale === 'english' ? 'Tiếng Anh' : 'Môn chung');
+        const fk = normFileKey(x.fileKey, i);
         return `
         <div class="lr">
             <div class="lr-info"><span class="no">${i+1}</span>
-            <div><b>${esc(x.name)}</b><div class="note">${x.items.filter(k=>k.k==='q').length} câu • Cài đặt: ${x.time||0} phút - Thang điểm: ${tScale}${(x.openAt||x.closeAt) ? `<br>🕒 ${x.openAt ? 'Mở: ' + fmtDT(x.openAt) : 'Mở: ngay'} — ${x.closeAt ? 'Đóng: ' + fmtDT(x.closeAt) : 'không giới hạn'}` : ''}</div></div></div>
+            <div>
+                <b>${esc(x.name)}</b> <span class="tg">📄 ${esc(fk)}.json</span>
+                <div class="note">${x.items.filter(k=>k.k==='q').length} câu • Cài đặt: ${x.time||0} phút - Thang điểm: ${tScale} • Link thi: <code>?de=${esc(fk)}</code>${(x.openAt||x.closeAt) ? `<br>🕒 ${x.openAt ? 'Mở: ' + fmtDT(x.openAt) : 'Mở: ngay'} — ${x.closeAt ? 'Đóng: ' + fmtDT(x.closeAt) : 'không giới hạn'}` : ''}</div>
+            </div></div>
             <div class="lr-act">
                 <button class="btn sec" onclick="openExam('${x.id}')">Quản lý</button>
-                <button class="btn sec" title="Xuất file exams.json riêng cho đề này" onclick="exportExam('${x.id}')">⬆️ Xuất thư viện (exams.json)</button>
-                <button class="btn sec" title="Chọn file exams.json để ghi đè nội dung đề này" onclick="importIntoExam('${x.id}')">⬇️ Nhập thư viện (.json)</button>
+                <button class="btn sec" title="Xuất đề này ra file ${esc(fk)}.json để tải lên GitHub" onclick="exportExam('${x.id}')">⬆️ Xuất thư viện (exams.json) / ${esc(fk)}.json</button>
+                <button class="btn gr" title="Copy link thi ?de=${esc(fk)}" onclick="copyExamLink('${x.id}')">🔗 Link (${esc(fk)})</button>
+                <button class="btn sec" title="Chọn file .json để ghi đè nội dung đề này" onclick="importIntoExam('${x.id}')">⬇️ Nhập thư viện (.json)</button>
                 <button class="btn sec" style="color:var(--bad);border-color:var(--bad)" onclick="delExam('${x.id}')">Xóa</button>
             </div>
         </div>`;
-    }).join('') : '<p class="note">Chưa có đề nào. Hãy tải file Word lên.</p>';
+    }).join('') : '<p class="note">Chưa có đề nào. Hãy tải file Word (.docx) hoặc Nhập thêm đề (.json) lên.</p>';
 }
 
 window.delExam = (id) => {
@@ -446,14 +642,20 @@ window.delExam = (id) => {
 };
 
 window.openExam = (id) => {
-    exam = lib.find(x => x.id === id);
-    if(!exam) return;
+    const idx = lib.findIndex(x => x.id === id);
+    if(idx < 0) return;
+    exam = lib[idx];
     $('reqbox').classList.remove('hide');$('cur-exam-name').textContent = exam.name;
     
+    const fk = normFileKey(exam.fileKey, idx);
+    exam.fileKey = fk;
+    $('exam-file-key').value = fk;
+    $('btn-export-cur').textContent = `⬆️ Xuất ${fk}.json`;
     $('time-limit').value = exam.time || 0;
     $('open-at').value = toLocalInput(exam.openAt);
     $('close-at').value = toLocalInput(exam.closeAt);
     $('exam-scale').value = exam.scale || 'english';
+    $('exam-webhook').value = exam.webhook || '';
     $('chk-shuf-grp').checked = !!exam.shufGrp; 
     $('chk-shuf-q').checked = exam.shufQ !== false; 
     $('chk-shuf-opt').checked = exam.shufOpt !== false;
@@ -463,21 +665,45 @@ window.openExam = (id) => {
     renderTeacherPreview();
 };
 
+$('exam-file-key').addEventListener('input', () => {
+    const fk = normFileKey($('exam-file-key').value, exam ? lib.indexOf(exam) : 0);
+    $('btn-export-cur').textContent = `⬆️ Xuất ${fk}.json`;
+});
+
+$('btn-export-cur').onclick = () => {
+    if(!exam) return;
+    exam.fileKey = normFileKey($('exam-file-key').value, lib.indexOf(exam));
+    saveLib();
+    exportExam(exam.id);
+};
+
+$('btn-export-all').onclick = () => {
+    if(!lib.length) return alert('Chưa có đề thi nào để xuất!');
+    ensureFileKeys(lib);
+    downloadJSON(lib, 'exams.json');
+    showToast(`Đã xuất tất cả ${lib.length} đề vào file exams.json!`);
+};
+
 $('btn-save-settings').onclick = () => {
     if(exam) {
         const oa = fromLocalInput($('open-at').value), ca = fromLocalInput($('close-at').value);
         if(oa && ca && ca <= oa) return alert('Giờ đóng đề phải sau giờ mở đề. Vui lòng kiểm tra lại.');
         if(ca && ca <= Date.now() && !confirm('Giờ đóng đề đã qua, học sinh sẽ không vào làm được. Vẫn lưu?')) return;
+        const idx = lib.indexOf(exam);
+        exam.fileKey = normFileKey($('exam-file-key').value, idx >= 0 ? idx : 0);
+        $('exam-file-key').value = exam.fileKey;
+        $('btn-export-cur').textContent = `⬆️ Xuất ${exam.fileKey}.json`;
         exam.openAt = oa;
         exam.closeAt = ca;
         exam.time = parseInt($('time-limit').value) || 0;
         exam.scale = $('exam-scale').value;
+        exam.webhook = $('exam-webhook').value.trim();
         exam.shufGrp = $('chk-shuf-grp').checked;
         exam.shufQ = $('chk-shuf-q').checked;
         exam.shufOpt = $('chk-shuf-opt').checked;
         exam.proctor = $('chk-proctor').checked; exam.maxViol = Math.max(0, parseInt($('max-viol').value) || 0);
         saveLib();
-        alert('Đã lưu cài đặt! Nhớ xuất lại file exams.json của đề này để cập nhật lên Github.');
+        alert(`Đã lưu cài đặt! Nhớ bấm "Xuất ${exam.fileKey}.json" (hoặc "Xuất tất cả exams.json") và tải lên GitHub.`);
     }
 };
 
@@ -485,11 +711,13 @@ $('btn-clear-sch').onclick = () => { $('open-at').value = ''; $('close-at').valu
 
 $('btn-copy-link').onclick = () => {
     if(!exam) return;
-    const link = window.location.origin + window.location.pathname + '?s=' + exam.id;
-    navigator.clipboard.writeText(link).then(() => alert('Đã copy link gửi cho học sinh:\n' + link));
+    const idx = lib.indexOf(exam);
+    exam.fileKey = normFileKey($('exam-file-key').value || exam.fileKey, idx >= 0 ? idx : 0);
+    saveLib();
+    window.copyExamLink(exam.id);
 };
 
-// ===== Xuất / nhập đề thi riêng rẽ dạng exams.json =====
+// ===== Xuất / nhập đề thi riêng rẽ dạng de1.json, de2.json hoặc gộp exams.json =====
 const SAFE_ID = /^[A-Za-z0-9_-]{1,64}$/;
 const slug = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/gi, 'd').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
 
@@ -501,21 +729,25 @@ function downloadJSON(obj, filename) {
     setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
 
-// Xuất riêng biệt cấu trúc cho TỪNG đề vào file exams.json 
-// (Bọc dưới dạng array 1 phần tử để ứng dụng HS luôn tự parse độc lập)
+// Xuất riêng biệt từng đề ra file <fileKey>.json (mặc định de1.json, de2.json...)
 window.exportExam = id => {
-    const x = lib.find(y => y.id === id);
-    if(!x) return;
-    downloadJSON([x], 'exams.json');
+    const idx = lib.findIndex(y => y.id === id);
+    if(idx < 0) return;
+    const x = lib[idx];
+    const fk = normFileKey(x.fileKey, idx);
+    x.fileKey = fk;
+    downloadJSON([x], fk + '.json');
+    showToast(`Đã tải xuống file ${fk}.json! Hãy tải file này lên GitHub.`);
 };
 
 // Kiểm tra và chuẩn hóa 1 đề đọc từ file; trả về null nếu không hợp lệ
-function normExam(x, fallbackId) {
+function normExam(x, fallbackId, fallbackFileKey) {
     if(!x || typeof x !== 'object' || Array.isArray(x)) return null;
     if(typeof x.name !== 'string' || !x.name.trim() || !Array.isArray(x.items)) return null;
     if(!x.items.every(k => k && typeof k === 'object') || !x.items.some(k => k.k === 'q')) return null;
     return {
         id: SAFE_ID.test(String(x.id || '')) ? String(x.id) : fallbackId,
+        fileKey: normFileKey(x.fileKey || fallbackFileKey, lib.length),
         name: x.name.trim(),
         at: x.at || Date.now(),
         items: x.items,
@@ -523,20 +755,24 @@ function normExam(x, fallbackId) {
         img: Array.isArray(x.img) ? x.img : [],
         time: parseInt(x.time) || 0,
         scale: (x.scale === 'math' || x.scale === 'english' || x.scale === 'other') ? x.scale : 'english',
+        webhook: x.webhook || '',
         openAt: +x.openAt || 0,
         closeAt: +x.closeAt || 0,
         shufGrp: !!x.shufGrp, shufQ: x.shufQ !== false, shufOpt: x.shufOpt !== false, proctor: !!x.proctor, maxViol: x.maxViol == null ? 3 : Math.max(0, parseInt(x.maxViol) || 0)
     };
 }
 
-// Đọc file .json (nhận diện array hoặc object)
+// Đọc file .json (nhận diện array hoặc object, tự lấy tên file làm fileKey nếu là de1.json, de2.json...)
 async function readExamFile(f) {
     let data;
     try { data = JSON.parse(await f.text()); }
     catch(e) { throw new Error('"' + f.name + '" không phải file JSON hợp lệ.'); }
+    const baseName = f.name.replace(/\.json$/i, '');
+    const defaultFk = /^exams$/i.test(baseName) ? '' : baseName;
     const out = []; let bad = 0;
-    (Array.isArray(data) ? data : [data]).forEach(x => {
-        const n = normExam(x, 'e' + Date.now() + Math.random().toString(36).slice(2, 7));
+    (Array.isArray(data) ? data : [data]).forEach((x, idx) => {
+        const fk = x && x.fileKey ? x.fileKey : (defaultFk || ('de' + (lib.length + idx + 1)));
+        const n = normExam(x, 'e' + Date.now() + Math.random().toString(36).slice(2, 7), fk);
         if(n) out.push(n); else bad++;
     });
     return {out, bad};
@@ -549,6 +785,37 @@ function refreshOpenExam() {
     if(still) openExam(still.id);
     else { exam = null; $('reqbox').classList.add('hide'); $('list-teacher').innerHTML = ''; }
 }
+
+// Nhập thêm 1 hoặc nhiều file .json (de1.json, de2.json, exams.json) vào thư viện
+$('li-multi').onchange = async e => {
+    const files = [...(e.target.files || [])];
+    e.target.value = '';
+    if(!files.length) return;
+    let added = 0, updated = 0;
+    for(const f of files) {
+        try {
+            const {out} = await readExamFile(f);
+            out.forEach(n => {
+                const existIdx = lib.findIndex(y => y.id === n.id || (y.fileKey && y.fileKey.toLowerCase() === n.fileKey.toLowerCase()));
+                if(existIdx >= 0) {
+                    lib[existIdx] = n;
+                    updated++;
+                } else {
+                    lib.push(n);
+                    added++;
+                }
+            });
+        } catch(err) {
+            alert('Lỗi đọc file ' + f.name + ': ' + err.message);
+        }
+    }
+    if(added || updated) {
+        saveLib();
+        if(exam) refreshOpenExam();
+        else if(lib.length) openExam(lib[lib.length - 1].id);
+        alert(`Đã nhập thành công: thêm mới ${added} đề, cập nhật ${updated} đề!`);
+    }
+};
 
 // Nhập .json ĐỘC LẬP cho TỪNG đề: ghi đè nội dung của đề đã chọn, giữ nguyên mã đề (link thi không đổi)
 let importTargetId = null;
@@ -567,10 +834,11 @@ $('li-one').onchange = async e => {
         const qn = n.items.filter(k => k.k === 'q').length;
         if(!confirm('Xác nhận cập nhật nội dung đề "' + lib[i].name + '" bằng file "' + f.name + '" (gồm ' + qn + ' câu)?\n\nMã đề (ID) và Link thi của đề này sẽ được giữ nguyên.')) return;
         n.id = lib[i].id;
+        n.fileKey = lib[i].fileKey || normFileKey(f.name, i);
         lib[i] = n;
         if(saveLib()) {
             refreshOpenExam();
-            alert('Đã cập nhật dữ liệu đề thi thành công! Nhớ xuất lại file exams.json và tải lên Github để học sinh thấy bản mới nhất.');
+            alert(`Đã cập nhật dữ liệu đề thi thành công! Nhớ xuất lại file ${n.fileKey}.json và tải lên Github.`);
         }
     } catch(err) { alert('Lỗi: ' + err.message); }
 };
@@ -796,13 +1064,14 @@ $('file').onchange = async e => {
     if(!qs.length){alert('Không nhận diện được câu hỏi nào.'); $('loading').classList.add('hide'); return}
     await Promise.all(IM.map(prep));
     
+    const nextIdx = lib.length;
     const ex={
-        id:'e'+Date.now(), name:f.name.replace(/\.docx$/i,''), at:Date.now(), 
-        items, eq, img:IM, time:0, scale:'english', openAt:0, closeAt:0,
+        id:'e'+Date.now(), fileKey:'de'+(nextIdx+1), name:f.name.replace(/\.docx$/i,''), at:Date.now(), 
+        items, eq, img:IM, time:0, scale:'english', webhook:'', openAt:0, closeAt:0,
         shufGrp: false, shufQ: true, shufOpt: true
     };
     const old=lib.find(y=>y.name===ex.name);
-    if(old){ ex.id=old.id; ex.time=old.time||0; ex.openAt=old.openAt||0; ex.closeAt=old.closeAt||0; ex.scale=old.scale||'english'; ex.shufGrp=!!old.shufGrp; ex.shufQ=old.shufQ!==false; ex.shufOpt=old.shufOpt!==false; ex.proctor=!!old.proctor; ex.maxViol=old.maxViol; }
+    if(old){ ex.id=old.id; ex.fileKey=old.fileKey||ex.fileKey; ex.time=old.time||0; ex.openAt=old.openAt||0; ex.closeAt=old.closeAt||0; ex.scale=old.scale||'english'; ex.webhook=old.webhook||''; ex.shufGrp=!!old.shufGrp; ex.shufQ=old.shufQ!==false; ex.shufOpt=old.shufOpt!==false; ex.proctor=!!old.proctor; ex.maxViol=old.maxViol; }
     lib=lib.filter(y=>y.name!==ex.name); lib.push(ex); saveLib();
     openExam(ex.id);
     
@@ -964,37 +1233,133 @@ function shuffleExamItems(items, examConf) {
     return blocks.flatMap(b => b.out);
 }
 
-async function initStudentFlow(id) {
-    $('student-login').classList.remove('hide');
-    
+async function fetchExamJsonFile(filename) {
     try {
         const t0 = Date.now();
-        const res = await fetch('exams.json?t=' + t0, { cache: 'no-store' });
+        const res = await fetch(filename + '?t=' + t0, { cache: 'no-store' });
         const t1 = Date.now();
-        if (!res.ok) throw new Error('Không tìm thấy file exams.json');
+        if (!res.ok) return null;
         const sd = Date.parse(res.headers.get('Date') || '');
         if (isFinite(sd)) serverOffset = sd - (t0 + t1) / 2;
         const data = await res.json();
-        // data được export là array có 1 phần tử hoặc thư viện cũ nhiều phần tử
-        exam = Array.isArray(data) ? data.find(x => x.id === id) : null;
-    } catch(e) {}
+        return Array.isArray(data) ? data : (data && typeof data === 'object' ? [data] : null);
+    } catch(e) {
+        return null;
+    }
+}
 
-    if(!exam) {
+function matchExamInList(list, id, deKey) {
+    if (!Array.isArray(list) || !list.length) return null;
+    const cleanDe = String(deKey || '').trim().replace(/\.json$/i, '').toLowerCase();
+    const cleanId = String(id || '').trim().replace(/\.json$/i, '');
+    if (cleanId) {
+        const byId = list.find(x => x && (String(x.id) === cleanId || String(x.fileKey || '').toLowerCase() === cleanId.toLowerCase()));
+        if (byId) return byId;
+    }
+    if (cleanDe) {
+        const byDe = list.find(x => x && (String(x.fileKey || '').toLowerCase() === cleanDe || String(x.id).toLowerCase() === cleanDe));
+        if (byDe) return byDe;
+    }
+    // Nếu mở trực tiếp file lẻ (VD: de1.json) mà trong file chỉ có 1 đề thì lấy luôn đề đó
+    if (list.length === 1 && list[0] && Array.isArray(list[0].items)) {
+        return list[0];
+    }
+    return null;
+}
+
+async function initStudentFlow(id, deParam) {
+    exam = null;
+    $('student-login').classList.remove('hide');
+    $('s-exam-name').textContent = 'Đang tải đề thi...';
+    $('s-exam-name').style.color = '';
+    $('s-name').style.display = '';
+    $('s-class').style.display = '';
+    $('btn-start-exam').style.display = '';
+    const oldWarn = $('sf').querySelector('.err-not-found');
+    if (oldWarn) oldWarn.remove();
+
+    $('btn-back-hub').onclick = () => {
+        if (gateTimer) { clearInterval(gateTimer); gateTimer = null; }
+        $('student-login').classList.add('hide');
+        try {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('s');
+            url.searchParams.delete('de');
+            url.searchParams.delete('file');
+            window.history.replaceState({}, '', url.pathname);
+        } catch(e) {}
+        initTeacherFlow();
+    };
+
+    const rawDe = String(deParam || '').trim();
+    const rawId = String(id || '').trim();
+
+    // 1. Nếu có tham số ?de=de1 (hoặc ?de=de1.json) hoặc ?s=de1 -> tải trực tiếp file <de>.json trước
+    const directFiles = [];
+    if (rawDe) {
+        const fn = rawDe.toLowerCase().endsWith('.json') ? rawDe : (rawDe + '.json');
+        directFiles.push(fn);
+    }
+    if (rawId && (!/^e\d{10,}$/.test(rawId) || rawId.toLowerCase().endsWith('.json'))) {
+        const fn2 = rawId.toLowerCase().endsWith('.json') ? rawId : (rawId + '.json');
+        if (!directFiles.includes(fn2)) directFiles.push(fn2);
+    }
+
+    for (const fn of directFiles) {
+        const list = await fetchExamJsonFile(fn);
+        if (list && list.length) {
+            exam = matchExamInList(list, rawId, rawDe) || list[0];
+            if (exam) {
+                exam.fileKey = normFileKey(exam.fileKey || fn.replace(/\.json$/i, ''), 0);
+                break;
+            }
+        }
+    }
+
+    // 2. Nếu chưa thấy, tìm trong exams.json
+    if (!exam) {
+        const list = await fetchExamJsonFile('exams.json');
+        if (list && list.length) {
+            exam = matchExamInList(list, rawId, rawDe);
+        }
+    }
+
+    // 3. Nếu vẫn chưa thấy (VD học sinh dùng link cũ ?s=e179... mà giáo viên lưu ở de1.json, de2.json...), quét de1.json -> de10.json
+    if (!exam && rawId) {
+        for (let k = 1; k <= 10; k++) {
+            const fn = 'de' + k + '.json';
+            if (directFiles.includes(fn)) continue;
+            const list = await fetchExamJsonFile(fn);
+            const found = matchExamInList(list, rawId, rawDe);
+            if (found && (String(found.id) === rawId || String(found.fileKey || '').toLowerCase() === rawId.toLowerCase())) {
+                exam = found;
+                exam.fileKey = normFileKey(exam.fileKey || ('de' + k), k - 1);
+                break;
+            }
+        }
+    }
+
+    // 4. Tìm trong localStorage hoặc đề mẫu tích hợp sẵn
+    if (!exam) {
         let local = [];
         try { local = JSON.parse(localStorage.getItem(LK) || '[]'); } catch(e) {}
-        exam = Array.isArray(local) ? local.find(x => x.id === id) : null;
+        if (!Array.isArray(local) || !local.length) local = DEFAULT_EXAMS || [];
+        ensureFileKeys(local);
+        exam = matchExamInList(local, rawId, rawDe);
     }
 
     if(!exam) {
-        $('s-exam-name').textContent = 'LỖI: Không tìm thấy đề thi!';
+        const targetLabel = rawDe ? (rawDe.replace(/\.json$/i, '') + '.json') : (rawId || 'exams.json');
+        $('s-exam-name').textContent = 'LỖI: Không tìm thấy đề thi (' + targetLabel + ')!';
         $('s-exam-name').style.color = 'var(--bad)';$('s-name').style.display = 'none';
         $('s-class').style.display = 'none';$('btn-start-exam').style.display = 'none';
         
         let warn = document.createElement('p');
+        warn.className = 'err-not-found';
         warn.style.color = 'var(--bad)';
         warn.style.fontWeight = 'bold';
-        warn.textContent = 'Hệ thống không tìm thấy mã đề. Vui lòng báo Giáo viên tải file exams.json lên Github!';
-        $('sf').appendChild(warn);
+        warn.textContent = 'Không tìm thấy file "' + targetLabel + '" trên GitHub. Vui lòng báo Giáo viên tải file "' + targetLabel + '" lên Repository hoặc bấm "Đổi đề thi khác" bên dưới!';
+        $('sf').insertBefore(warn, $('btn-back-hub'));
         return;
     }
 
@@ -1391,8 +1756,9 @@ async function processSubmission() {
     };
 
     try {
-        if (WEBHOOK_URL !== 'YOUR_GOOGLE_SCRIPT_WEBAPP_URL_HERE') {
-            await fetch(WEBHOOK_URL, {
+        const targetWebhook = exam.webhook ? exam.webhook : WEBHOOK_URL;
+        if (targetWebhook !== 'YOUR_GOOGLE_SCRIPT_WEBAPP_URL_HERE') {
+            await fetch(targetWebhook, {
                 method: 'POST',
                 mode: 'no-cors',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -1649,7 +2015,7 @@ function shWmSvg() {
   const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '"><text x="' + w / 2 + '" y="' + h / 2 +
     '" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#475569" fill-opacity=".2" transform="rotate(-24 ' +
     w / 2 + ' ' + h / 2 + ')">' + x(txt) + '</text></svg>';
-  return 'url("data:image/svg+xml,' + encodeURIComponent(svg) + '")';
+  return 'url("data:image/svg+xml," + encodeURIComponent(svg) + "")';
 }
 
 function shWmMake() {
