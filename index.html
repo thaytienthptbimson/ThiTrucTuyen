@@ -154,6 +154,18 @@ img.im{max-width:100%;height:auto;border-radius:6px;margin:8px 0}
 .score-big{font-size:44px;font-weight:700;line-height:1.1;text-align:center;color:var(--pri);font-variant-numeric:tabular-nums}
 .score-big small{font-size:18px;font-weight:600;color:var(--mut)}
 .score-list{margin-top:14px;font-size:14px;line-height:1.8}
+.res-stats{display:flex;flex-wrap:wrap;gap:6px 26px;margin-top:16px;font-size:14.5px}
+.res-h{margin:22px 0 0;font-size:15px}
+.res-wrap{overflow:auto;margin-top:10px}
+.res-wrap.rank{max-height:520px;border:1px solid var(--bd);border-radius:var(--r)}
+.res-t{width:100%;border-collapse:collapse;font-size:14.5px}
+.res-t th,.res-t td{padding:9px 12px;border-bottom:1px solid var(--bd);text-align:left;white-space:nowrap}
+.res-t th{position:sticky;top:0;background:var(--bg);color:var(--mut);font-size:13px;font-weight:600}
+.res-t .num{text-align:right;font-variant-numeric:tabular-nums}
+.res-t tfoot td{font-weight:700;border-bottom:0}
+.res-bar{display:block;height:8px;min-width:110px;border-radius:4px;background:var(--bg)}
+.res-bar i{display:block;height:100%;border-radius:4px}
+.res-code{background:#0f1c26;color:#d6e6ee;padding:12px 14px;border-radius:var(--r);font:12.5px/1.55 ui-monospace,Consolas,monospace;overflow:auto;max-height:280px;margin:10px 0;white-space:pre}
 .copyright{margin:18px 0 0;padding:0 12px 14px;font-size:12px;color:var(--mut);text-align:center}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);max-width:min(92vw,460px);background:var(--tx);color:#fff;padding:10px 16px;border-radius:var(--r);font-size:14px;line-height:1.5;z-index:100;box-shadow:0 6px 24px rgba(0,0,0,.3);text-align:center}
 header,.student-hdr{padding-left:max(24px,env(safe-area-inset-left));padding-right:max(24px,env(safe-area-inset-right))}
@@ -298,6 +310,28 @@ body.shot-hide #list-student,body.shot-hide #q-panel{visibility:hidden}
         <button class="btn gr" id="btn-copy-link">Sao chép liên kết</button>
       </div>
     </section>
+    <section id="resbox" class="card hide">
+      <h2 class="card-t">Kết quả thi: <span id="res-name" style="color:var(--pri)"></span></h2>
+      <div class="bar">
+        <button class="btn" type="button" id="btn-load-res">Tải kết quả</button>
+        <label class="btn sec" for="res-csv">Nhập bảng điểm (.csv)</label>
+        <input type="file" id="res-csv" accept=".csv,text/csv" hidden>
+      </div>
+      <div id="res-msg" class="sch-state hide" style="margin:14px 0 0"></div>
+      <div id="res-out"></div>
+      <details class="sect" id="res-help">
+        <summary>Bật tải tự động từ Google Sheet (làm một lần)</summary>
+        <ol class="steps">
+          <li>Mở Google Sheet nhận điểm, chọn <b>Tiện ích mở rộng → Apps Script</b>.</li>
+          <li>Dán đoạn mã bên dưới vào cuối file, giữ nguyên hàm <code>doPost</code> đang dùng.</li>
+          <li>Bấm <b>Triển khai → Quản lý bản triển khai</b>, chọn biểu tượng bút chì, mục Phiên bản chọn <b>Phiên bản mới</b>, rồi <b>Triển khai</b>. Liên kết cũ vẫn dùng được, không phải sửa lại trong đề.</li>
+          <li>Quay lại đây bấm <b>Tải kết quả</b>.</li>
+        </ol>
+        <pre id="gs-code" class="res-code"></pre>
+        <button class="btn sec" type="button" id="btn-copy-gs">Sao chép đoạn mã</button>
+        <p class="note">Đoạn mã đã kèm sẵn một mã truy cập ngẫu nhiên để người khác không đọc được điểm qua liên kết này. Mã chỉ lưu trên máy này; dùng máy khác thì sao chép lại đoạn mã từ máy đó.</p>
+      </details>
+    </section>
     <div id="list-teacher"></div>
     <div class="copyright">Bản quyền thuộc về số ĐT: 0943.930.787</div>
   </main>
@@ -355,7 +389,7 @@ function triggerMathJax(tries) {
     }
 }
 
-const PW = 'tienhuong@28011981';
+const PW = '28011981';
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -575,6 +609,7 @@ function showLib() {
             </div></div>
             <div class="lr-act">
                 <button class="btn sec" onclick="openExam('${x.id}')">Quản lý</button>
+                <button class="btn sec" title="Xem kết quả đã xếp hạng và thống kê theo khoảng điểm" onclick="openResults('${x.id}')">Kết quả</button>
                 <button class="btn sec" title="Xuất đề này ra file ${esc(fk)}.json để tải lên GitHub" onclick="exportExam('${x.id}')">Xuất ${esc(fk)}.json</button>
                 <button class="btn gr" title="Copy link thi ?de=${esc(fk)}" onclick="copyExamLink('${x.id}')">Sao chép liên kết</button>
                 <button class="btn sec" title="Chọn file .json để ghi đè nội dung đề này" onclick="importIntoExam('${x.id}')">Nhập .json</button>
@@ -587,7 +622,7 @@ function showLib() {
 window.delExam = (id) => {
     if(confirm('Xóa đề thi này?')) { 
         if(exam && exam.id === id) exam = null; lib = lib.filter(x => x.id !== id); saveLib(); 
-        $('reqbox').classList.add('hide');$('list-teacher').innerHTML=''; 
+        $('reqbox').classList.add('hide'); $('resbox').classList.add('hide'); clearTimeout(resTimer);$('list-teacher').innerHTML=''; 
     }
 };
 
@@ -616,6 +651,7 @@ window.openExam = (id) => {
 
     cur = JSON.parse(JSON.stringify(exam.items)); 
     renderTeacherPreview();
+    prepResults();
 };
 
 $('exam-file-key').addEventListener('input', () => {
@@ -661,6 +697,7 @@ $('btn-save-settings').onclick = () => {
         pwRemove = false;
         $('exam-pw').value = exam.pwPlain || '';
         updatePwNote();
+        scheduleAutoResults(); resIdleMsg();
         saveLib();
         alert(`Đã lưu cài đặt! Nhớ bấm "Xuất ${exam.fileKey}.json" (hoặc "Xuất tất cả exams.json") và tải lên GitHub.`);
     }
@@ -808,7 +845,7 @@ function refreshOpenExam() {
     if(!exam) return;
     const still = lib.find(y => y.id === exam.id);
     if(still) openExam(still.id);
-    else { exam = null; $('reqbox').classList.add('hide'); $('list-teacher').innerHTML = ''; }
+    else { exam = null; $('reqbox').classList.add('hide'); $('resbox').classList.add('hide'); clearTimeout(resTimer); $('list-teacher').innerHTML = ''; }
 }
 
 // Nhập thêm 1 hoặc nhiều file .json (de1.json, de2.json, exams.json) vào thư viện
@@ -866,6 +903,220 @@ $('li-one').onchange = async e => {
             alert(`Đã cập nhật dữ liệu đề thi thành công! Nhớ xuất lại file ${n.fileKey}.json và tải lên Github.`);
         }
     } catch(err) { alert('Lỗi: ' + err.message); }
+};
+
+// ===== Kết quả thi: tự xếp hạng cao → thấp và thống kê theo khoảng điểm =====
+const BANDS = [
+    { lb: 'Dưới 5', col: 'var(--bad)', hit: v => v < 5 },
+    { lb: 'Từ 5 đến dưới 8', col: '#b7791f', hit: v => v >= 5 && v < 8 },
+    { lb: 'Từ 8 đến dưới 10', col: 'var(--pri)', hit: v => v >= 8 && v < 10 },
+    { lb: '10 điểm', col: 'var(--ok)', hit: v => v >= 10 }
+];
+const nrm = v => String(v == null ? '' : v).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/gi, 'd').toLowerCase().trim();
+const parseScore = v => {
+    if (typeof v === 'number') return isFinite(v) ? Math.round(v * 100) / 100 : NaN;
+    const m = String(v == null ? '' : v).match(/-?\d+(?:[.,]\d+)?/);
+    return m ? Math.round(parseFloat(m[0].replace(',', '.')) * 100) / 100 : NaN;
+};
+
+// Nhận diện cột theo tiêu đề (không phân biệt hoa/thường, có hoặc không dấu) trong 5 dòng đầu của bảng
+function tableToRows(values) {
+    if (!Array.isArray(values)) return null;
+    for (let hi = 0; hi < Math.min(5, values.length); hi++) {
+        if (!Array.isArray(values[hi])) continue;
+        const h = values[hi].map(nrm);
+        const pick = (...res) => { for (const re of res) { const i = h.findIndex(x => re.test(x)); if (i >= 0) return i; } return -1; };
+        const c = {
+            name: pick(/ho va ten|ho ten|hoc sinh|student ?name/, /^(ten|name)$/),
+            cls: pick(/^lop|class/),
+            score: pick(/^(diem|diem so|tong diem|score|scorestr)$/, /^(?!.*thoi diem).*(^|\s)(diem|score\w*)(\s|$)/),
+            id: pick(/ma de|exam ?id/),
+            en: pick(/ten de|exam ?name|ten bai/)
+        };
+        if (c.name < 0 || c.score < 0) continue;
+        const cell = (r, i) => i >= 0 && r[i] != null ? String(r[i]).trim() : '';
+        const rows = [];
+        values.slice(hi + 1).forEach(r => {
+            if (!Array.isArray(r)) return;
+            const score = parseScore(r[c.score]);
+            if (!isFinite(score)) return;
+            rows.push({ name: cell(r, c.name) || '(không tên)', cls: cell(r, c.cls), score, id: cell(r, c.id), en: cell(r, c.en) });
+        });
+        return { rows, hasExam: c.id >= 0 || c.en >= 0 };
+    }
+    return null;
+}
+
+function parseCSV(txt) {
+    txt = txt.replace(/^\uFEFF/, '');
+    const first = txt.split(/\r?\n/, 1)[0];
+    const dl = [',', ';', '\t'].map(c => [c, first.split(c).length]).sort((a, b) => b[1] - a[1])[0][0];
+    const rows = []; let row = [], cell = '', q = false;
+    for (let i = 0; i < txt.length; i++) {
+        const c = txt[i];
+        if (q) { if (c === '"') { if (txt[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += c; }
+        else if (c === '"') q = true;
+        else if (c === dl) { row.push(cell); cell = ''; }
+        else if (c === '\n' || c === '\r') { if (c === '\r' && txt[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; }
+        else cell += c;
+    }
+    if (cell !== '' || row.length) { row.push(cell); rows.push(row); }
+    return rows;
+}
+
+let resRows = [], resBusy = null, resTimer = null;
+const RK = 'res_key_v1';
+function getResKey() {
+    let k = ''; try { k = localStorage.getItem(RK) || ''; } catch(e) {}
+    if (!/^[A-Za-z0-9_-]{8,}$/.test(k)) { k = randHex(10); try { localStorage.setItem(RK, k); } catch(e) {} }
+    return k;
+}
+const GS_TPL = [
+    '// Thêm vào Apps Script của Google Sheet nhận điểm (giữ nguyên hàm doPost hiện có).',
+    '// Nếu script đã có hàm doGet thì thay bằng hàm này.',
+    '// Nếu script không gắn trong Sheet: thay getActiveSpreadsheet() bằng openById("ID_SHEET").',
+    "const RESULT_KEY = '__KEY__';",
+    '',
+    'function doGet(e) {',
+    '  var ok = !!(e && e.parameter && e.parameter.key === RESULT_KEY);',
+    '  var out = { ok: ok };',
+    '  if (ok) {',
+    '    out.sheets = {};',
+    '    SpreadsheetApp.getActiveSpreadsheet().getSheets().forEach(function (s) {',
+    '      out.sheets[s.getName()] = s.getDataRange().getDisplayValues();',
+    '    });',
+    '  }',
+    '  return ContentService.createTextOutput(JSON.stringify(out))',
+    '    .setMimeType(ContentService.MimeType.JSON);',
+    '}'
+].join('\n');
+$('gs-code').textContent = GS_TPL.replace('__KEY__', getResKey());
+$('btn-copy-gs').onclick = () => copyTextSafe($('gs-code').textContent, 'Đã sao chép đoạn mã Apps Script.');
+
+function setResMsg(kind, text) {
+    const b = $('res-msg');
+    b.className = 'sch-state' + ({ ok: ' open', bad: ' closed', warn: ' wait' }[kind] || '');
+    b.textContent = text || '';
+    b.classList.toggle('hide', !text);
+}
+
+function renderResults(skipped) {
+    const rows = resRows, out = $('res-out');
+    if (!rows.length) {
+        out.innerHTML = '';
+        return setResMsg('warn', 'Chưa có bài nộp nào của đề này' + (skipped ? ` (đã bỏ qua ${skipped} dòng của đề khác)` : '') + '.');
+    }
+    const sorted = rows.slice().sort((a, b) => b.score - a.score || a.name.localeCompare(b.name, 'vi'));
+    const n = sorted.length, total = sorted.reduce((t, r) => t + r.score, 0);
+    const cnt = BANDS.map(b => sorted.filter(r => b.hit(r.score)).length);
+    const pct = c => (Math.round(c / n * 1000) / 10) + '%';
+    const f = v => String(Math.round(v * 100) / 100);
+    let rk = 0, prev = null;
+    const rank = sorted.map((r, i) => {
+        if (r.score !== prev) { rk = i + 1; prev = r.score; }
+        return `<tr><td class="num">${rk}</td><td>${esc(r.name)}</td><td>${esc(r.cls)}</td><td class="num"><b>${f(r.score)}</b></td></tr>`;
+    }).join('');
+    const bands = BANDS.map((b, i) => `<tr><td>${b.lb}</td><td class="num">${cnt[i]}</td><td class="num">${pct(cnt[i])}</td><td><span class="res-bar"><i style="width:${n ? cnt[i] / n * 100 : 0}%;background:${b.col}"></i></span></td></tr>`).join('');
+    out.innerHTML = `
+        <div class="res-stats"><span>Số bài đã nộp: <b>${n}</b></span><span>Điểm trung bình: <b>${f(total / n)}</b></span><span>Cao nhất: <b>${f(sorted[0].score)}</b></span><span>Thấp nhất: <b>${f(sorted[n - 1].score)}</b></span></div>
+        <h3 class="res-h">Thống kê theo khoảng điểm</h3>
+        <div class="res-wrap"><table class="res-t"><thead><tr><th>Khoảng điểm</th><th class="num">Số bài</th><th class="num">Tỉ lệ</th><th>Biểu đồ</th></tr></thead><tbody>${bands}</tbody><tfoot><tr><td>Tổng</td><td class="num">${n}</td><td class="num">100%</td><td></td></tr></tfoot></table></div>
+        <h3 class="res-h">Bảng xếp hạng (cao → thấp)</h3>
+        <div class="res-wrap rank"><table class="res-t"><thead><tr><th class="num">Hạng</th><th>Họ và tên</th><th>Lớp</th><th class="num">Điểm</th></tr></thead><tbody>${rank}</tbody></table></div>`;
+    const d = new Date();
+    setResMsg('ok', `Đã xếp hạng ${n} bài nộp từ cao xuống thấp${skipped ? `, bỏ qua ${skipped} dòng của đề khác` : ''}. Cập nhật lúc ${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}.`);
+}
+
+// Chỉ giữ các dòng của đúng đề này nếu bảng có cột Mã đề / Tên đề
+function applyResults(t) {
+    if (!exam) return;
+    let rows = t.rows, skipped = 0;
+    if (t.hasExam) {
+        rows = t.rows.filter(r => (r.id && r.id === exam.id) || (r.en && r.en === exam.name));
+        skipped = t.rows.length - rows.length;
+    }
+    resRows = rows;
+    renderResults(skipped);
+}
+
+function pickTable(data) {
+    const tabs = data && data.sheets ? Object.values(data.sheets) : (data && data.values ? [data.values] : []);
+    let first = null;
+    for (const v of tabs) {
+        const t = tableToRows(v);
+        if (t) { if (t.rows.length) return t; if (!first) first = t; }
+    }
+    return first;
+}
+
+async function loadResults() {
+    const ex = exam;
+    if (!ex || resBusy === ex) return;
+    const url = (ex.webhook || '').trim();
+    if (!url) return setResMsg('warn', 'Đề này chưa có liên kết Google Sheet nên không tải tự động được. Có thể tải bảng điểm từ Google Sheet về dạng .csv rồi bấm "Nhập bảng điểm (.csv)".');
+    resBusy = ex; $('btn-load-res').disabled = true;
+    setResMsg('', '⏳ Đang tải kết quả...');
+    try {
+        const res = await fetch(url + (url.includes('?') ? '&' : '?') + 'key=' + encodeURIComponent(getResKey()) + '&t=' + Date.now(), { cache: 'no-store' });
+        const data = await res.json();
+        if (exam !== ex) return;
+        if (!data || data.ok === false) throw new Error('key');
+        const t = pickTable(data);
+        if (!t) throw new Error('format');
+        applyResults(t);
+    } catch(err) {
+        if (exam !== ex) return;
+        $('res-out').innerHTML = ''; resRows = [];
+        $('res-help').open = true;
+        setResMsg('bad', err.message === 'key'
+            ? 'Google Sheet từ chối vì mã truy cập chưa khớp. Hãy dán lại đoạn mã bên dưới vào Apps Script và triển khai phiên bản mới.'
+            : err.message === 'format'
+            ? 'Đã kết nối nhưng không thấy cột "Họ và tên" và "Điểm" trong Google Sheet. Có thể nhập file .csv thay thế.'
+            : 'Chưa tải được kết quả. Hãy làm theo hướng dẫn bên dưới (thêm hàm doGet và triển khai phiên bản mới, quyền truy cập "Bất kỳ ai"), hoặc dùng "Nhập bảng điểm (.csv)".');
+    } finally {
+        if (resBusy === ex) resBusy = null;
+        $('btn-load-res').disabled = false;
+    }
+}
+
+function resIdleMsg() {
+    if (!exam || resRows.length) return;
+    const c = exam.closeAt || 0;
+    if (!c) setResMsg('', 'Đề chưa đặt giờ đóng nên không tự tải được. Bấm "Tải kết quả" khi kỳ thi kết thúc.');
+    else if (c > Date.now()) setResMsg('warn', `Kỳ thi đóng lúc ${fmtDT(c)}. Nếu trang này còn mở, kết quả sẽ tự tải và xếp hạng sau giờ đó.`);
+}
+
+// Hẹn giờ: đến giờ đóng đề (cộng 15 giây chờ các bài nộp cuối) thì tự tải và xếp hạng
+function scheduleAutoResults() {
+    clearTimeout(resTimer);
+    if (!exam || !exam.closeAt) return;
+    const wait = exam.closeAt + 15000 - Date.now(), ex = exam;
+    if (wait > 0 && wait < 2147000000) resTimer = setTimeout(() => { if (exam === ex) loadResults(); }, wait);
+}
+
+function prepResults() {
+    clearTimeout(resTimer); resRows = []; resBusy = null;
+    $('res-out').innerHTML = ''; $('res-name').textContent = exam.name;
+    $('resbox').classList.remove('hide');
+    if (exam.closeAt && exam.closeAt <= Date.now()) loadResults();
+    else { resIdleMsg(); scheduleAutoResults(); }
+}
+
+window.openResults = id => {
+    openExam(id);
+    loadResults();
+    const b = $('resbox'); if (b.scrollIntoView) b.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+$('btn-load-res').onclick = () => loadResults();
+
+$('res-csv').onchange = async e => {
+    const f = e.target.files[0]; e.target.value = '';
+    if (!f || !exam) return;
+    try {
+        const t = tableToRows(parseCSV(await f.text()));
+        if (!t) return setResMsg('bad', 'Không thấy cột "Họ và tên" và "Điểm" ở đầu file. Hãy kiểm tra dòng tiêu đề của bảng.');
+        applyResults(t);
+    } catch(err) { setResMsg('bad', 'Không đọc được file: ' + err.message); }
 };
 
 const MN='http://schemas.openxmlformats.org/officeDocument/2006/math',WN='http://schemas.openxmlformats.org/wordprocessingml/2006/main';
@@ -1767,6 +2018,7 @@ async function processSubmission() {
         studentName: studentData.name,
         studentClass: studentData.class,
         timeTaken: Math.floor((Date.now() - studentData.startTime) / 1000), 
+        score,
         scoreStr: `${score}/10 điểm`,
         details: JSON.stringify({ 
             score, 
