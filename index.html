@@ -30,7 +30,10 @@ h1,h2,h3{line-height:1.3;letter-spacing:-.01em}
 .center-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(rgba(11,107,138,.07) 1px,transparent 1px) 0 0/28px 28px,linear-gradient(90deg,rgba(11,107,138,.07) 1px,transparent 1px) 0 0/28px 28px,var(--bg)}
 @supports(height:100dvh){.center-screen{min-height:100dvh}}
 .box{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:32px;width:100%;max-width:440px;box-shadow:0 12px 32px rgba(20,35,47,.1)}
-.box.wide{max-width:520px}
+.box.wide{width:min(100%,600px);max-width:none;padding:clamp(20px,5vw,32px)}
+#lf .brand h1{white-space:nowrap;text-align:center;font-size:24px;line-height:1.2;letter-spacing:.02em}
+#lf .brand h1 span{display:inline-block}
+#lf .brand p{text-align:center}
 .box h1{margin:0 0 6px;font-size:24px}
 .box h2{margin:0 0 8px;font-size:18px}
 .box p{margin:0 0 20px;color:var(--mut);font-size:15px}
@@ -173,7 +176,7 @@ body.shot-hide #list-student,body.shot-hide #q-panel{visibility:hidden}
 
 <div id="login" class="center-screen hide">
   <form class="box wide" id="lf">
-    <div class="brand"><h1>HỆ THỐNG THI TRỰC TUYẾN MÔN TIẾNG ANH</h1><p>Chọn đề để làm bài, hoặc đăng nhập để quản lý đề.</p></div>
+    <div class="brand"><h1><span>HỆ THỐNG THI TRỰC TUYẾN</span></h1><p>Chọn đề để làm bài, hoặc đăng nhập để quản lý đề.</p></div>
     <section class="pane">
       <h2>Làm bài thi</h2>
       <div id="hub-exam-list" class="hub"></div>
@@ -337,7 +340,7 @@ function triggerMathJax(tries) {
     }
 }
 
-const PW = 'tienhuong28011981';
+const PW = '28011981';
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -1973,6 +1976,22 @@ function shShot(reason) {
   if (ev === 'keydown' && (e.ctrlKey || e.metaKey) && !e.altKey && c === 'KeyP') { e.preventDefault(); shShot('Cố in hoặc lưu PDF bài thi'); }
 }, true));
 window.addEventListener('beforeprint', () => { if (SH.on) shShot('Cố in hoặc lưu PDF bài thi'); });
+
+// Tiêu đề khung đăng nhập: luôn 1 dòng, cỡ chữ tự chỉnh cho vừa khít hai mép khung
+(function(){
+  const h = document.querySelector('#lf .brand h1'); if(!h) return;
+  const sp = h.firstElementChild || h;
+  function fit(){
+    const w = h.clientWidth; if(!w) return;
+    h.style.fontSize = '100px';
+    const tw = sp.getBoundingClientRect().width; if(!tw) return;
+    h.style.fontSize = Math.max(10, Math.min(34, Math.floor(100 * w / tw * 10) / 10)) + 'px';
+  }
+  if(window.ResizeObserver) new ResizeObserver(fit).observe(h.parentElement);
+  window.addEventListener('resize', fit);
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+  fit();
+})();
 </script>
 </body>
 </html>
