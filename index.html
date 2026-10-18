@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Hệ thống Thi & Ôn luyện Trắc nghiệm</title>
-<!-- Tích hợp MathJax 3 thay cho KaTeX để hỗ trợ tốt nhất trên Github Pages & Đọc giọng nói -->
+<!-- MathJax 3: hiển thị công thức và hỗ trợ đọc giọng nói -->
 <script>
 window.MathJax = {
   tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']], processEscapes: true },
@@ -16,170 +16,149 @@ window.MathJax = {
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--pri:#2563eb;--pri2:#1d4ed8;--ok:#16a34a;--okbg:#dcfce7;--bad:#dc2626;--badbg:#fee2e2;--bg:#f8fafc;--tx:#1e293b;--mut:#64748b;--bd:#cbd5e1;--hh:170px; --card:#ffffff;}
+:root{--pri:#0b6b8a;--pri2:#095570;--tint:#e4f1f5;--ok:#17734f;--okbg:#e2f3ea;--bad:#b83a2a;--badbg:#fae8e5;--bg:#eef2f5;--tx:#14232f;--mut:#5b6b78;--bd:#d3dbe1;--card:#fff;--hh:64px;--r:8px}
 *{box-sizing:border-box}
-body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--tx);line-height:1.6}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{margin:0;font-family:"Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.6;background:var(--bg);color:var(--tx)}
+h1,h2,h3{line-height:1.3;letter-spacing:-.01em}
 .hide{display:none!important}
-.center-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(135deg,var(--pri),#8b5cf6)}
-.box{background:var(--card);border-radius:16px;padding:32px;width:100%;max-width:440px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.2)}
-.box .ic{font-size:48px;margin-bottom:12px}
-.box h1{margin:0 0 8px;font-size:22px;color:#0f172a}
+:focus-visible{outline:2px solid var(--pri);outline-offset:2px}
+.center-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(rgba(11,107,138,.07) 1px,transparent 1px) 0 0/28px 28px,linear-gradient(90deg,rgba(11,107,138,.07) 1px,transparent 1px) 0 0/28px 28px,var(--bg)}
+@supports(height:100dvh){.center-screen{min-height:100dvh}}
+.box{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:32px;width:100%;max-width:440px;box-shadow:0 12px 32px rgba(20,35,47,.1)}
+.box.wide{max-width:520px}
+.box h1{margin:0 0 6px;font-size:24px}
+.box h2{margin:0 0 8px;font-size:18px}
 .box p{margin:0 0 20px;color:var(--mut);font-size:15px}
-input[type=password],input[type=text],input[type=number],input[type=datetime-local],select{width:100%;padding:12px 16px;border:2px solid var(--bd);border-radius:10px;font-size:15px;outline:none;transition:.2s;margin-bottom:12px;font-family:inherit;}
-input[type=checkbox]{width:18px;height:18px;accent-color:var(--pri);cursor:pointer;}
-input:focus,textarea:focus,select:focus{border-color:var(--pri);box-shadow:0 0 0 4px rgba(37,99,235,.15)}
+.brand{margin-bottom:20px}.brand p{margin:0}
+.pane{padding:18px 0;border-top:1px solid var(--bd)}
+.pane h2{font-size:14px;font-weight:600;color:var(--mut);margin:0 0 12px}
+.row{display:flex;gap:8px}.row input{flex:1;margin:0}.row .btn{width:auto;flex:none}
+.hub{display:grid;gap:8px;margin-top:12px;max-height:320px;overflow:auto}
+.hub-item{display:block;width:100%;text-align:left;font-family:inherit;color:var(--tx);background:#fff;cursor:pointer;padding:12px 14px;border:1px solid var(--bd);border-radius:var(--r);transition:border-color .15s,background .15s}
+.hub-item:hover{border-color:var(--pri);background:var(--tint)}
+.hub-item>div{min-width:0}
+.hub-item b{display:block;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hub-item span{font-size:12.5px;color:var(--mut)}
+.hub-item .btn{width:auto;padding:6px 14px;font-size:13.5px}
+input[type=password],input[type=text],input[type=number],input[type=datetime-local],select{width:100%;padding:10px 14px;border:1px solid var(--bd);border-radius:var(--r);font-size:15px;font-family:inherit;color:var(--tx);background:#fff;outline:none;transition:border-color .15s,box-shadow .15s;margin-bottom:12px}
+input:focus,textarea:focus,select:focus{border-color:var(--pri);box-shadow:0 0 0 3px rgba(11,107,138,.18)}
+input[type=checkbox]{width:18px;height:18px;margin:3px 0 0;flex:none;accent-color:var(--pri);cursor:pointer}
+textarea{width:100%;padding:12px;border:1px solid var(--bd);border-radius:var(--r);font:inherit;resize:vertical}
 .err{color:var(--bad);font-size:14px;margin-bottom:12px;min-height:20px}
-.btn{display:inline-block;border:0;border-radius:10px;padding:10px 18px;font-weight:600;font-size:15px;font-family:inherit;cursor:pointer;background:var(--pri);color:#fff;transition:.2s;text-align:center}
-.btn:hover:not(:disabled){background:var(--pri2);transform:translateY(-1px)}
-.btn:disabled{opacity:.5;cursor:not-allowed}
-.btn.sec{background:#fff;color:var(--pri);border:2px solid var(--pri)}
-.btn.sec:hover:not(:disabled){background:#eff6ff}
-.btn.gr{background:#16a34a;color:#fff;border:none}
-.btn.gr:hover:not(:disabled){background:#15803d}
-.box .btn{width:100%;padding:12px}
-header{position:sticky;top:0;z-index:10;background:var(--card);box-shadow:0 1px 10px rgba(0,0,0,.08);padding:12px 20px;display:flex;justify-content:space-between;align-items:center}
-.hdr-title{font-size:18px;font-weight:700;margin:0}
-.bar{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
-.info{font-size:14px;color:var(--mut)}
-main{max-width:1240px;margin:24px auto;padding:0 16px 40px}
-.card{background:var(--card);border-radius:12px;padding:20px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,.04);border:1px solid var(--bd)}
-.card summary{font-weight:700;cursor:pointer;font-size:16px}
-.lr{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--bd)}
+.btn{display:inline-block;border:1px solid var(--pri);border-radius:var(--r);padding:9px 16px;font-family:inherit;font-weight:600;font-size:14.5px;line-height:1.4;cursor:pointer;background:var(--pri);color:#fff;text-align:center;transition:background .15s,border-color .15s,color .15s}
+.btn:hover:not(:disabled){background:var(--pri2);border-color:var(--pri2)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.sec{background:var(--card);color:var(--tx);border-color:var(--bd)}
+.btn.sec:hover:not(:disabled){background:var(--card);border-color:var(--pri);color:var(--pri)}
+.btn.gr{background:var(--ok);border-color:var(--ok)}
+.btn.gr:hover:not(:disabled){background:#10573b;border-color:#10573b}
+.box .btn{width:100%;padding:11px}
+#btn-back-hub{margin-top:8px}
+header{position:sticky;top:0;z-index:10;background:var(--card);border-bottom:1px solid var(--bd);padding:12px 24px;display:flex;justify-content:space-between;align-items:center}
+.hdr-title{margin:0;font-size:18px}
+main{max-width:1160px;margin:24px auto;padding:0 16px 40px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:20px 22px;margin-bottom:18px}
+.card summary{font-weight:600;font-size:16px;cursor:pointer}
+.card-t{margin:0 0 16px;font-size:17px}
+.bar{display:flex;flex-wrap:wrap;gap:8px}
+.steps{margin:16px 0 0;padding-left:20px;color:var(--mut);font-size:14px}
+code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.92em}
+.note{font-size:13px;color:var(--mut);margin:8px 0 0}
+.lr{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;padding:14px 0;border-bottom:1px solid var(--bd)}
 .lr:last-child{border:0}
-.lr-info{display:flex;align-items:center;gap:12px}
-.no{flex:none;width:32px;height:32px;border-radius:50%;background:#eff6ff;color:var(--pri);display:grid;place-items:center;font-weight:700;font-size:14px}
-.tg{background:#fef3c7;color:#92400e;font-size:12px;padding:2px 8px;border-radius:6px;margin-left:6px}
-.note{font-size:13px;color:var(--mut);margin-top:12px}
-textarea{width:100%;padding:12px;border:2px solid var(--bd);border-radius:10px;font:inherit;outline:none;resize:vertical}
-.q{background:var(--card);border-radius:12px;padding:24px;margin-bottom:20px;box-shadow:0 2px 10px rgba(0,0,0,.05);border:1px solid var(--bd)}
-.qh{font-weight:700;color:var(--pri);margin-bottom:12px;font-size:16px;display:flex;justify-content:space-between}
-.st{font-size:16px;margin-bottom:16px}
-.os{display:grid;gap:12px}
-.o{display:flex;gap:12px;align-items:center;padding:12px 16px;border:2px solid var(--bd);border-radius:10px;background:var(--card);cursor:pointer;transition:.2s}
-.o:hover:not(.disabled){border-color:var(--pri);background:#eff6ff}
-.o .l{flex:none;width:28px;height:28px;border-radius:50%;background:#f1f5f9;color:var(--mut);display:grid;place-items:center;font-weight:600}
-.o.selected{border-color:var(--pri);background:#eff6ff}
-.o.selected .l{background:var(--pri);color:#fff}
+.lr-info{display:flex;align-items:center;gap:14px}
+.lr-act{display:flex;gap:8px;flex-wrap:wrap}.lr-act .btn{padding:7px 12px;font-size:13.5px}
+.no{flex:none;width:30px;height:30px;border-radius:6px;background:var(--tint);color:var(--pri);display:grid;place-items:center;font-weight:700;font-size:13px}
+.tg{background:var(--bg);color:var(--mut);font-size:12px;font-weight:500;padding:2px 8px;border-radius:4px;margin-left:6px}
+.warn-t{color:var(--bad);font-weight:600}
+.sect{border-top:1px solid var(--bd);padding-top:18px;margin-top:18px}
+.sect h3{margin:0 0 12px;font-size:15px}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.fld label{display:block;font-size:13px;font-weight:600;color:var(--mut);margin-bottom:6px}
+.fld input,.fld select{margin:0}.fld input[type=datetime-local]{max-width:260px}
+.suffix{display:flex;align-items:center;gap:6px}.suffix span{color:var(--mut);font-weight:600}
+.chks{display:grid;gap:10px}
+.chk{display:flex;gap:10px;align-items:flex-start;font-weight:500;cursor:pointer}
+.chk small{display:block}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px;padding-top:18px;border-top:1px solid var(--bd)}
+.student-hdr{position:sticky;top:0;z-index:20;background:var(--tx);color:#fff;padding:12px 24px;min-height:var(--hh);display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px}
+.student-hdr .hdr-title{font-size:16px}
+#student-info-bar{font-size:13px;opacity:.75}
+.hdr-act{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.student-hdr .btn.sec{background:transparent;color:#fff;border-color:rgba(255,255,255,.4)}
+.student-hdr .btn.sec:hover:not(:disabled){background:rgba(255,255,255,.12);color:#fff;border-color:#fff}
+.timer-box{display:flex;align-items:center;font-variant-numeric:tabular-nums;font-weight:700;font-size:18px;padding:5px 14px;border-radius:var(--r);background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.3)}
+.timer-box.danger{background:var(--bad);border-color:var(--bad);animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.65}}
+.student-main{display:flex;gap:20px;align-items:flex-start;max-width:1240px;margin:20px auto;padding:0 16px}
+.student-content{flex:1;min-width:0}
+.q-panel{position:sticky;top:calc(var(--hh) + 16px);width:240px;flex:none;background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:16px}
+.q-panel-title{font-weight:600;font-size:14px;margin-bottom:12px}
+.q-legend{display:grid;gap:6px;font-size:12.5px;color:var(--mut)}
+.q-legend div{display:flex;align-items:center;gap:8px}
+.box-leg{width:14px;height:14px;border-radius:4px;border:1px solid var(--bd);background:#fff}
+.box-leg.done{background:var(--tint);border-color:var(--pri)}
+.box-leg.right{background:var(--okbg);border-color:var(--ok)}
+.box-leg.wrong{background:var(--badbg);border-color:var(--bad)}
+.q-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:14px;max-height:calc(100vh - 280px);overflow:auto}
+.q-btn{height:36px;border-radius:6px;border:1px solid var(--bd);background:#fff;font-weight:600;font-size:13.5px;cursor:pointer;display:grid;place-items:center;color:var(--tx)}
+.q-btn:hover{border-color:var(--pri)}
+.q-btn.done{background:var(--tint);border-color:var(--pri);color:var(--pri)}
+.q-btn.right{background:var(--okbg);border-color:var(--ok);color:var(--ok)}
+.q-btn.wrong{background:var(--badbg);border-color:var(--bad);color:var(--bad)}
+.q{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:22px 24px;margin-bottom:16px}
+.qh{font-weight:700;color:var(--pri);font-size:14px;margin-bottom:10px}
+.st{font-size:16.5px;margin-bottom:16px;white-space:pre-line}
+.os{display:grid;gap:10px}
+.o{display:flex;gap:12px;align-items:center;padding:11px 14px;border:1px solid var(--bd);border-radius:var(--r);background:var(--card);cursor:pointer;transition:border-color .15s,background .15s}
+.o:hover:not(.disabled){border-color:var(--pri);background:var(--tint)}
+.o .l{flex:none;width:28px;height:28px;border-radius:6px;background:var(--bg);color:var(--mut);display:grid;place-items:center;font-weight:700;font-size:13.5px}
+.o.selected{border-color:var(--pri);background:var(--tint)}.o.selected .l{background:var(--pri);color:#fff}
 .o.ok{border-color:var(--ok);background:var(--okbg)}.o.ok .l{background:var(--ok);color:#fff}
 .o.bad{border-color:var(--bad);background:var(--badbg)}.o.bad .l{background:var(--bad);color:#fff}
 .o.disabled{cursor:default}
-.fb{margin-top:12px;font-weight:600;padding:10px;border-radius:8px;background:#f8fafc}
-.fb.good{color:var(--ok);background:var(--okbg)}.fb.no{color:var(--bad);background:var(--badbg)}
-img.im{max-width:100%;height:auto;border-radius:8px;margin:8px 0}
-.timer-box{background:#fff;padding:6px 16px;border-radius:30px;font-weight:700;font-size:18px;color:var(--pri);border:2px solid #fff;display:flex;align-items:center;gap:8px}
-.timer-box.danger{color:var(--bad);border-color:var(--bad);animation:pulse 1s infinite}
-@keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.05)}100%{transform:scale(1)}}
-.sa-input{width:100%;max-width:400px;font-weight:600;color:var(--pri)}
-.tf-row{display:flex;justify-content:space-between;cursor:default!important;background:transparent!important;border:none!important;padding:0!important}
-.tf-row:hover{background:transparent!important;border-color:transparent!important}
-.tf-btn{flex:1;text-align:center;padding:8px}
-.tf-btn.selected{background:var(--pri);color:#fff}
-.btn.sec.tf-btn.selected,.btn.sec.tf-btn.selected:hover:not(:disabled){background:var(--pri);color:#fff}
-.student-hdr{background:var(--pri);color:#fff;padding:15px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:20;box-shadow:0 4px 12px rgba(0,0,0,.15)}
-#student-info-bar{font-size:14px;opacity:0.9}
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:50}
-.score-result{background:#f8fafc;border-radius:8px;padding:16px;margin-top:16px;text-align:left;border:1px solid var(--bd)}
-.grp{margin-bottom:24px}
+.o.tf-row{justify-content:space-between;cursor:default}
+.o.tf-row:hover{border-color:var(--bd);background:var(--card)}
+.tf-btn{padding:6px 14px}
+.btn.sec.tf-btn.selected,.btn.sec.tf-btn.selected:hover:not(:disabled){background:var(--pri);border-color:var(--pri);color:#fff}
+.sa-input{max-width:400px;font-weight:600;color:var(--pri);margin:0}
+.fb{margin-top:12px;font-weight:600;padding:10px 12px;border-radius:var(--r);background:var(--bg)}
+img.im{max-width:100%;height:auto;border-radius:6px;margin:8px 0}
+.grp{margin-bottom:20px}
 .grp.two{display:grid;grid-template-columns:minmax(260px,2fr) 3fr;gap:20px;align-items:start}
-.gl{position:sticky;top:96px;max-height:calc(100vh - 116px);overflow:auto;background:#fffbeb;border:1px solid #fde68a;border-left:5px solid #f59e0b;border-radius:12px;padding:16px}
 .grp.two.en{grid-template-columns:minmax(0,2fr) minmax(280px,1fr)}
-.st{white-space:pre-line}
-.gl .st:last-child{margin-bottom:0}
-.gr .q:last-child{margin-bottom:0}
-.gr .q{margin-bottom:14px}
-@media(max-width:820px){.grp.two{grid-template-columns:1fr}.gl{position:static;max-height:none}}
-.sch-box{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;margin-top:15px;background:#f8fafc;padding:15px;border-radius:10px;border:1px solid var(--bd)}
-.sch-box label{display:block;font-weight:600;font-size:14px;margin-bottom:4px}
-.sch-box input[type=datetime-local]{width:230px;margin:0}
-.sch-state{margin:0 0 16px;padding:12px 14px;border-radius:10px;font-size:14px;line-height:1.7;text-align:left;border:1px solid var(--bd);background:#f8fafc;color:var(--tx)}
-.sch-state.wait{background:#fef3c7;border-color:#fde68a;color:#92400e}
-.sch-state.open{background:var(--okbg);border-color:#86efac;color:#166534}
-.sch-state.closed{background:var(--badbg);border-color:#fca5a5;color:#991b1b}
-.sch-count{display:block;font-size:26px;font-weight:800;text-align:center;margin-top:4px;font-variant-numeric:tabular-nums}
-.lr{flex-wrap:wrap;gap:10px}
-.lr-act{display:flex;gap:8px;flex-wrap:wrap}
-.gd{grid-column:1/-1}
-.gd .st{margin-bottom:6px}
-.gd .st:last-child{margin-bottom:0}
+.gl{position:sticky;top:calc(var(--hh) + 16px);max-height:calc(100vh - var(--hh) - 32px);overflow:auto;background:#fbfaf6;border:1px solid var(--bd);border-left:3px solid var(--pri);border-radius:10px;padding:16px}
+.gl .st:last-child,.gd .st:last-child,.gr .q:last-child{margin-bottom:0}
+.gd{grid-column:1/-1}.gd .st{margin-bottom:6px}
 .grp:not(.two) .gd{margin-bottom:12px}
+.gr .q{margin-bottom:14px}
+.sch-state{margin:0 0 16px;padding:12px 14px;border-radius:var(--r);font-size:14px;line-height:1.7;border:1px solid var(--bd);background:var(--bg)}
+.sch-state.wait{background:#fdf3dc;border-color:#ecd49a;color:#6e4700}
+.sch-state.open{background:var(--okbg);border-color:#a8d8bf;color:#0f5a3c}
+.sch-state.closed{background:var(--badbg);border-color:#efb7ae;color:#8e2b1e}
+.sch-count{display:block;font-size:26px;font-weight:700;text-align:center;margin-top:4px;font-variant-numeric:tabular-nums}
+.overlay{position:fixed;inset:0;background:rgba(20,35,47,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.overlay .box{text-align:center}
+.spin{width:36px;height:36px;margin:0 auto 16px;border:3px solid var(--bd);border-top-color:var(--pri);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(1turn)}}
+.ok-title{color:var(--ok)}
+.score-result{background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:18px;margin-top:16px;text-align:left}
+.score-big{font-size:44px;font-weight:700;line-height:1.1;text-align:center;color:var(--pri);font-variant-numeric:tabular-nums}
+.score-big small{font-size:18px;font-weight:600;color:var(--mut)}
+.score-list{margin-top:14px;font-size:14px;line-height:1.8}
 .copyright{margin:18px 0 0;padding:0 12px 14px;font-size:12px;color:var(--mut);text-align:center}
-
-html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
-@supports(height:100dvh){.center-screen{min-height:100dvh}}
-.student-hdr,header{padding-left:max(20px,env(safe-area-inset-left));padding-right:max(20px,env(safe-area-inset-right))}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);max-width:min(92vw,460px);background:var(--tx);color:#fff;padding:10px 16px;border-radius:var(--r);font-size:14px;line-height:1.5;z-index:100;box-shadow:0 6px 24px rgba(0,0,0,.3);text-align:center}
+header,.student-hdr{padding-left:max(24px,env(safe-area-inset-left));padding-right:max(24px,env(safe-area-inset-right))}
 main{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
-.student-hdr{flex-wrap:wrap;gap:8px}
-@media(max-width:820px){.grp.two.en{grid-template-columns:1fr}}
-.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);max-width:min(92vw,460px);background:#0f172a;color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;line-height:1.5;z-index:100;box-shadow:0 6px 24px rgba(0,0,0,.3);text-align:center}
-@media (orientation:landscape) and (max-height:520px){
-  :root{--hh:60px}
-  .center-screen{padding:10px calc(10px + env(safe-area-inset-right)) 10px calc(10px + env(safe-area-inset-left))}
-  .box{padding:16px 22px;max-width:520px}
-  .box .ic{font-size:30px;margin-bottom:4px}
-  .box h1{font-size:18px;margin-bottom:4px}
-  .box p{margin-bottom:10px;font-size:14px}
-  input[type=password],input[type=text],input[type=number],input[type=datetime-local],select{padding:8px 12px;margin-bottom:8px}
-  .btn{padding:7px 12px;font-size:14px}
-  .box .btn{padding:9px}
-  .student-hdr,header{padding-top:6px;padding-bottom:6px}
-  .hdr-title{font-size:15px;line-height:1.3}
-  #student-info-bar{font-size:12px;line-height:1.3}
-  .timer-box{font-size:15px;padding:3px 12px}
-  main{margin:10px auto;padding-bottom:24px}
-  .grp{margin-bottom:14px}
-  .q{padding:14px 16px;margin-bottom:12px}
-  .qh{margin-bottom:6px;font-size:15px}
-  .st{font-size:15px;margin-bottom:10px}
-  .os{gap:8px}
-  .o{padding:8px 12px}
-  .grp.two{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
-  .grp.two.en{grid-template-columns:minmax(0,3fr) minmax(0,2fr)}
-  .gl{position:sticky;top:var(--hh);max-height:calc(100vh - var(--hh) - 12px);padding:12px}
-  .overlay .box{max-height:94vh;overflow:auto}
-}
-@supports(height:100dvh){@media (orientation:landscape) and (max-height:520px){.gl{max-height:calc(100dvh - var(--hh) - 12px)}}}
-
-.student-main {
-  display: flex;
-  gap: 20px;
-  align-items: flex-start;
-  max-width: 1240px;
-  margin: 24px auto;
-  padding: 0 16px;
-}
-.q-panel {
-  position: sticky;
-  top: 80px;
-  width: 250px;
-  flex: none;
-  background: var(--card);
-  border-radius: 12px;
-  padding: 16px;
-  border: 1px solid var(--bd);
-  box-shadow: 0 2px 8px rgba(0,0,0,.04);
-}
-.student-content { flex: 1; min-width: 0; }
-.q-panel-title { font-weight: 700; font-size: 16px; color: var(--pri); margin-bottom: 12px; text-align: center; }
-.q-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; max-height: calc(100vh - 220px); overflow-y: auto; }
-.q-btn { width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--bd); background: #fff; font-weight: 600; cursor: pointer; display: grid; place-items: center; color: var(--tx); transition: .2s; font-size: 14px; }
-.q-btn:hover { background: #f1f5f9; }
-.q-btn.done { background: #eff6ff; border-color: var(--pri); color: var(--pri); } 
-.q-btn.right { background: var(--okbg); border-color: var(--ok); color: var(--ok); } 
-.q-btn.wrong { background: var(--badbg); border-color: var(--bad); color: var(--bad); } 
-.q-legend { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; color: var(--mut); }
-.q-legend div { display: flex; align-items: center; gap: 6px; }
-.box-leg { width: 14px; height: 14px; border-radius: 4px; border: 1px solid var(--bd); }
-.box-leg.none { background: #fff; }
-.box-leg.right { background: var(--okbg); border-color: var(--ok); }
-.box-leg.wrong { background: var(--badbg); border-color: var(--bad); }
-
-@media (max-width: 900px) {
-  .student-main { flex-direction: column; }
-  .q-panel { width: 100%; position: static; }
-  .q-grid { max-height: 200px; }
-}
-
+@media(max-width:900px){.student-main{flex-direction:column}.q-panel{width:100%;position:static}.q-grid{grid-template-columns:repeat(auto-fill,minmax(40px,1fr));max-height:180px}}
+@media(max-width:820px){.grp.two,.grp.two.en{grid-template-columns:1fr}.gl{position:static;max-height:none}.box{padding:24px 20px}}
+@media(orientation:landscape) and (max-height:520px){:root{--hh:52px}.center-screen{padding:10px}.box{padding:16px 22px}.box h1{font-size:18px}.box p{margin-bottom:10px}.student-hdr,header{padding-top:6px;padding-bottom:6px}.student-hdr .hdr-title{font-size:14px;line-height:1.3}#student-info-bar{font-size:12px}.timer-box{font-size:15px;padding:3px 10px}main,.student-main{margin:10px auto}.q{padding:14px 16px;margin-bottom:12px}.st{font-size:15px;margin-bottom:10px}.os{gap:8px}.o{padding:8px 12px}.grp.two{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}.grp.two.en{grid-template-columns:minmax(0,3fr) minmax(0,2fr)}.gl{top:var(--hh);max-height:calc(100vh - var(--hh) - 12px);padding:12px}.overlay .box{max-height:94vh;overflow:auto}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 #pg-cam-box{position:fixed;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:60;width:132px;background:#0f172a;color:#fff;border-radius:10px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.35);font-size:11px;text-align:center}
 #pg-cam{display:block;width:100%;height:auto;transform:scaleX(-1);background:#000}
 #pg-st{padding:3px 4px}
@@ -193,135 +172,114 @@ body.shot-hide #list-student,body.shot-hide #q-panel{visibility:hidden}
 <body>
 
 <div id="login" class="center-screen hide">
-  <form class="box" id="lf" style="max-width:480px">
-    <div class="ic">👨‍🏫</div>
-    <h1>Hệ thống Thi &amp; Quản lý Đề</h1>
-    <p>Chọn đề thi cho học sinh hoặc đăng nhập quản trị</p>
-    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:14px;margin-bottom:18px;text-align:left">
-      <div style="font-weight:700;color:var(--pri);margin-bottom:8px;font-size:15px">🎓 Dành cho Học sinh làm bài:</div>
-      <div style="display:flex;gap:8px;margin-bottom:8px">
-        <input type="text" id="quick-de-input" placeholder="Nhập mã file đề (VD: de1, de2...)" style="margin:0;flex:1">
-        <button class="btn gr" type="button" id="btn-open-quick-de" style="width:auto;padding:10px 16px;white-space:nowrap">Mở đề</button>
-      </div>
-      <div id="hub-exam-list" style="display:grid;gap:6px;max-height:180px;overflow-y:auto"></div>
-    </div>
-    <div style="border-top:1px solid var(--bd);padding-top:14px;text-align:left">
-      <div style="font-weight:600;color:var(--mut);margin-bottom:8px;font-size:13px;text-align:center">🔐 Quản trị viên / Giáo viên tạo đề</div>
-      <input type="password" id="pw" placeholder="Nhập mật khẩu giáo viên" autocomplete="current-password">
-      <div class="err" id="err"></div>
+  <form class="box wide" id="lf">
+    <div class="brand"><h1>Hệ thống thi trắc nghiệm</h1><p>Chọn đề để làm bài, hoặc đăng nhập để quản lý đề.</p></div>
+    <section class="pane">
+      <h2>Làm bài thi</h2>
+      <div id="hub-exam-list" class="hub"></div>
+    </section>
+    <section class="pane">
+      <h2>Giáo viên</h2>
+      <input type="password" id="pw" placeholder="Mật khẩu giáo viên" autocomplete="current-password">
+      <div class="err" id="err" role="alert"></div>
       <button class="btn" type="submit">Đăng nhập</button>
-    </div>
+    </section>
     <div class="copyright">Bản quyền thuộc về số ĐT: 0943.930.787</div>
   </form>
 </div>
 
 <div id="student-login" class="center-screen hide">
   <form class="box" id="sf">
-    <div class="ic">🎓</div>
-    <h1 id="s-exam-name">Đang tải đề thi...</h1>
-    <p>Vui lòng nhập thông tin để bắt đầu làm bài</p>
+    <div class="brand"><h1 id="s-exam-name">Đang tải đề thi...</h1><p>Nhập thông tin để bắt đầu làm bài.</p></div>
     <div id="s-schedule" class="sch-state hide"></div>
-    <div id="s-pg-note" class="sch-state wait hide">📷 Bài thi có giám sát: em cần cho phép camera và làm bài ở chế độ toàn màn hình. Rời màn hình, chuyển tab hoặc ra khỏi khung camera sẽ bị ghi nhận và có thể bị tự động nộp bài. Trên màn hình luôn có hình mờ ghi tên và lớp của em: mọi ảnh chụp hoặc quay màn hình (kể cả chụp bằng điện thoại khác) đều truy ra được người làm bài.</div>
-    <input type="text" id="s-name" placeholder="Họ và tên học sinh" required>
-    <input type="text" id="s-class" placeholder="Lớp (Ví dụ: 12A1)" required>
+    <div id="s-pg-note" class="sch-state wait hide">Bài thi có giám sát: em cần cho phép camera và làm bài ở chế độ toàn màn hình. Rời màn hình, chuyển tab hoặc ra khỏi khung camera sẽ bị ghi nhận và có thể bị tự động nộp bài. Trên màn hình luôn có hình mờ ghi tên và lớp của em: mọi ảnh chụp hoặc quay màn hình (kể cả chụp bằng điện thoại khác) đều truy ra được người làm bài.</div>
+    <input type="text" id="s-name" placeholder="Họ và tên" required>
+    <input type="text" id="s-class" placeholder="Lớp, ví dụ 12A1" required>
     <button class="btn gr" type="submit" id="btn-start-exam" disabled>Bắt đầu làm bài</button>
-    <button class="btn sec" type="button" id="btn-back-hub" style="margin-top:8px">📚 Đổi đề thi khác</button>
+    <button class="btn sec" type="button" id="btn-back-hub">Chọn đề khác</button>
     <div class="copyright">Bản quyền thuộc về số ĐT: 0943.930.787</div>
   </form>
 </div>
 
 <div id="loading" class="overlay hide">
-  <div class="box" id="loading-box">
-    <div class="ic">⏳</div>
-    <h2>Đang xử lý...</h2>
-    <p>Vui lòng không đóng trình duyệt.</p>
-  </div>
+  <div class="box" id="loading-box"><div class="spin"></div><h2>Đang xử lý</h2><p>Vui lòng không đóng trình duyệt.</p></div>
 </div>
 
 <div id="app-teacher" class="hide">
   <header>
-    <h1 class="hdr-title">📝 Quản lý đề thi</h1>
+    <h1 class="hdr-title">Quản lý đề thi</h1>
     <button class="btn sec" id="out">Đăng xuất</button>
   </header>
   <main>
-    <div class="card">
+    <section class="card">
       <div class="bar">
-        <label class="btn" for="file">📂 Tải file Word đề gốc (.docx)</label>
-        <label class="btn sec" for="li-multi">📥 Nhập thêm đề (.json)</label>
-        <button class="btn sec" type="button" id="btn-export-all">📦 Xuất tất cả (exams.json)</button>
+        <label class="btn" for="file">Tải đề Word (.docx)</label>
+        <label class="btn sec" for="li-multi">Nhập đề (.json)</label>
+        <button class="btn sec" type="button" id="btn-export-all">Xuất tất cả (exams.json)</button>
         <input type="file" id="file" accept=".docx" hidden>
         <input type="file" id="li-one" accept=".json,application/json" hidden>
         <input type="file" id="li-multi" accept=".json,application/json" multiple hidden>
       </div>
-      <p class="note"><b>Cách đưa nhiều đề lên cùng 1 Repository GitHub (dạng <code>de1.json</code>, <code>de2.json</code>...):</b><br>
-      1. Tải từng file Word (<code>.docx</code>) lên &rarr; Hệ thống tự động gán mã file <b><code>de1.json</code></b>, <b><code>de2.json</code></b>, <b><code>de3.json</code></b>... (có thể đổi tên tùy ý trong mục Cài đặt).<br>
-      2. Bấm <b>⬆️ Xuất file (de1.json)</b> ở từng đề để tải các file <code>de1.json</code>, <code>de2.json</code>... về máy và upload tất cả lên chung Repository GitHub.<br>
-      3. Bấm <b>🔗 Copy Link Thi</b> để lấy link riêng cho từng đề (ví dụ: <code>.../KIEM-TRA-THAY-TIEN-12/?de=de1</code> hoặc <code>?de=de2</code>) gửi cho học sinh.</p>
-      <p class="note"><b>Mẹo:</b> Thầy cũng có thể bấm <b>📦 Xuất tất cả (exams.json)</b> để tải 1 file <code>exams.json</code> chứa toàn bộ các đề, giúp trang chủ tự hiện danh sách tất cả các đề cho học sinh chọn.</p>
-    </div>
+      <ol class="steps">
+        <li>Tải từng file Word lên. Mỗi đề được gán một tên file (<code>de1.json</code>, <code>de2.json</code>...), có thể đổi trong phần cài đặt đề.</li>
+        <li>Bấm <b>Xuất</b> ở từng đề, hoặc <b>Xuất tất cả</b> để có một file <code>exams.json</code>, rồi tải lên cùng một Repository GitHub.</li>
+        <li>Bấm <b>Sao chép liên kết</b> để lấy link riêng của đề, dạng <code>.../?de=de1</code>, gửi cho học sinh. Trang chủ tự liệt kê các đề có trong <code>exams.json</code>.</li>
+      </ol>
+    </section>
 
     <details id="libbox" class="card" open>
-      <summary id="lt">📚 Danh sách đề thi đã tạo</summary>
-      <div id="libl" style="margin-top:15px"></div>
+      <summary id="lt">Danh sách đề thi</summary>
+      <div id="libl" style="margin-top:12px"></div>
     </details>
 
-    <div id="reqbox" class="card hide">
-      <div>
-        <b>⚙ Cài đặt đề thi: <span id="cur-exam-name" style="color:var(--pri)"></span></b>
-        
-        <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; align-items:center;">
-          <div style="display:flex; align-items:center; gap:6px; background:#eff6ff; padding:4px 10px; border-radius:10px; border:1px solid #bfdbfe;">
-            <label for="exam-file-key" style="font-weight:700; font-size:14px; color:var(--pri); white-space:nowrap;">📄 Tên file:</label>
-            <input type="text" id="exam-file-key" placeholder="de1" style="width:110px; margin:0; padding:6px 10px; font-weight:700; color:var(--pri);">
-            <span style="font-weight:700; color:var(--mut); font-size:14px;">.json</span>
-          </div>
-          <input type="number" id="time-limit" placeholder="Phút (0 = tự do)" style="width:140px; margin:0">
-          <select id="exam-scale" class="btn sec" style="padding:10px; margin:0; width:auto; text-align:left;">
-              <option value="english" selected>Thang điểm: Môn Tiếng Anh</option>
-              <option value="other">Thang điểm: Các môn chung (Lý, Hóa, Sinh, Sử, Địa...)</option>
-              <option value="math">Thang điểm: Môn Toán</option>
+    <section id="reqbox" class="card hide">
+      <h2 class="card-t">Cài đặt đề: <span id="cur-exam-name" style="color:var(--pri)"></span></h2>
+      <div class="fgrid">
+        <div class="fld"><label for="exam-file-key">Tên file</label><div class="suffix"><input type="text" id="exam-file-key" placeholder="de1"><span>.json</span></div></div>
+        <div class="fld"><label for="time-limit">Thời gian làm bài (phút)</label><input type="number" id="time-limit" min="0" placeholder="0 = không giới hạn"></div>
+        <div class="fld"><label for="exam-scale">Thang điểm</label>
+          <select id="exam-scale">
+            <option value="english" selected>Môn Tiếng Anh</option>
+            <option value="other">Các môn chung (Lý, Hóa, Sinh, Sử, Địa...)</option>
+            <option value="math">Môn Toán</option>
           </select>
-          <button class="btn sec" id="btn-save-settings">Lưu cài đặt</button>
-          <button class="btn sec" id="btn-export-cur" type="button">⬆️ Xuất file .json</button>
-          <button class="btn gr" id="btn-copy-link">🔗 Copy Link Thi</button>
         </div>
-
-        <div style="display:flex; flex-wrap:wrap; gap:20px; margin-top:15px; background:#eff6ff; padding:15px; border-radius:10px; border:1px solid var(--bd);">
-            <label style="width:100%; font-weight:600; font-size:14px; color:var(--pri)">🔗 Link lưu điểm Google Sheet riêng (Tùy chọn):</label>
-            <input type="text" id="exam-webhook" placeholder="Nhập URL Google Apps Script môn Địa lí 12 (để trống nếu dùng hệ thống cũ)" style="width:100%; margin:0">
-        </div>
-
-        <div style="display:flex; flex-wrap:wrap; gap:20px; margin-top:15px; background:#f8fafc; padding:15px; border-radius:10px; border:1px solid var(--bd);">
-            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:600;">
-                <input type="checkbox" id="chk-shuf-grp"> Đảo vị trí Nhóm/Phần (Đoạn văn)
-            </label>
-            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:600;">
-                <input type="checkbox" id="chk-shuf-q"> Đảo vị trí Câu hỏi <small id="q-note" class="note" style="margin:0"></small>
-            </label>
-            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:600;">
-                <input type="checkbox" id="chk-shuf-opt"> Đảo Đáp án (A, B, C, D)
-            </label>
-        </div>
-
-        <div class="sch-box" style="margin:15px 0 0">
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin:0;font-weight:600"><input type="checkbox" id="chk-proctor"> 🛡 Chống gian lận: bắt buộc toàn màn hình + camera, ghi nhận khi rời màn hình, hình mờ tên học sinh chống chụp màn hình</label>
-          <div><label for="max-viol">Vi phạm tối đa trước khi tự nộp (0 = chỉ ghi nhận)</label><input type="number" id="max-viol" min="0" style="width:120px;margin:0"></div>
-        </div>
-        <div class="sch-box">
-            <div>
-                <label for="open-at">🟢 Giờ mở đề (bắt đầu)</label>
-                <input type="datetime-local" id="open-at">
-            </div>
-            <div>
-                <label for="close-at">🔴 Giờ đóng đề (kết thúc)</label>
-                <input type="datetime-local" id="close-at">
-            </div>
-            <button class="btn sec" type="button" id="btn-clear-sch" style="margin-bottom:0">Bỏ hạn thời gian</button>
-            <div class="note" style="flex-basis:100%;margin:0">Để trống = không giới hạn. Học sinh chỉ vào làm được trong khoảng này, đến giờ đóng đề hệ thống tự nộp bài. Sau khi lưu nhớ xuất lại exams.json và tải lên Github.</div>
-        </div>
-
       </div>
-    </div>
+      <div class="sect fld">
+        <label for="exam-webhook">Liên kết Google Sheet nhận điểm (Apps Script)</label>
+        <input type="text" id="exam-webhook" placeholder="https://script.google.com/macros/s/.../exec">
+        <p class="note">Mỗi đề dùng liên kết riêng. Để trống thì điểm chỉ hiện cho học sinh và không được ghi lại.</p>
+      </div>
+      <div class="sect">
+        <h3>Xáo trộn</h3>
+        <div class="chks">
+          <label class="chk"><input type="checkbox" id="chk-shuf-grp"><span>Đảo vị trí nhóm / phần (đoạn văn)</span></label>
+          <label class="chk"><input type="checkbox" id="chk-shuf-q"><span>Đảo vị trí câu hỏi <small id="q-note" class="note" style="margin:0"></small></span></label>
+          <label class="chk"><input type="checkbox" id="chk-shuf-opt"><span>Đảo đáp án (A, B, C, D)</span></label>
+        </div>
+      </div>
+      <div class="sect">
+        <h3>Giám sát</h3>
+        <div class="chks">
+          <label class="chk"><input type="checkbox" id="chk-proctor"><span>Chống gian lận: bắt buộc toàn màn hình và camera, ghi nhận khi rời màn hình, hình mờ tên học sinh chống chụp màn hình</span></label>
+          <div class="fld"><label for="max-viol">Số vi phạm tối đa trước khi tự nộp (0 = chỉ ghi nhận)</label><input type="number" id="max-viol" min="0" style="width:120px"></div>
+        </div>
+      </div>
+      <div class="sect">
+        <h3>Thời hạn mở đề</h3>
+        <div class="fgrid">
+          <div class="fld"><label for="open-at">Giờ mở đề</label><input type="datetime-local" id="open-at"></div>
+          <div class="fld"><label for="close-at">Giờ đóng đề</label><input type="datetime-local" id="close-at"></div>
+        </div>
+        <p class="note">Để trống là không giới hạn. Học sinh chỉ vào làm được trong khoảng này; đến giờ đóng đề, hệ thống tự nộp bài. Sau khi lưu, nhớ xuất lại file .json và tải lên GitHub.</p>
+        <button class="btn sec" type="button" id="btn-clear-sch" style="margin-top:10px">Bỏ hạn thời gian</button>
+      </div>
+      <div class="actions">
+        <button class="btn" id="btn-save-settings">Lưu cài đặt</button>
+        <button class="btn sec" id="btn-export-cur" type="button">Xuất file .json</button>
+        <button class="btn gr" id="btn-copy-link">Sao chép liên kết</button>
+      </div>
+    </section>
     <div id="list-teacher"></div>
     <div class="copyright">Bản quyền thuộc về số ĐT: 0943.930.787</div>
   </main>
@@ -333,38 +291,37 @@ body.shot-hide #list-student,body.shot-hide #q-panel{visibility:hidden}
       <h1 class="hdr-title" id="sh-exam-name">Tên bài thi</h1>
       <div id="student-info-bar">Học sinh: - Lớp: </div>
     </div>
-    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end">
-      <div id="timer-display" class="timer-box hide">⏱ <span id="time-text">--:--</span></div>
-      <button class="btn sec hide" id="btn-rotate" type="button" style="background:#fff;color:var(--pri)">🔄 Xoay ngang</button>
-      <button class="btn sec" id="btn-submit-exam" style="background:#fff;color:var(--pri)">Nộp bài ngay</button>
+    <div class="hdr-act">
+      <div id="timer-display" class="timer-box hide"><span id="time-text">--:--</span></div>
+      <button class="btn sec hide" id="btn-rotate" type="button">Xoay ngang</button>
+      <button class="btn sec" id="btn-submit-exam">Nộp bài ngay</button>
     </div>
   </div>
 
   <main class="student-main">
     <aside class="q-panel" id="q-panel">
-       <div class="q-panel-title">Danh sách câu hỏi</div>
-       <div class="q-legend">
-          <div><span class="box-leg none"></span> Chưa làm</div>
-          <div><span class="box-leg right"></span> Làm đúng</div>
-          <div><span class="box-leg wrong"></span> Làm sai</div>
-       </div>
-       <div id="q-grid" class="q-grid"></div>
+      <div class="q-panel-title">Danh sách câu hỏi</div>
+      <div class="q-legend">
+        <div><span class="box-leg"></span> Chưa làm</div>
+        <div><span class="box-leg done"></span> Đã trả lời</div>
+        <div><span class="box-leg right"></span> Làm đúng</div>
+        <div><span class="box-leg wrong"></span> Làm sai</div>
+      </div>
+      <div id="q-grid" class="q-grid"></div>
     </aside>
-    
     <div id="list-student" class="student-content"></div>
   </main>
   <div class="copyright">Bản quyền thuộc về số ĐT: 0943.930.787</div>
 </div>
 
-<div id="pg" class="overlay hide" style="z-index:200;background:rgba(15,23,42,.96)">
+<div id="pg" class="overlay hide" style="z-index:200;background:rgba(20,35,47,.96)">
   <div class="box">
-    <div class="ic">⚠️</div>
-    <h2 id="pg-title" style="margin:0 0 8px"></h2>
+    <h2 id="pg-title"></h2>
     <p id="pg-msg"></p>
     <button class="btn" id="pg-btn" type="button">Quay lại làm bài</button>
   </div>
 </div>
-<div id="pg-cam-box" class="hide"><video id="pg-cam" muted playsinline autoplay></video><div id="pg-st">📷 Camera đang bật</div></div>
+<div id="pg-cam-box" class="hide"><video id="pg-cam" muted playsinline autoplay></video><div id="pg-st">Camera đang bật</div></div>
 <div id="toast" class="toast hide" role="status"></div>
 
 <script>
@@ -381,8 +338,6 @@ function triggerMathJax(tries) {
 }
 
 const PW = '28011981';
-const WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbwb14F44kdAE2vV-d1mfyoqWrZxEFfL6Y79j6HgUhCzhGnI6TdUwRV3QmmScqySCCVd/exec';
-const DEFAULT_EXAMS = [{"id": "e1792253206168", "name": "DE KIEM TRA GIOI TU", "at": 1792253206168, "items": [{"k": "q", "no": 1, "qtype": "mc", "stem": [{"t": "I was born ______ 15th March, 2008.", "f": 0}], "opts": [{"runs": [{"t": "in", "f": 0}], "ok": false}, {"runs": [{"t": "at", "f": 0}], "ok": false}, {"runs": [{"t": "on", "f": 0}], "ok": true}, {"runs": [{"t": "by", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 2, "qtype": "mc", "stem": [{"t": "We usually have dinner ______ 7 p.m.", "f": 0}], "opts": [{"runs": [{"t": "in", "f": 0}], "ok": false}, {"runs": [{"t": "on", "f": 0}], "ok": false}, {"runs": [{"t": "for", "f": 0}], "ok": false}, {"runs": [{"t": "at", "f": 0}], "ok": true}], "g": 0}, {"k": "q", "no": 3, "qtype": "mc", "stem": [{"t": "My grandparents live ______ a small village near Thanh Hoa.", "f": 0}], "opts": [{"runs": [{"t": "on", "f": 0}], "ok": false}, {"runs": [{"t": "in", "f": 0}], "ok": true}, {"runs": [{"t": "at", "f": 0}], "ok": false}, {"runs": [{"t": "to", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 4, "qtype": "mc", "stem": [{"t": "The cat is hiding ______ the table.", "f": 0}], "opts": [{"runs": [{"t": "under", "f": 0}], "ok": true}, {"runs": [{"t": "during", "f": 0}], "ok": false}, {"runs": [{"t": "across", "f": 0}], "ok": false}, {"runs": [{"t": "since", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 5, "qtype": "mc", "stem": [{"t": "He has lived in Ha Noi ______ 2015.", "f": 0}], "opts": [{"runs": [{"t": "for", "f": 0}], "ok": false}, {"runs": [{"t": "from", "f": 0}], "ok": false}, {"runs": [{"t": "since", "f": 0}], "ok": true}, {"runs": [{"t": "during", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 6, "qtype": "mc", "stem": [{"t": "We have been learning English ______ five years.", "f": 0}], "opts": [{"runs": [{"t": "since", "f": 0}], "ok": false}, {"runs": [{"t": "in", "f": 0}], "ok": false}, {"runs": [{"t": "at", "f": 0}], "ok": false}, {"runs": [{"t": "for", "f": 0}], "ok": true}], "g": 0}, {"k": "q", "no": 7, "qtype": "mc", "stem": [{"t": "The bank is ______ the post office and the supermarket.", "f": 0}], "opts": [{"runs": [{"t": "among", "f": 0}], "ok": false}, {"runs": [{"t": "between", "f": 0}], "ok": true}, {"runs": [{"t": "over", "f": 0}], "ok": false}, {"runs": [{"t": "through", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 8, "qtype": "mc", "stem": [{"t": "There is a beautiful painting ______ the wall.", "f": 0}], "opts": [{"runs": [{"t": "in", "f": 0}], "ok": false}, {"runs": [{"t": "at", "f": 0}], "ok": false}, {"runs": [{"t": "on", "f": 0}], "ok": true}, {"runs": [{"t": "into", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 9, "qtype": "mc", "stem": [{"t": "Students are not allowed to use mobile phones ______ the exam.", "f": 0}], "opts": [{"runs": [{"t": "during", "f": 0}], "ok": true}, {"runs": [{"t": "while", "f": 0}], "ok": false}, {"runs": [{"t": "since", "f": 0}], "ok": false}, {"runs": [{"t": "among", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 10, "qtype": "mc", "stem": [{"t": "She is very good ______ playing the piano.", "f": 0}], "opts": [{"runs": [{"t": "in", "f": 0}], "ok": false}, {"runs": [{"t": "for", "f": 0}], "ok": false}, {"runs": [{"t": "with", "f": 0}], "ok": false}, {"runs": [{"t": "at", "f": 0}], "ok": true}], "g": 0}, {"k": "q", "no": 11, "qtype": "mc", "stem": [{"t": "My little brother is afraid ______ spiders.", "f": 0}], "opts": [{"runs": [{"t": "from", "f": 0}], "ok": false}, {"runs": [{"t": "of", "f": 0}], "ok": true}, {"runs": [{"t": "with", "f": 0}], "ok": false}, {"runs": [{"t": "at", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 12, "qtype": "mc", "stem": [{"t": "We have English lessons ______ Mondays and Fridays.", "f": 0}], "opts": [{"runs": [{"t": "in", "f": 0}], "ok": false}, {"runs": [{"t": "at", "f": 0}], "ok": false}, {"runs": [{"t": "for", "f": 0}], "ok": false}, {"runs": [{"t": "on", "f": 0}], "ok": true}], "g": 0}, {"k": "q", "no": 13, "qtype": "mc", "stem": [{"t": "He is interested ______ collecting stamps.", "f": 0}], "opts": [{"runs": [{"t": "on", "f": 0}], "ok": false}, {"runs": [{"t": "at", "f": 0}], "ok": false}, {"runs": [{"t": "in", "f": 0}], "ok": true}, {"runs": [{"t": "about", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 14, "qtype": "mc", "stem": [{"t": "We are looking forward ______ meeting you next week.", "f": 0}], "opts": [{"runs": [{"t": "to", "f": 0}], "ok": true}, {"runs": [{"t": "for", "f": 0}], "ok": false}, {"runs": [{"t": "at", "f": 0}], "ok": false}, {"runs": [{"t": "on", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 15, "qtype": "mc", "stem": [{"t": "I’ll wait for you ______ the bus stop in front of the school.", "f": 0}], "opts": [{"runs": [{"t": "in", "f": 0}], "ok": false}, {"runs": [{"t": "at", "f": 0}], "ok": true}, {"runs": [{"t": "on", "f": 0}], "ok": false}, {"runs": [{"t": "to", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 16, "qtype": "mc", "stem": [{"t": "They are going to travel to Hue ______ train.", "f": 0}], "opts": [{"runs": [{"t": "in", "f": 0}], "ok": false}, {"runs": [{"t": "with", "f": 0}], "ok": false}, {"runs": [{"t": "on", "f": 0}], "ok": false}, {"runs": [{"t": "by", "f": 0}], "ok": true}], "g": 0}, {"k": "q", "no": 17, "qtype": "mc", "stem": [{"t": "I am very proud ______ my daughter.", "f": 0}], "opts": [{"runs": [{"t": "of", "f": 0}], "ok": true}, {"runs": [{"t": "for", "f": 0}], "ok": false}, {"runs": [{"t": "with", "f": 0}], "ok": false}, {"runs": [{"t": "in", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 18, "qtype": "mc", "stem": [{"t": "She is married ______ a famous doctor.", "f": 0}], "opts": [{"runs": [{"t": "with", "f": 0}], "ok": false}, {"runs": [{"t": "to", "f": 0}], "ok": true}, {"runs": [{"t": "by", "f": 0}], "ok": false}, {"runs": [{"t": "for", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 19, "qtype": "mc", "stem": [{"t": "I usually get up early ______ the morning to do exercise.", "f": 0}], "opts": [{"runs": [{"t": "at", "f": 0}], "ok": false}, {"runs": [{"t": "on", "f": 0}], "ok": false}, {"runs": [{"t": "in", "f": 0}], "ok": true}, {"runs": [{"t": "by", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 20, "qtype": "mc", "stem": [{"t": "He apologised ______ being late for the meeting.", "f": 0}], "opts": [{"runs": [{"t": "of", "f": 0}], "ok": false}, {"runs": [{"t": "at", "f": 0}], "ok": false}, {"runs": [{"t": "for", "f": 0}], "ok": true}, {"runs": [{"t": "on", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 21, "qtype": "mc", "stem": [{"t": "The new policy is expected to result ______ a significant reduction in pollution.", "f": 0}], "opts": [{"runs": [{"t": "in", "f": 0}], "ok": true}, {"runs": [{"t": "from", "f": 0}], "ok": false}, {"runs": [{"t": "with", "f": 0}], "ok": false}, {"runs": [{"t": "by", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 22, "qtype": "mc", "stem": [{"t": "Most traffic accidents result ______ drivers’ carelessness.", "f": 0}], "opts": [{"runs": [{"t": "in", "f": 0}], "ok": false}, {"runs": [{"t": "to", "f": 0}], "ok": false}, {"runs": [{"t": "from", "f": 0}], "ok": true}, {"runs": [{"t": "of", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 23, "qtype": "mc", "stem": [{"t": "Many young people are still dependent ______ their parents for money.", "f": 0}], "opts": [{"runs": [{"t": "from", "f": 0}], "ok": false}, {"runs": [{"t": "on", "f": 0}], "ok": true}, {"runs": [{"t": "of", "f": 0}], "ok": false}, {"runs": [{"t": "to", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 24, "qtype": "mc", "stem": [{"t": "The man was accused ______ stealing a large sum of money.", "f": 0}], "opts": [{"runs": [{"t": "for", "f": 0}], "ok": false}, {"runs": [{"t": "of", "f": 0}], "ok": true}, {"runs": [{"t": "with", "f": 0}], "ok": false}, {"runs": [{"t": "about", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 25, "qtype": "mc", "stem": [{"t": "The heavy rain prevented us ______ going on the picnic.", "f": 0}], "opts": [{"runs": [{"t": "of", "f": 0}], "ok": false}, {"runs": [{"t": "against", "f": 0}], "ok": false}, {"runs": [{"t": "to", "f": 0}], "ok": false}, {"runs": [{"t": "from", "f": 0}], "ok": true}], "g": 0}, {"k": "q", "no": 26, "qtype": "mc", "stem": [{"t": "This old house is very similar ______ the one my grandparents used to own.", "f": 0}], "opts": [{"runs": [{"t": "to", "f": 0}], "ok": true}, {"runs": [{"t": "with", "f": 0}], "ok": false}, {"runs": [{"t": "as", "f": 0}], "ok": false}, {"runs": [{"t": "from", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 27, "qtype": "mc", "stem": [{"t": "We are extremely grateful ______ you for all your support.", "f": 0}], "opts": [{"runs": [{"t": "for", "f": 0}], "ok": false}, {"runs": [{"t": "of", "f": 0}], "ok": false}, {"runs": [{"t": "to", "f": 0}], "ok": true}, {"runs": [{"t": "with", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 28, "qtype": "mc", "stem": [{"t": "I’m fed up ______ doing the same work every day.", "f": 0}], "opts": [{"runs": [{"t": "of", "f": 0}], "ok": false}, {"runs": [{"t": "in", "f": 0}], "ok": false}, {"runs": [{"t": "for", "f": 0}], "ok": false}, {"runs": [{"t": "with", "f": 0}], "ok": true}], "g": 0}, {"k": "q", "no": 29, "qtype": "mc", "stem": [{"t": "Linh is very keen ______ learning foreign languages.", "f": 0}], "opts": [{"runs": [{"t": "on", "f": 0}], "ok": true}, {"runs": [{"t": "in", "f": 0}], "ok": false}, {"runs": [{"t": "at", "f": 0}], "ok": false}, {"runs": [{"t": "of", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 30, "qtype": "mc", "stem": [{"t": "The manager is responsible ______ training new staff.", "f": 0}], "opts": [{"runs": [{"t": "to", "f": 0}], "ok": false}, {"runs": [{"t": "for", "f": 0}], "ok": true}, {"runs": [{"t": "of", "f": 0}], "ok": false}, {"runs": [{"t": "with", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 31, "qtype": "mc", "stem": [{"t": "A good teacher is always patient ______ slow learners.", "f": 0}], "opts": [{"runs": [{"t": "to", "f": 0}], "ok": false}, {"runs": [{"t": "of", "f": 0}], "ok": false}, {"runs": [{"t": "at", "f": 0}], "ok": false}, {"runs": [{"t": "with", "f": 0}], "ok": true}], "g": 0}, {"k": "q", "no": 32, "qtype": "mc", "stem": [{"t": "There has been a sharp increase ______ the price of petrol recently.", "f": 0}], "opts": [{"runs": [{"t": "of", "f": 0}], "ok": false}, {"runs": [{"t": "on", "f": 0}], "ok": false}, {"runs": [{"t": "in", "f": 0}], "ok": true}, {"runs": [{"t": "at", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 33, "qtype": "mc", "stem": [{"t": "What is the reason ______ his sudden decision to leave?", "f": 0}], "opts": [{"runs": [{"t": "for", "f": 0}], "ok": true}, {"runs": [{"t": "of", "f": 0}], "ok": false}, {"runs": [{"t": "about", "f": 0}], "ok": false}, {"runs": [{"t": "to", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 34, "qtype": "mc", "stem": [{"t": "We still haven’t found a solution ______ this problem.", "f": 0}], "opts": [{"runs": [{"t": "of", "f": 0}], "ok": false}, {"runs": [{"t": "to", "f": 0}], "ok": true}, {"runs": [{"t": "at", "f": 0}], "ok": false}, {"runs": [{"t": "on", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 35, "qtype": "mc", "stem": [{"t": "She insisted ______ paying for the meal.", "f": 0}], "opts": [{"runs": [{"t": "in", "f": 0}], "ok": false}, {"runs": [{"t": "at", "f": 0}], "ok": false}, {"runs": [{"t": "on", "f": 0}], "ok": true}, {"runs": [{"t": "to", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 36, "qtype": "mc", "stem": [{"t": "I completely agree ______ what you have just said.", "f": 0}], "opts": [{"runs": [{"t": "to", "f": 0}], "ok": false}, {"runs": [{"t": "at", "f": 0}], "ok": false}, {"runs": [{"t": "in", "f": 0}], "ok": false}, {"runs": [{"t": "with", "f": 0}], "ok": true}], "g": 0}, {"k": "q", "no": 37, "qtype": "mc", "stem": [{"t": "This film is based ______ a true story.", "f": 0}], "opts": [{"runs": [{"t": "in", "f": 0}], "ok": false}, {"runs": [{"t": "on", "f": 0}], "ok": true}, {"runs": [{"t": "at", "f": 0}], "ok": false}, {"runs": [{"t": "with", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 38, "qtype": "mc", "stem": [{"t": "I broke my mother’s favourite vase ______ accident, so she wasn’t angry with me.", "f": 0}], "opts": [{"runs": [{"t": "on", "f": 0}], "ok": false}, {"runs": [{"t": "in", "f": 0}], "ok": false}, {"runs": [{"t": "by", "f": 0}], "ok": true}, {"runs": [{"t": "at", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 39, "qtype": "mc", "stem": [{"t": "The bus drivers have been ______ strike since Monday.", "f": 0}], "opts": [{"runs": [{"t": "on", "f": 0}], "ok": true}, {"runs": [{"t": "in", "f": 0}], "ok": false}, {"runs": [{"t": "at", "f": 0}], "ok": false}, {"runs": [{"t": "under", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 40, "qtype": "mc", "stem": [{"t": "My father is away ______ business this week.", "f": 0}], "opts": [{"runs": [{"t": "in", "f": 0}], "ok": false}, {"runs": [{"t": "at", "f": 0}], "ok": false}, {"runs": [{"t": "with", "f": 0}], "ok": false}, {"runs": [{"t": "on", "f": 0}], "ok": true}], "g": 0}, {"k": "h", "runs": [{"t": "PHẦN III. VẬN DỤNG (Questions 41–50)", "f": 2}]}, {"k": "q", "no": 41, "qtype": "mc", "stem": [{"t": "The company decided to cut costs ______ the economic downturn.", "f": 0}], "opts": [{"runs": [{"t": "in spite of", "f": 0}], "ok": false}, {"runs": [{"t": "instead of", "f": 0}], "ok": false}, {"runs": [{"t": "in view of", "f": 0}], "ok": true}, {"runs": [{"t": "on behalf of", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 42, "qtype": "mc", "stem": [{"t": "The chairman accepted the award ______ the whole team.", "f": 0}], "opts": [{"runs": [{"t": "in terms of", "f": 0}], "ok": false}, {"runs": [{"t": "on behalf of", "f": 0}], "ok": true}, {"runs": [{"t": "by means of", "f": 0}], "ok": false}, {"runs": [{"t": "in case of", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 43, "qtype": "mc", "stem": [{"t": "______ the efforts of the local government, the number of tourists remained low.", "f": 0}], "opts": [{"runs": [{"t": "Despite", "f": 0}], "ok": true}, {"runs": [{"t": "Thanks to", "f": 0}], "ok": false}, {"runs": [{"t": "Because of", "f": 0}], "ok": false}, {"runs": [{"t": "According to", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 44, "qtype": "mc", "stem": [{"t": "______ popular belief, goldfish can remember things for several months.", "f": 0}], "opts": [{"runs": [{"t": "Instead of", "f": 0}], "ok": false}, {"runs": [{"t": "In spite", "f": 0}], "ok": false}, {"runs": [{"t": "Regardless", "f": 0}], "ok": false}, {"runs": [{"t": "Contrary to", "f": 0}], "ok": true}], "g": 0}, {"k": "q", "no": 45, "qtype": "mc", "stem": [{"t": "Choose the sentence that has the closest meaning to: “The match was called off because of the storm.”", "f": 0}], "opts": [{"runs": [{"t": "The match was called off in spite of the storm.", "f": 0}], "ok": false}, {"runs": [{"t": "The match was called off owing to the storm.", "f": 0}], "ok": true}, {"runs": [{"t": "The match was called off instead of the storm.", "f": 0}], "ok": false}, {"runs": [{"t": "The match was called off regardless of the storm.", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 46, "qtype": "mc", "stem": [{"t": "The committee ______ I am a member has decided to hold the conference in Da Nang.", "f": 0}], "opts": [{"runs": [{"t": "of that", "f": 0}], "ok": false}, {"runs": [{"t": "which", "f": 0}], "ok": false}, {"runs": [{"t": "in which", "f": 0}], "ok": false}, {"runs": [{"t": "of which", "f": 0}], "ok": true}], "g": 0}, {"k": "q", "no": 47, "qtype": "mc", "stem": [{"t": "Scientists have long been concerned ______ the impact of plastic waste ______ marine life.", "f": 0}], "opts": [{"runs": [{"t": "about – on", "f": 0}], "ok": true}, {"runs": [{"t": "of – to", "f": 0}], "ok": false}, {"runs": [{"t": "with – at", "f": 0}], "ok": false}, {"runs": [{"t": "for – in", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 48, "qtype": "mc", "stem": [{"t": "The firefighters finally got the fire ______ control after six hours.", "f": 0}], "opts": [{"runs": [{"t": "over", "f": 0}], "ok": false}, {"runs": [{"t": "beyond", "f": 0}], "ok": false}, {"runs": [{"t": "under", "f": 0}], "ok": true}, {"runs": [{"t": "out of", "f": 0}], "ok": false}], "g": 0}, {"k": "q", "no": 49, "qtype": "mc", "stem": [{"t": "I’ll lend you the money ______ condition that you pay it back next month.", "f": 0}], "opts": [{"runs": [{"t": "at", "f": 0}], "ok": false}, {"runs": [{"t": "by", "f": 0}], "ok": false}, {"runs": [{"t": "for", "f": 0}], "ok": false}, {"runs": [{"t": "on", "f": 0}], "ok": true}], "g": 0}, {"k": "q", "no": 50, "qtype": "mc", "stem": [{"t": "The bridge was completed ______ time and ______ budget, which surprised everyone.", "f": 0}], "opts": [{"runs": [{"t": "on – within", "f": 0}], "ok": true}, {"runs": [{"t": "in – at", "f": 0}], "ok": false}, {"runs": [{"t": "by – on", "f": 0}], "ok": false}, {"runs": [{"t": "at – in", "f": 0}], "ok": false}], "g": 0}], "eq": [], "img": [], "time": 30, "scale": "english", "webhook": "https://script.google.com/macros/s/AKfycbzcRNqA4aDxJGmOf-pFlU8JXbuokG6GtogRQk3OubsCDrKKp1UTkvrJztYmyCv2keOO/exec", "openAt": 0, "closeAt": 0, "shufGrp": true, "shufQ": true, "shufOpt": true, "proctor": false, "maxViol": 3, "fileKey": "de1"}];
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -465,14 +420,10 @@ function fallbackCopy(text, okMsg) {
 }
 
 const urlParams = new URLSearchParams(window.location.search);
-const studentDeParam = (urlParams.get('de') || urlParams.get('file') || '').trim();
-const studentExamId = (urlParams.get('s') || '').trim();
+const studentDeParam = (urlParams.get('de') || '').trim();
 
-if(studentDeParam || studentExamId) {
-    initStudentFlow(studentExamId, studentDeParam);
-} else {
-    initTeacherFlow();
-}
+if(studentDeParam) initStudentFlow('', studentDeParam);
+else initTeacherFlow();
 
 function initTeacherFlow() {
     let ok = false;
@@ -496,14 +447,6 @@ function initTeacherFlow() {
         $('login').classList.remove('hide');
         populateStudentHub();
     };
-    $('btn-open-quick-de').onclick = () => {
-        const val = ($('quick-de-input').value || '').trim();
-        if(!val) { showToast('Vui lòng nhập mã file đề (ví dụ: de1, de2)'); return; }
-        openStudentExamByKey(val);
-    };
-    $('quick-de-input').addEventListener('keydown', e => {
-        if(e.key === 'Enter') { e.preventDefault(); $('btn-open-quick-de').click(); }
-    });
     populateStudentHub();
     if(ok) loadLib();
 }
@@ -547,11 +490,6 @@ async function discoverAvailableExams() {
         const local = JSON.parse(localStorage.getItem(LK) || '[]');
         if(Array.isArray(local)) local.forEach((x, idx) => addExam(x, x.fileKey || ('de' + (idx + 1))));
     } catch(e) {}
-
-    // 3. Fallback đề mẫu nếu chưa có đề nào
-    if(!found.length && Array.isArray(DEFAULT_EXAMS)) {
-        DEFAULT_EXAMS.forEach((x, idx) => addExam(x, x.fileKey || ('de' + (idx + 1))));
-    }
     return found;
 }
 
@@ -561,26 +499,20 @@ async function populateStudentHub() {
     box.innerHTML = '<div class="note" style="margin:0">⏳ Đang tìm danh sách đề thi...</div>';
     const list = await discoverAvailableExams();
     if(!list.length) {
-        box.innerHTML = '<div class="note" style="margin:0">Nhập mã đề (VD: <b>de1</b>, <b>de2</b>) ở ô trên rồi bấm <b>Mở đề</b>.</div>';
+        box.innerHTML = '<div class="note" style="margin:0">Chưa có đề nào được mở. Em dùng liên kết đề do giáo viên gửi.</div>';
         return;
     }
     box.innerHTML = list.map((x, i) => {
         const fk = normFileKey(x.fileKey, i);
         const qCount = (x.items || []).filter(k => k.k === 'q').length;
-        return `<div style="display:flex;justify-content:space-between;align-items:center;background:#fff;padding:8px 10px;border-radius:8px;border:1px solid var(--bd);gap:8px">
-            <div style="min-width:0;flex:1">
-                <div style="font-weight:700;font-size:14px;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(x.name)}</div>
-                <div style="font-size:12px;color:var(--mut)">Mã file: <b>${esc(fk)}.json</b> • ${qCount} câu • ${x.time ? x.time + ' phút' : 'Tự do'}</div>
-            </div>
-            <button class="btn gr" type="button" style="width:auto;padding:6px 12px;font-size:13px;flex:none" onclick="openStudentExamByKey('${esc(fk)}','${esc(x.id)}')">Vào thi</button>
-        </div>`;
+        return `<button type="button" class="hub-item" onclick="openStudentExamByKey('${esc(fk)}','${esc(x.id)}')"><b>${esc(x.name)}</b><span>${qCount} câu · ${x.time ? x.time + ' phút' : 'Tự do'}</span></button>`;
     }).join('');
 }
 
 function loadLib() {
     try { lib = JSON.parse(localStorage.getItem(LK) || '[]'); } catch(e) { lib = []; }
     if(!Array.isArray(lib) || !lib.length) {
-        lib = JSON.parse(JSON.stringify(DEFAULT_EXAMS || []));
+        lib = [];
         try { localStorage.setItem(LK, JSON.stringify(lib)); } catch(e) {}
     }
     ensureFileKeys(lib);
@@ -607,12 +539,12 @@ window.copyExamLink = (id) => {
     const x = lib[idx];
     const fk = normFileKey(x.fileKey, idx);
     const link = buildExamStudentLink(x, idx);
-    copyTextSafe(link, `Đã copy link thi của "${x.name}":\n${link}\n\n📌 Lưu ý: Hãy xuất file "${fk}.json" (hoặc "exams.json") và tải lên GitHub.`);
+    copyTextSafe(link, `Đã copy link thi của "${x.name}":\n${link}\n\nLưu ý: Hãy xuất file "${fk}.json" (hoặc "exams.json") và tải lên GitHub.`);
 };
 
 function showLib() {
     ensureFileKeys(lib);
-    $('lt').textContent = `📚 Danh sách đề thi (${lib.length})`;
+    $('lt').textContent = `Danh sách đề thi (${lib.length})`;
     $('libl').innerHTML = lib.length ? lib.map((x, i) => {
         const tScale = x.scale === 'math' ? 'Toán' : (x.scale === 'english' ? 'Tiếng Anh' : 'Môn chung');
         const fk = normFileKey(x.fileKey, i);
@@ -620,14 +552,14 @@ function showLib() {
         <div class="lr">
             <div class="lr-info"><span class="no">${i+1}</span>
             <div>
-                <b>${esc(x.name)}</b> <span class="tg">📄 ${esc(fk)}.json</span>
-                <div class="note">${x.items.filter(k=>k.k==='q').length} câu • Cài đặt: ${x.time||0} phút - Thang điểm: ${tScale} • Link thi: <code>?de=${esc(fk)}</code>${(x.openAt||x.closeAt) ? `<br>🕒 ${x.openAt ? 'Mở: ' + fmtDT(x.openAt) : 'Mở: ngay'} — ${x.closeAt ? 'Đóng: ' + fmtDT(x.closeAt) : 'không giới hạn'}` : ''}</div>
+                <b>${esc(x.name)}</b> <span class="tg">${esc(fk)}.json</span>
+                <div class="note">${x.items.filter(k=>k.k==='q').length} câu • Cài đặt: ${x.time||0} phút - Thang điểm: ${tScale} • Link thi: <code>?de=${esc(fk)}</code>${x.webhook ? '' : '<br><span class="warn-t">Chưa có liên kết Google Sheet: điểm sẽ không được lưu.</span>'}${(x.openAt||x.closeAt) ? `<br>${x.openAt ? 'Mở: ' + fmtDT(x.openAt) : 'Mở: ngay'} — ${x.closeAt ? 'Đóng: ' + fmtDT(x.closeAt) : 'không giới hạn'}` : ''}</div>
             </div></div>
             <div class="lr-act">
                 <button class="btn sec" onclick="openExam('${x.id}')">Quản lý</button>
-                <button class="btn sec" title="Xuất đề này ra file ${esc(fk)}.json để tải lên GitHub" onclick="exportExam('${x.id}')">⬆️ Xuất thư viện (exams.json) / ${esc(fk)}.json</button>
-                <button class="btn gr" title="Copy link thi ?de=${esc(fk)}" onclick="copyExamLink('${x.id}')">🔗 Link (${esc(fk)})</button>
-                <button class="btn sec" title="Chọn file .json để ghi đè nội dung đề này" onclick="importIntoExam('${x.id}')">⬇️ Nhập thư viện (.json)</button>
+                <button class="btn sec" title="Xuất đề này ra file ${esc(fk)}.json để tải lên GitHub" onclick="exportExam('${x.id}')">Xuất ${esc(fk)}.json</button>
+                <button class="btn gr" title="Copy link thi ?de=${esc(fk)}" onclick="copyExamLink('${x.id}')">Sao chép liên kết</button>
+                <button class="btn sec" title="Chọn file .json để ghi đè nội dung đề này" onclick="importIntoExam('${x.id}')">Nhập .json</button>
                 <button class="btn sec" style="color:var(--bad);border-color:var(--bad)" onclick="delExam('${x.id}')">Xóa</button>
             </div>
         </div>`;
@@ -650,7 +582,7 @@ window.openExam = (id) => {
     const fk = normFileKey(exam.fileKey, idx);
     exam.fileKey = fk;
     $('exam-file-key').value = fk;
-    $('btn-export-cur').textContent = `⬆️ Xuất ${fk}.json`;
+    $('btn-export-cur').textContent = `Xuất ${fk}.json`;
     $('time-limit').value = exam.time || 0;
     $('open-at').value = toLocalInput(exam.openAt);
     $('close-at').value = toLocalInput(exam.closeAt);
@@ -667,7 +599,7 @@ window.openExam = (id) => {
 
 $('exam-file-key').addEventListener('input', () => {
     const fk = normFileKey($('exam-file-key').value, exam ? lib.indexOf(exam) : 0);
-    $('btn-export-cur').textContent = `⬆️ Xuất ${fk}.json`;
+    $('btn-export-cur').textContent = `Xuất ${fk}.json`;
 });
 
 $('btn-export-cur').onclick = () => {
@@ -692,7 +624,7 @@ $('btn-save-settings').onclick = () => {
         const idx = lib.indexOf(exam);
         exam.fileKey = normFileKey($('exam-file-key').value, idx >= 0 ? idx : 0);
         $('exam-file-key').value = exam.fileKey;
-        $('btn-export-cur').textContent = `⬆️ Xuất ${exam.fileKey}.json`;
+        $('btn-export-cur').textContent = `Xuất ${exam.fileKey}.json`;
         exam.openAt = oa;
         exam.closeAt = ca;
         exam.time = parseInt($('time-limit').value) || 0;
@@ -1077,7 +1009,7 @@ $('file').onchange = async e => {
     
     const miss=qs.filter(q=> q.qtype==='mc' && !q.opts.some(o=>o.ok)).length;
     let msg = miss ? `Đã đọc ${qs.length} câu. Có ${miss} câu chưa gạch chân đáp án.` : `Đã tải thành công ${qs.length} câu.`;
-    if(parseSkipped) msg += `\n⚠ Có ${parseSkipped} câu không tìm đủ 4 phương án A–D nên đã bị bỏ qua (kiểm tra lại file Word).`;
+    if(parseSkipped) msg += `\nCó ${parseSkipped} câu không tìm đủ 4 phương án A–D nên đã bị bỏ qua (kiểm tra lại file Word).`;
     const saEq = qs.filter(q=>q.qtype==='sa' && q.ansRuns.some(r=>r.t.includes('⟪'))).length;
     if(saEq) msg += `\nℹ ${saEq} câu trả lời ngắn có đáp án gõ bằng Equation: hệ thống tự quy đổi sang số, nên kiểm tra lại trong phần xem trước.`;
     alert(msg);
@@ -1096,7 +1028,7 @@ function kx(l,d){
 const imH = k => {
     const m = (exam.img||[])[k];
     if(!m) return '';
-    if(m.isMathType) return `<span style="background:#fee2e2;color:#dc2626;padding:4px 8px;border-radius:6px;font-size:13px;font-weight:600;display:inline-block;margin:4px 0;line-height:1.4;">⚠️ Lỗi MathType: Ảnh WMF/EMF không hỗ trợ trên Web tĩnh.<br>Giải pháp: Mở file Word &rarr; Tab MathType &rarr; Chọn Convert Equations (thành OMML) rồi tải lên lại.</span>`;
+    if(m.isMathType) return `<span style="background:#fee2e2;color:#dc2626;padding:4px 8px;border-radius:6px;font-size:13px;font-weight:600;display:inline-block;margin:4px 0;line-height:1.4;">Lỗi MathType: Ảnh WMF/EMF không hỗ trợ trên Web tĩnh.<br>Giải pháp: Mở file Word &rarr; Tab MathType &rarr; Chọn Convert Equations (thành OMML) rồi tải lên lại.</span>`;
     if(m.bad) return '<span style="color:red">[Ảnh lỗi]</span>';
     return `<img class="im" src="${esc(m.d)}" alt="">`;
 };
@@ -1283,9 +1215,7 @@ async function initStudentFlow(id, deParam) {
         $('student-login').classList.add('hide');
         try {
             const url = new URL(window.location.href);
-            url.searchParams.delete('s');
             url.searchParams.delete('de');
-            url.searchParams.delete('file');
             window.history.replaceState({}, '', url.pathname);
         } catch(e) {}
         initTeacherFlow();
@@ -1294,15 +1224,11 @@ async function initStudentFlow(id, deParam) {
     const rawDe = String(deParam || '').trim();
     const rawId = String(id || '').trim();
 
-    // 1. Nếu có tham số ?de=de1 (hoặc ?de=de1.json) hoặc ?s=de1 -> tải trực tiếp file <de>.json trước
+    // 1. Nếu có tham số ?de=de1 (hoặc ?de=de1.json) -> tải trực tiếp file <de>.json trước
     const directFiles = [];
     if (rawDe) {
         const fn = rawDe.toLowerCase().endsWith('.json') ? rawDe : (rawDe + '.json');
         directFiles.push(fn);
-    }
-    if (rawId && (!/^e\d{10,}$/.test(rawId) || rawId.toLowerCase().endsWith('.json'))) {
-        const fn2 = rawId.toLowerCase().endsWith('.json') ? rawId : (rawId + '.json');
-        if (!directFiles.includes(fn2)) directFiles.push(fn2);
     }
 
     for (const fn of directFiles) {
@@ -1324,26 +1250,11 @@ async function initStudentFlow(id, deParam) {
         }
     }
 
-    // 3. Nếu vẫn chưa thấy (VD học sinh dùng link cũ ?s=e179... mà giáo viên lưu ở de1.json, de2.json...), quét de1.json -> de10.json
-    if (!exam && rawId) {
-        for (let k = 1; k <= 10; k++) {
-            const fn = 'de' + k + '.json';
-            if (directFiles.includes(fn)) continue;
-            const list = await fetchExamJsonFile(fn);
-            const found = matchExamInList(list, rawId, rawDe);
-            if (found && (String(found.id) === rawId || String(found.fileKey || '').toLowerCase() === rawId.toLowerCase())) {
-                exam = found;
-                exam.fileKey = normFileKey(exam.fileKey || ('de' + k), k - 1);
-                break;
-            }
-        }
-    }
 
-    // 4. Tìm trong localStorage hoặc đề mẫu tích hợp sẵn
+    // 3. Tìm trong localStorage (đề giáo viên vừa tạo trên máy này)
     if (!exam) {
         let local = [];
         try { local = JSON.parse(localStorage.getItem(LK) || '[]'); } catch(e) {}
-        if (!Array.isArray(local) || !local.length) local = DEFAULT_EXAMS || [];
         ensureFileKeys(local);
         exam = matchExamInList(local, rawId, rawDe);
     }
@@ -1402,8 +1313,8 @@ function updateGate() {
     const st = gateState(), box = $('s-schedule'), btn =$('btn-start-exam');
     const n = nowMs(), o = exam.openAt || 0, c = exam.closeAt || 0;
     let html = '';
-    if(o) html += `🟢 Mở đề: <b>${fmtDT(o)}</b><br>`;
-    if(c) html += `🔴 Đóng đề: <b>${fmtDT(c)}</b>`;
+    if(o) html += `Mở đề: <b>${fmtDT(o)}</b><br>`;
+    if(c) html += `Đóng đề: <b>${fmtDT(c)}</b>`;
     box.className = 'sch-state ' + st;
     btn.disabled = st !== 'open';
     
@@ -1566,7 +1477,7 @@ function showToast(msg, ms = 5000) {
 function updateRotBtn() {
     const b = $('btn-rotate'); if (!b) return;
     b.classList.toggle('hide', !(isTouchDev() && (rotLocked || isPortrait())));
-    b.textContent = rotLocked ? '↩ Thoát chế độ ngang' : '🔄 Xoay ngang';
+    b.textContent = rotLocked ? '↩ Thoát chế độ ngang' : 'Xoay ngang';
 }
 
 async function enterLandscape() {
@@ -1604,7 +1515,7 @@ function setupRotate() {
         updateRotBtn();
     });
     updateRotBtn();
-    if (isTouchDev() && isPortrait()) showToast('💡 Xoay ngang điện thoại để xem đoạn văn và câu hỏi cạnh nhau.');
+    if (isTouchDev() && isPortrait()) showToast('Xoay ngang điện thoại để xem đoạn văn và câu hỏi cạnh nhau.');
 }
 
 $('btn-submit-exam').onclick = () => {
@@ -1664,14 +1575,13 @@ function showResult(res, canReview) {
     clearInterval(resultTimer);
     const box = $('loading-box');
     const head = `
-        <div class="ic">🎉</div>
-        <h2 style="color:var(--ok)">Nộp bài thành công!</h2>
+        <h2 class="ok-title">Nộp bài thành công</h2>
         <p>Cảm ơn em đã hoàn thành bài thi.</p>`;
     const showScore = () => {
         box.innerHTML = head + `
             <div class="score-result">
-                <div style="font-size:24px; font-weight:900; color:var(--pri); text-align:center; margin-bottom:12px;">ĐIỂM: ${res.score}/10</div>
-                <div style="font-size:14px; color:var(--tx)">
+                <div class="score-big">${res.score}<small>/10 điểm</small></div>
+                <div class="score-list">
                     • Trắc nghiệm (0.25đ/câu): Đúng ${res.correctMC}/${res.totalMC} câu<br>
                     • Đúng/Sai (Điểm lũy tiến): Đã làm ${res.tfQuestions} câu<br>
                     • Trả lời ngắn (${res.isMath?'0.5đ':'0.25đ'}/câu): Đúng ${res.correctSA}/${res.totalSA} câu
@@ -1681,7 +1591,7 @@ function showResult(res, canReview) {
     if(!(res.revealAt > nowMs())) { showScore(); return; }
     box.innerHTML = head + `
         <div class="score-result" style="text-align:center">
-            🔒 Điểm và số câu đúng sẽ được công bố sau khi hết thời gian thi, lúc <b>${fmtDT(res.revealAt)}</b>.
+            Điểm và số câu đúng sẽ được công bố sau khi hết thời gian thi, lúc <b>${fmtDT(res.revealAt)}</b>.
             <span class="sch-count" id="reveal-count"></span>
             <div class="note">Em vui lòng giữ nguyên trang này, kết quả sẽ tự hiện khi đến giờ.</div>
         </div>`;
@@ -1756,8 +1666,8 @@ async function processSubmission() {
     };
 
     try {
-        const targetWebhook = exam.webhook ? exam.webhook : WEBHOOK_URL;
-        if (targetWebhook !== 'YOUR_GOOGLE_SCRIPT_WEBAPP_URL_HERE') {
+        const targetWebhook = (exam.webhook || '').trim();
+        if (targetWebhook) {
             await fetch(targetWebhook, {
                 method: 'POST',
                 mode: 'no-cors',
@@ -1918,14 +1828,14 @@ function pgTick() {
   if (!PG.on || submitted || !PG.det || document.hidden || !v.videoWidth) return;
   let n;
   try { n = PG.det.detectForVideo(v, performance.now()).detections.length; } catch (e) { return; }
-  $('pg-st').textContent = n === 0 ? '⚠ Không thấy mặt' : n > 1 ? '⚠ Có nhiều người' : '✔ Bình thường';
+  $('pg-st').textContent = n === 0 ? 'Không thấy mặt' : n > 1 ? 'Có nhiều người' : 'Bình thường';
   if (n === 0) { if (++PG.none >= 5 && !PG.lostF) { PG.lostF = 1; pgViol('Không thấy thí sinh trong khung camera'); } } else { PG.none = 0; PG.lostF = 0; }
   if (n > 1) { if (++PG.many >= 3 && !PG.manyF) { PG.manyF = 1; pgViol('Phát hiện nhiều hơn 1 người trong khung camera'); } } else { PG.many = 0; PG.manyF = 0; }
 }
 
 function pgShow(reason) {
   const max = pgMax(), n = PG.viol.length, fin = max && n > max;
-  $('pg-title').textContent = fin ? '⛔ Vượt quá số lần vi phạm' : '⚠️ Cảnh báo vi phạm ' + n + (max ? '/' + max : '');
+  $('pg-title').textContent = fin ? 'Vượt quá số lần vi phạm' : 'Cảnh báo vi phạm ' + n + (max ? '/' + max : '');
   $('pg-msg').textContent = fin
     ? reason + '. Hệ thống đang tự động nộp bài của em.'
     : reason + '. Mọi vi phạm đều được ghi lại và gửi cho giáo viên. Bấm nút bên dưới để tiếp tục làm bài.';
@@ -1979,7 +1889,7 @@ function pgGuard() {
 function pgBlock() {
   PG.sel = (PG.sel || 0) + 1;
   if (PG.sel >= 5) { PG.sel = 0; pgViol('Cố bôi đen văn bản / tra từ điển nhiều lần'); return; }
-  showToast('🔒 Trong giờ thi không được bôi đen, sao chép hay tra từ điển (' + PG.sel + '/5).', 3000);
+  showToast('Trong giờ thi không được bôi đen, sao chép hay tra từ điển (' + PG.sel + '/5).', 3000);
 }
 
 ['selectstart', 'dragstart', 'copy', 'cut'].forEach(ev => document.addEventListener(ev, e => { if (pgOn() && !pgEdit(e.target)) e.preventDefault(); }, true));
