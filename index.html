@@ -198,6 +198,8 @@ body.shot-hide #list-student,body.shot-hide #q-panel{visibility:hidden}
     <div id="s-pg-note" class="sch-state wait hide">Bài thi có giám sát: em cần cho phép camera và làm bài ở chế độ toàn màn hình. Rời màn hình, chuyển tab hoặc ra khỏi khung camera sẽ bị ghi nhận và có thể bị tự động nộp bài. Trên màn hình luôn có hình mờ ghi tên và lớp của em: mọi ảnh chụp hoặc quay màn hình (kể cả chụp bằng điện thoại khác) đều truy ra được người làm bài.</div>
     <input type="text" id="s-name" placeholder="Họ và tên" required>
     <input type="text" id="s-class" placeholder="Lớp, ví dụ 12A1" required>
+    <input type="password" id="s-pw" class="hide" placeholder="Mật khẩu đề thi (do giáo viên cung cấp)" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <div class="err hide" id="s-pw-err" role="alert"></div>
     <button class="btn gr" type="submit" id="btn-start-exam" disabled>Bắt đầu làm bài</button>
     <button class="btn sec" type="button" id="btn-back-hub">Chọn đề khác</button>
     <div class="copyright">Bản quyền thuộc về số ĐT: 0943.930.787</div>
@@ -276,6 +278,19 @@ body.shot-hide #list-student,body.shot-hide #q-panel{visibility:hidden}
         </div>
         <p class="note">Để trống là không giới hạn. Học sinh chỉ vào làm được trong khoảng này; đến giờ đóng đề, hệ thống tự nộp bài. Sau khi lưu, nhớ xuất lại file .json và tải lên GitHub.</p>
         <button class="btn sec" type="button" id="btn-clear-sch" style="margin-top:10px">Bỏ hạn thời gian</button>
+      </div>
+      <div class="sect">
+        <h3>Mật khẩu đề thi</h3>
+        <div class="fld">
+          <label for="exam-pw">Học sinh phải nhập mật khẩu này mới được bắt đầu làm bài</label>
+          <div class="row" style="flex-wrap:wrap">
+            <input type="text" id="exam-pw" style="flex:1 1 180px;min-width:0" placeholder="Để trống nếu không đặt mật khẩu" autocomplete="off" autocapitalize="off" spellcheck="false">
+            <button class="btn sec" type="button" id="btn-gen-pw">Tạo ngẫu nhiên</button>
+            <button class="btn sec" type="button" id="btn-clear-pw">Bỏ mật khẩu</button>
+          </div>
+        </div>
+        <p class="note" id="pw-state"></p>
+        <p class="note">Mỗi đề có mật khẩu riêng. Khi xuất file .json, mật khẩu được mã hóa một chiều nên không ai đọc lại được từ file; chỉ máy này giữ bản gốc để giáo viên xem lại.</p>
       </div>
       <div class="actions">
         <button class="btn" id="btn-save-settings">Lưu cài đặt</button>
@@ -508,7 +523,7 @@ async function populateStudentHub() {
     box.innerHTML = list.map((x, i) => {
         const fk = normFileKey(x.fileKey, i);
         const qCount = (x.items || []).filter(k => k.k === 'q').length;
-        return `<button type="button" class="hub-item" onclick="openStudentExamByKey('${esc(fk)}','${esc(x.id)}')"><b>${esc(x.name)}</b><span>${qCount} câu · ${x.time ? x.time + ' phút' : 'Tự do'}</span></button>`;
+        return `<button type="button" class="hub-item" onclick="openStudentExamByKey('${esc(fk)}','${esc(x.id)}')"><b>${esc(x.name)}</b><span>${qCount} câu · ${x.time ? x.time + ' phút' : 'Tự do'}${x.pwHash ? ' · 🔒 Có mật khẩu' : ''}</span></button>`;
     }).join('');
 }
 
@@ -556,7 +571,7 @@ function showLib() {
             <div class="lr-info"><span class="no">${i+1}</span>
             <div>
                 <b>${esc(x.name)}</b> <span class="tg">${esc(fk)}.json</span>
-                <div class="note">${x.items.filter(k=>k.k==='q').length} câu • Cài đặt: ${x.time||0} phút - Thang điểm: ${tScale} • Link thi: <code>?de=${esc(fk)}</code>${x.webhook ? '' : '<br><span class="warn-t">Chưa có liên kết Google Sheet: điểm sẽ không được lưu.</span>'}${(x.openAt||x.closeAt) ? `<br>${x.openAt ? 'Mở: ' + fmtDT(x.openAt) : 'Mở: ngay'} — ${x.closeAt ? 'Đóng: ' + fmtDT(x.closeAt) : 'không giới hạn'}` : ''}</div>
+                <div class="note">${x.items.filter(k=>k.k==='q').length} câu • Cài đặt: ${x.time||0} phút - Thang điểm: ${tScale} • Link thi: <code>?de=${esc(fk)}</code>${x.pwHash ? ' • 🔒 Có mật khẩu' : ''}${x.webhook ? '' : '<br><span class="warn-t">Chưa có liên kết Google Sheet: điểm sẽ không được lưu.</span>'}${(x.openAt||x.closeAt) ? `<br>${x.openAt ? 'Mở: ' + fmtDT(x.openAt) : 'Mở: ngay'} — ${x.closeAt ? 'Đóng: ' + fmtDT(x.closeAt) : 'không giới hạn'}` : ''}</div>
             </div></div>
             <div class="lr-act">
                 <button class="btn sec" onclick="openExam('${x.id}')">Quản lý</button>
@@ -595,6 +610,9 @@ window.openExam = (id) => {
     $('chk-shuf-q').checked = exam.shufQ !== false; 
     $('chk-shuf-opt').checked = exam.shufOpt !== false;
     $('chk-proctor').checked = !!exam.proctor; $('max-viol').value = exam.maxViol == null ? 3 : exam.maxViol; 
+    pwRemove = false;
+    $('exam-pw').value = exam.pwPlain || '';
+    updatePwNote();
 
     cur = JSON.parse(JSON.stringify(exam.items)); 
     renderTeacherPreview();
@@ -615,7 +633,7 @@ $('btn-export-cur').onclick = () => {
 $('btn-export-all').onclick = () => {
     if(!lib.length) return alert('Chưa có đề thi nào để xuất!');
     ensureFileKeys(lib);
-    downloadJSON(lib, 'exams.json');
+    downloadJSON(lib.map(pubExam), 'exams.json');
     showToast(`Đã xuất tất cả ${lib.length} đề vào file exams.json!`);
 };
 
@@ -637,6 +655,12 @@ $('btn-save-settings').onclick = () => {
         exam.shufQ = $('chk-shuf-q').checked;
         exam.shufOpt = $('chk-shuf-opt').checked;
         exam.proctor = $('chk-proctor').checked; exam.maxViol = Math.max(0, parseInt($('max-viol').value) || 0);
+        const pwv = $('exam-pw').value.trim();
+        if(pwRemove) { delete exam.pwHash; delete exam.pwSalt; delete exam.pwPlain; }
+        else if(pwv && (!exam.pwHash || pwv !== exam.pwPlain)) { exam.pwSalt = randHex(8); exam.pwHash = hashPw(pwv, exam.pwSalt); exam.pwPlain = pwv; }
+        pwRemove = false;
+        $('exam-pw').value = exam.pwPlain || '';
+        updatePwNote();
         saveLib();
         alert(`Đã lưu cài đặt! Nhớ bấm "Xuất ${exam.fileKey}.json" (hoặc "Xuất tất cả exams.json") và tải lên GitHub.`);
     }
@@ -651,6 +675,71 @@ $('btn-copy-link').onclick = () => {
     saveLib();
     window.copyExamLink(exam.id);
 };
+
+// ===== Mật khẩu từng đề thi =====
+// Lưu trong đề: pwSalt + pwHash (SHA-256 có muối). pwPlain chỉ nằm ở máy giáo viên, KHÔNG xuất ra file .json.
+const SHA_K = [0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+function sha256hex(str) {
+    const b = Array.from(new TextEncoder().encode(String(str))), l = b.length;
+    b.push(0x80);
+    while (b.length % 64 !== 56) b.push(0);
+    const hi = Math.floor(l * 8 / 4294967296), lo = (l * 8) >>> 0;
+    for (let i = 3; i >= 0; i--) b.push((hi >>> (i * 8)) & 255);
+    for (let i = 3; i >= 0; i--) b.push((lo >>> (i * 8)) & 255);
+    let H = [0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+    const w = new Array(64), rr = (x, n) => (x >>> n) | (x << (32 - n));
+    for (let o = 0; o < b.length; o += 64) {
+        for (let i = 0; i < 16; i++) w[i] = (b[o+4*i] << 24) | (b[o+4*i+1] << 16) | (b[o+4*i+2] << 8) | b[o+4*i+3];
+        for (let i = 16; i < 64; i++) {
+            const s0 = rr(w[i-15], 7) ^ rr(w[i-15], 18) ^ (w[i-15] >>> 3);
+            const s1 = rr(w[i-2], 17) ^ rr(w[i-2], 19) ^ (w[i-2] >>> 10);
+            w[i] = (w[i-16] + s0 + w[i-7] + s1) | 0;
+        }
+        let [a, bb, c, d, e, f, g, h] = H;
+        for (let i = 0; i < 64; i++) {
+            const t1 = (h + (rr(e, 6) ^ rr(e, 11) ^ rr(e, 25)) + ((e & f) ^ (~e & g)) + SHA_K[i] + w[i]) | 0;
+            const t2 = ((rr(a, 2) ^ rr(a, 13) ^ rr(a, 22)) + ((a & bb) ^ (a & c) ^ (bb & c))) | 0;
+            h = g; g = f; f = e; e = (d + t1) | 0; d = c; c = bb; bb = a; a = (t1 + t2) | 0;
+        }
+        H = [H[0]+a|0, H[1]+bb|0, H[2]+c|0, H[3]+d|0, H[4]+e|0, H[5]+f|0, H[6]+g|0, H[7]+h|0];
+    }
+    return H.map(x => (x >>> 0).toString(16).padStart(8, '0')).join('');
+}
+function randBytes(n) {
+    const a = new Uint8Array(n);
+    try { crypto.getRandomValues(a); } catch(e) { for (let i = 0; i < n; i++) a[i] = Math.floor(Math.random() * 256); }
+    return a;
+}
+const randHex = n => Array.from(randBytes(n), x => x.toString(16).padStart(2, '0')).join('');
+const hashPw = (pw, salt) => sha256hex(String(salt || '') + '|' + String(pw).trim());
+const checkExamPw = (ex, input) => !!ex.pwHash && hashPw(input, ex.pwSalt) === ex.pwHash;
+function genPw(n) {
+    const cs = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; // bỏ các ký tự dễ nhầm: I, L, O, 0, 1
+    return Array.from(randBytes(n || 6), x => cs[x % cs.length]).join('');
+}
+// Bản xuất ra file: bỏ mật khẩu gốc, chỉ giữ bản băm
+const pubExam = x => { const { pwPlain, ...rest } = x; return rest; };
+
+let pwRemove = false;
+function updatePwNote() {
+    if(!exam) return;
+    const v = $('exam-pw').value.trim();
+    let t;
+    if(pwRemove) t = 'Mật khẩu sẽ được gỡ khi bấm "Lưu cài đặt".';
+    else if(v && (!exam.pwHash || v !== exam.pwPlain)) t = 'Mật khẩu mới sẽ có hiệu lực khi bấm "Lưu cài đặt".';
+    else if(exam.pwHash && exam.pwPlain) t = '🔒 Đề đang có mật khẩu.';
+    else if(exam.pwHash) t = '🔒 Đề đang có mật khẩu (file nhập từ máy khác nên không hiển thị lại được). Nhập mật khẩu mới nếu muốn đổi.';
+    else t = 'Chưa đặt mật khẩu: học sinh có link là vào làm được.';
+    $('pw-state').textContent = t;
+}
+$('exam-pw').addEventListener('input', () => {
+    pwRemove = !$('exam-pw').value.trim() && !!(exam && exam.pwHash && exam.pwPlain);
+    updatePwNote();
+});
+$('btn-gen-pw').onclick = () => { if(!exam) return; pwRemove = false; $('exam-pw').value = genPw(6); updatePwNote(); };
+$('btn-clear-pw').onclick = () => { if(!exam) return; $('exam-pw').value = ''; pwRemove = !!exam.pwHash; updatePwNote(); };
+// Giữ lại mật khẩu gốc ở máy giáo viên khi nhập đè file có cùng bản băm
+const keepPwPlain = (n, old) => { if(old && n.pwHash && n.pwHash === old.pwHash && old.pwPlain) n.pwPlain = old.pwPlain; return n; };
 
 // ===== Xuất / nhập đề thi riêng rẽ dạng de1.json, de2.json hoặc gộp exams.json =====
 const SAFE_ID = /^[A-Za-z0-9_-]{1,64}$/;
@@ -671,7 +760,7 @@ window.exportExam = id => {
     const x = lib[idx];
     const fk = normFileKey(x.fileKey, idx);
     x.fileKey = fk;
-    downloadJSON([x], fk + '.json');
+    downloadJSON([pubExam(x)], fk + '.json');
     showToast(`Đã tải xuống file ${fk}.json! Hãy tải file này lên GitHub.`);
 };
 
@@ -691,6 +780,7 @@ function normExam(x, fallbackId, fallbackFileKey) {
         time: parseInt(x.time) || 0,
         scale: (x.scale === 'math' || x.scale === 'english' || x.scale === 'other') ? x.scale : 'english',
         webhook: x.webhook || '',
+        ...(/^[0-9a-f]{64}$/.test(String(x.pwHash || '')) ? { pwHash: String(x.pwHash), pwSalt: String(x.pwSalt || '').slice(0, 64) } : {}),
         openAt: +x.openAt || 0,
         closeAt: +x.closeAt || 0,
         shufGrp: !!x.shufGrp, shufQ: x.shufQ !== false, shufOpt: x.shufOpt !== false, proctor: !!x.proctor, maxViol: x.maxViol == null ? 3 : Math.max(0, parseInt(x.maxViol) || 0)
@@ -733,7 +823,7 @@ $('li-multi').onchange = async e => {
             out.forEach(n => {
                 const existIdx = lib.findIndex(y => y.id === n.id || (y.fileKey && y.fileKey.toLowerCase() === n.fileKey.toLowerCase()));
                 if(existIdx >= 0) {
-                    lib[existIdx] = n;
+                    lib[existIdx] = keepPwPlain(n, lib[existIdx]);
                     updated++;
                 } else {
                     lib.push(n);
@@ -770,7 +860,7 @@ $('li-one').onchange = async e => {
         if(!confirm('Xác nhận cập nhật nội dung đề "' + lib[i].name + '" bằng file "' + f.name + '" (gồm ' + qn + ' câu)?\n\nMã đề (ID) và Link thi của đề này sẽ được giữ nguyên.')) return;
         n.id = lib[i].id;
         n.fileKey = lib[i].fileKey || normFileKey(f.name, i);
-        lib[i] = n;
+        lib[i] = keepPwPlain(n, lib[i]);
         if(saveLib()) {
             refreshOpenExam();
             alert(`Đã cập nhật dữ liệu đề thi thành công! Nhớ xuất lại file ${n.fileKey}.json và tải lên Github.`);
@@ -1006,7 +1096,7 @@ $('file').onchange = async e => {
         shufGrp: false, shufQ: true, shufOpt: true
     };
     const old=lib.find(y=>y.name===ex.name);
-    if(old){ ex.id=old.id; ex.fileKey=old.fileKey||ex.fileKey; ex.time=old.time||0; ex.openAt=old.openAt||0; ex.closeAt=old.closeAt||0; ex.scale=old.scale||'english'; ex.webhook=old.webhook||''; ex.shufGrp=!!old.shufGrp; ex.shufQ=old.shufQ!==false; ex.shufOpt=old.shufOpt!==false; ex.proctor=!!old.proctor; ex.maxViol=old.maxViol; }
+    if(old){ ex.id=old.id; ex.fileKey=old.fileKey||ex.fileKey; ex.time=old.time||0; ex.openAt=old.openAt||0; ex.closeAt=old.closeAt||0; ex.scale=old.scale||'english'; ex.webhook=old.webhook||''; ex.shufGrp=!!old.shufGrp; ex.shufQ=old.shufQ!==false; ex.shufOpt=old.shufOpt!==false; ex.proctor=!!old.proctor; ex.maxViol=old.maxViol; if(old.pwHash){ ex.pwHash=old.pwHash; ex.pwSalt=old.pwSalt; if(old.pwPlain) ex.pwPlain=old.pwPlain; } }
     lib=lib.filter(y=>y.name!==ex.name); lib.push(ex); saveLib();
     openExam(ex.id);
     
@@ -1210,6 +1300,7 @@ async function initStudentFlow(id, deParam) {
     $('s-name').style.display = '';
     $('s-class').style.display = '';
     $('btn-start-exam').style.display = '';
+    setPwField(false);
     const oldWarn = $('sf').querySelector('.err-not-found');
     if (oldWarn) oldWarn.remove();
 
@@ -1279,10 +1370,11 @@ async function initStudentFlow(id, deParam) {
 
     $('s-exam-name').textContent = exam.name;
     $('s-pg-note').classList.toggle('hide', !exam.proctor);
+    setPwField(!!exam.pwHash);
 
     const sv = loadProg();
     if(sv && sv.done) {
-        $('s-name').style.display = 'none'; $('s-class').style.display = 'none';$('btn-start-exam').style.display = 'none';
+        $('s-name').style.display = 'none'; $('s-class').style.display = 'none';$('btn-start-exam').style.display = 'none'; setPwField(false);
         const p = document.createElement('p');
         p.style.cssText = 'color:var(--ok);font-weight:bold';
         p.textContent = 'Em đã nộp bài thi này rồi. Cảm ơn em!';
@@ -1298,12 +1390,28 @@ async function initStudentFlow(id, deParam) {
     $('sf').onsubmit = async (e) => {
         e.preventDefault();
         if(gateState() !== 'open') { updateGate(); return; }
+        if(exam.pwHash && !checkExamPw(exam, $('s-pw').value)) {
+            $('s-pw-err').textContent = 'Mật khẩu đề thi không đúng. Em kiểm tra lại hoặc hỏi giáo viên.';
+            $('s-pw-err').classList.remove('hide');
+            $('s-pw').focus(); $('s-pw').select();
+            return;
+        }
         studentData.name = $('s-name').value.trim();
         studentData.class = $('s-class').value.trim();
         if(exam.proctor && !(await pgStart())) return;
         startStudentExam();
     };
 }
+
+// Bật/tắt ô mật khẩu đề thi trong form học sinh (tắt thì không được "required" để form không bị chặn)
+function setPwField(show) {
+    $('s-pw').classList.toggle('hide', !show);
+    $('s-pw').required = !!show;
+    $('s-pw').value = '';
+    $('s-pw-err').classList.add('hide');
+    $('s-pw-err').textContent = '';
+}
+$('s-pw').addEventListener('input', () => $('s-pw-err').classList.add('hide'));
 
 function gateState() {
     const n = nowMs(), o = exam.openAt || 0, c = exam.closeAt || 0;
@@ -1322,11 +1430,11 @@ function updateGate() {
     btn.disabled = st !== 'open';
     
     if(st === 'wait') {
-        html += `<span class="sch-count">⏳ Còn ${fmtCountdown(Math.ceil((o - n) / 1000))}</span>Chưa đến giờ làm bài. Em có thể nhập sẵn họ tên và lớp, nút bắt đầu sẽ tự mở khi đến giờ.`;
+        html += `<span class="sch-count">⏳ Còn ${fmtCountdown(Math.ceil((o - n) / 1000))}</span>Chưa đến giờ làm bài. Em có thể nhập sẵn họ tên${exam.pwHash ? ', lớp và mật khẩu' : ' và lớp'}, nút bắt đầu sẽ tự mở khi đến giờ.`;
     } else if(st === 'closed') {
         if(gateTimer) { clearInterval(gateTimer); gateTimer = null; }
         html += `<br><b>Đề thi đã đóng.</b> Em không thể làm bài nữa. Vui lòng liên hệ giáo viên nếu cần.`;
-        $('s-name').style.display = 'none';$('s-class').style.display = 'none'; btn.style.display = 'none';
+        $('s-name').style.display = 'none';$('s-class').style.display = 'none'; btn.style.display = 'none'; setPwField(false);
     } else if(c) {
         html += `<br>Đề đang mở. Còn <b>${fmtCountdown(Math.ceil((c - n) / 1000))}</b> đến giờ đóng đề.`;
     } else if(o) {
