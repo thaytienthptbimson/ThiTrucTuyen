@@ -156,6 +156,10 @@ img.im{max-width:100%;height:auto;border-radius:6px;margin:8px 0}
 .score-list{margin-top:14px;font-size:14px;line-height:1.8}
 .res-stats{display:flex;flex-wrap:wrap;gap:6px 26px;margin-top:16px;font-size:14.5px}
 .res-h{margin:22px 0 0;font-size:15px}
+.res-hbar{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:8px 16px;margin-top:22px}
+.res-hbar .res-h{margin:0}
+.res-exp{display:flex;flex-wrap:wrap;gap:8px}
+.res-xbtn{padding:6px 12px;font-size:13.5px}
 .res-wrap{overflow:auto;margin-top:10px}
 .res-wrap.rank{max-height:520px;border:1px solid var(--bd);border-radius:var(--r)}
 .res-t{width:100%;border-collapse:collapse;font-size:14.5px}
@@ -1021,7 +1025,7 @@ function renderResults(skipped) {
         <div class="res-stats"><span>Số bài đã nộp: <b>${n}</b></span><span>Điểm trung bình: <b>${f(total / n)}</b></span><span>Cao nhất: <b>${f(sorted[0].score)}</b></span><span>Thấp nhất: <b>${f(sorted[n - 1].score)}</b></span></div>
         <h3 class="res-h">Thống kê theo khoảng điểm</h3>
         <div class="res-wrap"><table class="res-t"><thead><tr><th>Khoảng điểm</th><th class="num">Số bài</th><th class="num">Tỉ lệ</th><th>Biểu đồ</th></tr></thead><tbody>${bands}</tbody><tfoot><tr><td>Tổng</td><td class="num">${n}</td><td class="num">100%</td><td></td></tr></tfoot></table></div>
-        <h3 class="res-h">Bảng xếp hạng (cao → thấp)</h3>
+        <div class="res-hbar"><h3 class="res-h">Bảng xếp hạng (cao → thấp)</h3><div class="res-exp"><button class="btn sec res-xbtn" type="button" title="Tải bảng xếp hạng và thống kê về file Excel" onclick="exportRank('xlsx')">Xuất Excel (.xlsx)</button><button class="btn sec res-xbtn" type="button" title="Tải bảng xếp hạng và thống kê về file Word" onclick="exportRank('docx')">Xuất Word (.docx)</button></div></div>
         <div class="res-wrap rank"><table class="res-t"><thead><tr><th class="num">Hạng</th><th>Họ và tên</th><th>Lớp</th><th class="num">Điểm</th></tr></thead><tbody>${rank}</tbody></table></div>`;
     const d = new Date();
     setResMsg('ok', `Đã xếp hạng ${n} bài nộp từ cao xuống thấp${skipped ? `, bỏ qua ${skipped} dòng của đề khác` : ''}. Cập nhật lúc ${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}.`);
@@ -1117,6 +1121,221 @@ $('res-csv').onchange = async e => {
         if (!t) return setResMsg('bad', 'Không thấy cột "Họ và tên" và "Điểm" ở đầu file. Hãy kiểm tra dòng tiêu đề của bảng.');
         applyResults(t);
     } catch(err) { setResMsg('bad', 'Không đọc được file: ' + err.message); }
+};
+
+// ===== Xuất bảng xếp hạng ra Excel (.xlsx) và Word (.docx) =====
+// Tạo file thật bằng JSZip (đã nạp sẵn ở đầu trang) nên không cần thêm thư viện nào khác.
+const XML_HEAD = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
+const XMIME = {
+    xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+};
+const xe = s => String(s == null ? '' : s)
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '')
+    .replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' }[c]));
+
+// Dữ liệu xếp hạng dùng chung cho cả hai định dạng (cùng cách đồng hạng với bảng trên màn hình)
+function rankData() {
+    const sorted = resRows.slice().sort((a, b) => b.score - a.score || a.name.localeCompare(b.name, 'vi'));
+    const n = sorted.length;
+    if (!n) return null;
+    let rk = 0, prev = null;
+    const list = sorted.map((r, i) => {
+        if (r.score !== prev) { rk = i + 1; prev = r.score; }
+        return { rk, name: r.name, cls: r.cls, score: r.score };
+    });
+    const total = sorted.reduce((t, r) => t + r.score, 0);
+    return {
+        list, n,
+        avg: Math.round(total / n * 100) / 100,
+        max: sorted[0].score,
+        min: sorted[n - 1].score,
+        bands: BANDS.map(b => { const c = sorted.filter(r => b.hit(r.score)).length; return { lb: b.lb, c, p: c / n }; })
+    };
+}
+
+function rankFileName(ext) {
+    const d = new Date();
+    return 'xep-hang-' + (slug(exam && exam.name) || 'ket-qua') + '-' + d.getFullYear() + p2(d.getMonth() + 1) + p2(d.getDate()) + '.' + ext;
+}
+
+function saveBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+
+// ---------- Excel ----------
+const xCol = i => String.fromCharCode(65 + i);
+function xCell(ref, v, s) {
+    if (v === '' || v == null) return `<c r="${ref}" s="${s}"/>`;
+    if (typeof v === 'number') return `<c r="${ref}" s="${s}"><v>${v}</v></c>`;
+    return `<c r="${ref}" s="${s}" t="inlineStr"><is><t xml:space="preserve">${xe(v)}</t></is></c>`;
+}
+// rows: mỗi dòng là mảng [giá trị, kiểu ô]; widths: độ rộng cột; opt.merges, opt.freeze, opt.titleRows
+function xSheet(rows, widths, opt) {
+    opt = opt || {};
+    const data = rows.map((r, i) => {
+        const ht = opt.heights && opt.heights[i] ? ` ht="${opt.heights[i]}" customHeight="1"` : '';
+        return r.length
+            ? `<row r="${i + 1}"${ht}>` + r.map((c, j) => xCell(xCol(j) + (i + 1), c[0], c[1])).join('') + '</row>'
+            : `<row r="${i + 1}"/>`;
+    }).join('');
+    const view = opt.freeze
+        ? `<sheetViews><sheetView workbookViewId="0"><pane ySplit="${opt.freeze}" topLeftCell="A${opt.freeze + 1}" activePane="bottomLeft" state="frozen"/><selection pane="bottomLeft" activeCell="A${opt.freeze + 1}" sqref="A${opt.freeze + 1}"/></sheetView></sheetViews>`
+        : '<sheetViews><sheetView workbookViewId="0"/></sheetViews>';
+    const cols = '<cols>' + widths.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join('') + '</cols>';
+    const merges = opt.merges && opt.merges.length
+        ? `<mergeCells count="${opt.merges.length}">` + opt.merges.map(m => `<mergeCell ref="${m}"/>`).join('') + '</mergeCells>' : '';
+    return XML_HEAD + '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+        '<sheetPr><pageSetUpPr fitToPage="1"/></sheetPr>' + view + '<sheetFormatPr defaultRowHeight="18"/>' + cols +
+        `<sheetData>${data}</sheetData>` + merges +
+        '<pageMargins left="0.6" right="0.6" top="0.7" bottom="0.7" header="0.3" footer="0.3"/>' +
+        '<pageSetup paperSize="9" orientation="portrait" fitToWidth="1" fitToHeight="0"/></worksheet>';
+}
+
+const X_STYLES = XML_HEAD +
+    '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+    '<numFmts count="1"><numFmt numFmtId="164" formatCode="0.0%"/></numFmts>' +
+    '<fonts count="3">' +
+    '<font><sz val="12"/><name val="Times New Roman"/><family val="1"/></font>' +
+    '<font><b/><sz val="16"/><name val="Times New Roman"/><family val="1"/></font>' +
+    '<font><b/><sz val="12"/><name val="Times New Roman"/><family val="1"/></font></fonts>' +
+    '<fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>' +
+    '<fill><patternFill patternType="solid"><fgColor rgb="FFE4F1F5"/><bgColor indexed="64"/></patternFill></fill></fills>' +
+    '<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border>' +
+    '<border><left style="thin"><color auto="1"/></left><right style="thin"><color auto="1"/></right><top style="thin"><color auto="1"/></top><bottom style="thin"><color auto="1"/></bottom><diagonal/></border></borders>' +
+    '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
+    '<cellXfs count="8">' +
+    '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +                                                   // 0 thường
+    '<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>' + // 1 tiêu đề
+    '<xf numFmtId="0" fontId="2" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>' + // 2 đầu bảng
+    '<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="center"/></xf>' +   // 3 chữ, căn trái
+    '<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>' + // 4 số, căn giữa
+    '<xf numFmtId="164" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>' + // 5 phần trăm
+    '<xf numFmtId="0" fontId="2" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="center"/></xf>' + // 6 nhãn đậm
+    '<xf numFmtId="0" fontId="2" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>' + // 7 số đậm
+    '</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
+
+function buildXlsx(d) {
+    const name = (exam && exam.name) || '', when = 'Xuất lúc ' + fmtDT(Date.now());
+    const longest = d.list.reduce((m, r) => Math.max(m, String(r.name).length), 0);
+
+    const s1 = [
+        [['BẢNG XẾP HẠNG KẾT QUẢ THI', 1], ['', 1], ['', 1], ['', 1]],
+        [['Đề thi: ' + name, 0]],
+        [[when, 0]],
+        [],
+        [['Hạng', 2], ['Họ và tên', 2], ['Lớp', 2], ['Điểm', 2]]
+    ].concat(d.list.map(r => [[r.rk, 4], [r.name, 3], [r.cls, 4], [r.score, 4]]));
+    const sheet1 = xSheet(s1, [8, Math.max(26, Math.min(52, longest + 4)), 14, 10],
+        { merges: ['A1:D1', 'A2:D2', 'A3:D3'], freeze: 5, heights: { 0: 30 } });
+
+    const s2 = [
+        [['THỐNG KÊ KẾT QUẢ THI', 1], ['', 1], ['', 1]],
+        [['Đề thi: ' + name, 0]],
+        [],
+        [['Chỉ tiêu', 2], ['Giá trị', 2]],
+        [['Số bài đã nộp', 6], [d.n, 4]],
+        [['Điểm trung bình', 6], [d.avg, 4]],
+        [['Điểm cao nhất', 6], [d.max, 4]],
+        [['Điểm thấp nhất', 6], [d.min, 4]],
+        [],
+        [['Khoảng điểm', 2], ['Số bài', 2], ['Tỉ lệ', 2]]
+    ].concat(d.bands.map(b => [[b.lb, 3], [b.c, 4], [b.p, 5]]))
+     .concat([[['Tổng', 6], [d.n, 7], [1, 5]]]);
+    const sheet2 = xSheet(s2, [26, 14, 14], { merges: ['A1:C1', 'A2:C2'], heights: { 0: 30 } });
+
+    const zip = new JSZip();
+    zip.file('[Content_Types].xml', XML_HEAD + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
+        '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>' +
+        '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' +
+        '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>' +
+        '<Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>' +
+        '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>');
+    zip.file('_rels/.rels', XML_HEAD + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+        '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>');
+    zip.file('xl/workbook.xml', XML_HEAD + '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">' +
+        '<sheets><sheet name="Xếp hạng" sheetId="1" r:id="rId1"/><sheet name="Thống kê" sheetId="2" r:id="rId2"/></sheets>' +
+        '<definedNames><definedName name="_xlnm.Print_Titles" localSheetId="0">\'Xếp hạng\'!$5:$5</definedName></definedNames></workbook>');
+    zip.file('xl/_rels/workbook.xml.rels', XML_HEAD + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+        '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>' +
+        '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/>' +
+        '<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>');
+    zip.file('xl/styles.xml', X_STYLES);
+    zip.file('xl/worksheets/sheet1.xml', sheet1);
+    zip.file('xl/worksheets/sheet2.xml', sheet2);
+    return zip;
+}
+
+// ---------- Word ----------
+// Trang A4, lề 2 cm: bề rộng nội dung 9638 dxa
+function wPara(text, o) {
+    o = o || {};
+    const rpr = (o.b ? '<w:b/>' : '') + (o.i ? '<w:i/>' : '') + `<w:sz w:val="${o.sz || 26}"/><w:szCs w:val="${o.sz || 26}"/>`;
+    const ppr = `<w:pPr>${o.keep ? '<w:keepNext/>' : ''}<w:spacing w:before="${o.before || 0}" w:after="${o.after == null ? 60 : o.after}"/><w:jc w:val="${o.jc || 'left'}"/></w:pPr>`;
+    return `<w:p>${ppr}` + (text === '' ? '' : `<w:r><w:rPr>${rpr}</w:rPr><w:t xml:space="preserve">${xe(text)}</w:t></w:r>`) + '</w:p>';
+}
+function wTable(widths, head, rows, aligns, boldLast) {
+    const cell = (t, w, jc, b, shade) =>
+        `<w:tc><w:tcPr><w:tcW w:w="${w}" w:type="dxa"/>${shade ? '<w:shd w:val="clear" w:color="auto" w:fill="E4F1F5"/>' : ''}<w:vAlign w:val="center"/></w:tcPr>` +
+        wPara(t == null ? '' : String(t), { sz: 24, b, jc, after: 40, before: 40 }) + '</w:tc>';
+    const bd = ['top', 'left', 'bottom', 'right', 'insideH', 'insideV'].map(k => `<w:${k} w:val="single" w:sz="4" w:space="0" w:color="808080"/>`).join('');
+    const hr = `<w:tr><w:trPr><w:cantSplit/><w:tblHeader/></w:trPr>` + head.map((h, i) => cell(h, widths[i], 'center', true, true)).join('') + '</w:tr>';
+    const body = rows.map((r, ri) => {
+        const bold = boldLast && ri === rows.length - 1;
+        return '<w:tr><w:trPr><w:cantSplit/></w:trPr>' + r.map((t, i) => cell(t, widths[i], aligns[i], bold, false)).join('') + '</w:tr>';
+    }).join('');
+    return `<w:tbl><w:tblPr><w:tblW w:w="${widths.reduce((a, b) => a + b, 0)}" w:type="dxa"/><w:tblBorders>${bd}</w:tblBorders><w:tblLayout w:type="fixed"/>` +
+        '<w:tblCellMar><w:left w:w="100" w:type="dxa"/><w:right w:w="100" w:type="dxa"/></w:tblCellMar></w:tblPr>' +
+        '<w:tblGrid>' + widths.map(w => `<w:gridCol w:w="${w}"/>`).join('') + '</w:tblGrid>' + hr + body + '</w:tbl>';
+}
+
+function buildDocx(d) {
+    const f = v => String(Math.round(v * 100) / 100);
+    const pct = p => (Math.round(p * 1000) / 10) + '%';
+    const body =
+        wPara('BẢNG XẾP HẠNG KẾT QUẢ THI', { b: 1, sz: 32, jc: 'center', after: 80 }) +
+        wPara('Đề thi: ' + ((exam && exam.name) || ''), { b: 1, jc: 'center', after: 40 }) +
+        wPara('Xuất lúc ' + fmtDT(Date.now()), { i: 1, sz: 24, jc: 'center', after: 200 }) +
+        wPara(`Số bài đã nộp: ${d.n}   |   Điểm trung bình: ${f(d.avg)}   |   Cao nhất: ${f(d.max)}   |   Thấp nhất: ${f(d.min)}`, { after: 160 }) +
+        wPara('Thống kê theo khoảng điểm', { b: 1, keep: 1, after: 80, before: 120 }) +
+        wTable([4638, 2500, 2500], ['Khoảng điểm', 'Số bài', 'Tỉ lệ'],
+            d.bands.map(b => [b.lb, b.c, pct(b.p)]).concat([['Tổng', d.n, '100%']]), ['left', 'center', 'center'], true) +
+        wPara('Bảng xếp hạng (cao → thấp)', { b: 1, keep: 1, after: 80, before: 280 }) +
+        wTable([1000, 5038, 1800, 1800], ['Hạng', 'Họ và tên', 'Lớp', 'Điểm'],
+            d.list.map(r => [r.rk, r.name, r.cls, f(r.score)]), ['center', 'left', 'center', 'center'], false) +
+        '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="567" w:footer="567" w:gutter="0"/></w:sectPr>';
+
+    const zip = new JSZip();
+    zip.file('[Content_Types].xml', XML_HEAD + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
+        '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>' +
+        '<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>' +
+        '<Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/></Types>');
+    zip.file('_rels/.rels', XML_HEAD + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+        '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>');
+    zip.file('word/_rels/document.xml.rels', XML_HEAD + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+        '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>');
+    zip.file('word/styles.xml', XML_HEAD + '<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr>' +
+        '<w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman" w:cs="Times New Roman" w:eastAsia="Times New Roman"/><w:sz w:val="26"/><w:szCs w:val="26"/><w:lang w:val="vi-VN" w:eastAsia="vi-VN" w:bidi="ar-SA"/>' +
+        '</w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="0" w:line="264" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults>' +
+        '<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:qFormat/></w:style></w:styles>');
+    zip.file('word/document.xml', XML_HEAD + '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>' + body + '</w:body></w:document>');
+    return zip;
+}
+
+window.exportRank = async kind => {
+    const d = rankData();
+    if (!d) return showToast('Chưa có bảng xếp hạng để xuất.', 3500);
+    if (typeof JSZip === 'undefined') return showToast('Chưa nạp được thư viện tạo file (JSZip). Hãy kiểm tra mạng rồi tải lại trang.', 6000);
+    try {
+        const zip = kind === 'xlsx' ? buildXlsx(d) : buildDocx(d);
+        const blob = await zip.generateAsync({ type: 'blob', mimeType: XMIME[kind], compression: 'DEFLATE' });
+        const fn = rankFileName(kind);
+        saveBlob(blob, fn);
+        showToast('Đã xuất file ' + fn, 4000);
+    } catch (err) { showToast('Không xuất được file: ' + err.message, 6000); }
 };
 
 const MN='http://schemas.openxmlformats.org/officeDocument/2006/math',WN='http://schemas.openxmlformats.org/wordprocessingml/2006/main';
