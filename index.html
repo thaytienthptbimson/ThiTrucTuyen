@@ -211,6 +211,7 @@ body.shot-hide #list-student,body.shot-hide #q-panel{visibility:hidden}
   <form class="box" id="sf">
     <div class="brand"><h1 id="s-exam-name">Đang tải đề thi...</h1><p>Nhập thông tin để bắt đầu làm bài.</p></div>
     <div id="s-schedule" class="sch-state hide"></div>
+    <div id="s-calc-note" class="sch-state hide"><b>Được dùng máy tính cầm tay</b> (máy tính bỏ túi hoặc máy tính khoa học loại thông thường) để tính toán. <b>Không được dùng điện thoại</b>, máy tính bảng, đồng hồ thông minh hay bất kỳ thiết bị kết nối mạng nào khác. Em cúi nhìn máy tính trong thời gian ngắn thì không bị tính vi phạm, nhưng không rời khỏi khung camera quá lâu.</div>
     <div id="s-pg-note" class="sch-state wait hide">Bài thi có giám sát: em cần cho phép camera và làm bài ở chế độ toàn màn hình. Rời màn hình, chuyển tab hoặc ra khỏi khung camera sẽ bị ghi nhận và có thể bị tự động nộp bài. Trên màn hình luôn có hình mờ ghi tên và lớp của em: mọi ảnh chụp hoặc quay màn hình (kể cả chụp bằng điện thoại khác) đều truy ra được người làm bài.</div>
     <input type="text" id="s-name" placeholder="Họ và tên" required>
     <input type="text" id="s-class" placeholder="Lớp, ví dụ 12A1" required>
@@ -283,6 +284,7 @@ body.shot-hide #list-student,body.shot-hide #q-panel{visibility:hidden}
         <h3>Giám sát</h3>
         <div class="chks">
           <label class="chk"><input type="checkbox" id="chk-proctor"><span>Chống gian lận: bắt buộc toàn màn hình và camera, ghi nhận khi rời màn hình, hình mờ tên học sinh chống chụp màn hình</span></label>
+          <label class="chk"><input type="checkbox" id="chk-calc"><span>Cho phép dùng máy tính cầm tay để tính toán (không cho dùng điện thoại): camera cho phép thí sinh cúi nhìn máy tính đến 20 giây liên tục mà không tính vi phạm, và học sinh được thông báo quy định trước khi làm bài</span></label>
           <div class="fld"><label for="max-viol">Số vi phạm tối đa trước khi tự nộp (0 = chỉ ghi nhận)</label><input type="number" id="max-viol" min="0" style="width:120px"></div>
         </div>
       </div>
@@ -648,7 +650,7 @@ window.openExam = (id) => {
     $('chk-shuf-grp').checked = !!exam.shufGrp; 
     $('chk-shuf-q').checked = exam.shufQ !== false; 
     $('chk-shuf-opt').checked = exam.shufOpt !== false;
-    $('chk-proctor').checked = !!exam.proctor; $('max-viol').value = exam.maxViol == null ? 3 : exam.maxViol; 
+    $('chk-proctor').checked = !!exam.proctor; $('max-viol').value = exam.maxViol == null ? 3 : exam.maxViol; $('chk-calc').checked = !!exam.calc; 
     pwRemove = false;
     $('exam-pw').value = exam.pwPlain || '';
     updatePwNote();
@@ -694,7 +696,7 @@ $('btn-save-settings').onclick = () => {
         exam.shufGrp = $('chk-shuf-grp').checked;
         exam.shufQ = $('chk-shuf-q').checked;
         exam.shufOpt = $('chk-shuf-opt').checked;
-        exam.proctor = $('chk-proctor').checked; exam.maxViol = Math.max(0, parseInt($('max-viol').value) || 0);
+        exam.proctor = $('chk-proctor').checked; exam.maxViol = Math.max(0, parseInt($('max-viol').value) || 0); exam.calc = $('chk-calc').checked;
         const pwv = $('exam-pw').value.trim();
         if(pwRemove) { delete exam.pwHash; delete exam.pwSalt; delete exam.pwPlain; }
         else if(pwv && (!exam.pwHash || pwv !== exam.pwPlain)) { exam.pwSalt = randHex(8); exam.pwHash = hashPw(pwv, exam.pwSalt); exam.pwPlain = pwv; }
@@ -824,7 +826,7 @@ function normExam(x, fallbackId, fallbackFileKey) {
         ...(/^[0-9a-f]{64}$/.test(String(x.pwHash || '')) ? { pwHash: String(x.pwHash), pwSalt: String(x.pwSalt || '').slice(0, 64) } : {}),
         openAt: +x.openAt || 0,
         closeAt: +x.closeAt || 0,
-        shufGrp: !!x.shufGrp, shufQ: x.shufQ !== false, shufOpt: x.shufOpt !== false, proctor: !!x.proctor, maxViol: x.maxViol == null ? 3 : Math.max(0, parseInt(x.maxViol) || 0)
+        shufGrp: !!x.shufGrp, shufQ: x.shufQ !== false, shufOpt: x.shufOpt !== false, proctor: !!x.proctor, maxViol: x.maxViol == null ? 3 : Math.max(0, parseInt(x.maxViol) || 0), calc: !!x.calc
     };
 }
 
@@ -1566,7 +1568,7 @@ $('file').onchange = async e => {
         shufGrp: false, shufQ: true, shufOpt: true
     };
     const old=lib.find(y=>y.name===ex.name);
-    if(old){ ex.id=old.id; ex.fileKey=old.fileKey||ex.fileKey; ex.time=old.time||0; ex.openAt=old.openAt||0; ex.closeAt=old.closeAt||0; ex.scale=old.scale||'english'; ex.webhook=old.webhook||''; ex.shufGrp=!!old.shufGrp; ex.shufQ=old.shufQ!==false; ex.shufOpt=old.shufOpt!==false; ex.proctor=!!old.proctor; ex.maxViol=old.maxViol; if(old.pwHash){ ex.pwHash=old.pwHash; ex.pwSalt=old.pwSalt; if(old.pwPlain) ex.pwPlain=old.pwPlain; } }
+    if(old){ ex.id=old.id; ex.fileKey=old.fileKey||ex.fileKey; ex.time=old.time||0; ex.openAt=old.openAt||0; ex.closeAt=old.closeAt||0; ex.scale=old.scale||'english'; ex.webhook=old.webhook||''; ex.shufGrp=!!old.shufGrp; ex.shufQ=old.shufQ!==false; ex.shufOpt=old.shufOpt!==false; ex.proctor=!!old.proctor; ex.maxViol=old.maxViol; ex.calc=!!old.calc; if(old.pwHash){ ex.pwHash=old.pwHash; ex.pwSalt=old.pwSalt; if(old.pwPlain) ex.pwPlain=old.pwPlain; } }
     lib=lib.filter(y=>y.name!==ex.name); lib.push(ex); saveLib();
     openExam(ex.id);
     
@@ -1840,6 +1842,7 @@ async function initStudentFlow(id, deParam) {
 
     $('s-exam-name').textContent = exam.name;
     $('s-pg-note').classList.toggle('hide', !exam.proctor);
+    $('s-calc-note').classList.toggle('hide', !exam.calc);
     setPwField(!!exam.pwHash);
 
     const sv = loadProg();
@@ -2405,13 +2408,15 @@ async function pgDetectInit() {
   } catch (e) { PG.det = null; } // không tải được thư viện: chỉ giám sát camera bật/tắt, không phạt oan
 }
 
+// Số giây liên tục không thấy mặt thì ghi vi phạm: 5 giây mặc định, 20 giây nếu đề cho dùng máy tính cầm tay
+const PG_NONE_SEC = 5, PG_NONE_SEC_CALC = 20;
 function pgTick() {
   const v = $('pg-cam');
   if (!PG.on || submitted || !PG.det || document.hidden || !v.videoWidth) return;
   let n;
   try { n = PG.det.detectForVideo(v, performance.now()).detections.length; } catch (e) { return; }
   $('pg-st').textContent = n === 0 ? 'Không thấy mặt' : n > 1 ? 'Có nhiều người' : 'Bình thường';
-  if (n === 0) { if (++PG.none >= 5 && !PG.lostF) { PG.lostF = 1; pgViol('Không thấy thí sinh trong khung camera'); } } else { PG.none = 0; PG.lostF = 0; }
+  if (n === 0) { if (++PG.none >= (exam.calc ? PG_NONE_SEC_CALC : PG_NONE_SEC) && !PG.lostF) { PG.lostF = 1; pgViol('Không thấy thí sinh trong khung camera'); } } else { PG.none = 0; PG.lostF = 0; }
   if (n > 1) { if (++PG.many >= 3 && !PG.manyF) { PG.manyF = 1; pgViol('Phát hiện nhiều hơn 1 người trong khung camera'); } } else { PG.many = 0; PG.manyF = 0; }
 }
 
