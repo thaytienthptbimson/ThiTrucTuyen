@@ -53,6 +53,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--pri);box-shadow:0 0 0
 input[type=checkbox]{width:18px;height:18px;margin:3px 0 0;flex:none;accent-color:var(--pri);cursor:pointer}
 textarea{width:100%;padding:12px;border:1px solid var(--bd);border-radius:var(--r);font:inherit;resize:vertical}
 .err{color:var(--bad);font-size:14px;margin-bottom:12px;min-height:20px}
+#s-name[style*="none"]~.nm-aux{display:none!important}
 .btn{display:inline-block;border:1px solid var(--pri);border-radius:var(--r);padding:9px 16px;font-family:inherit;font-weight:600;font-size:14.5px;line-height:1.4;cursor:pointer;background:var(--pri);color:#fff;text-align:center;transition:background .15s,border-color .15s,color .15s}
 .btn:hover:not(:disabled){background:var(--pri2);border-color:var(--pri2)}
 .btn:disabled{opacity:.45;cursor:not-allowed}
@@ -213,7 +214,9 @@ body.shot-hide #list-student,body.shot-hide #q-panel{visibility:hidden}
     <div id="s-attempt" class="sch-state hide" role="status"></div>
     <div id="s-calc-note" class="sch-state hide"><b>Được dùng máy tính cầm tay</b> (máy tính bỏ túi hoặc máy tính khoa học loại thông thường) để tính toán. <b>Không được dùng điện thoại</b>, máy tính bảng, đồng hồ thông minh hay bất kỳ thiết bị kết nối mạng nào khác. Em cúi nhìn máy tính trong thời gian ngắn thì không bị tính vi phạm, nhưng không rời khỏi khung camera quá lâu.</div>
     <div id="s-pg-note" class="sch-state wait hide">Bài thi có giám sát: em cần cho phép camera và làm bài ở chế độ toàn màn hình. Rời màn hình, chuyển tab hoặc ra khỏi khung camera sẽ bị ghi nhận và có thể bị tự động nộp bài. Trên màn hình luôn có hình mờ ghi tên và lớp của em: mọi ảnh chụp hoặc quay màn hình (kể cả chụp bằng điện thoại khác) đều truy ra được người làm bài.</div>
-    <input type="text" id="s-name" placeholder="Họ và tên" required>
+    <input type="text" id="s-name" placeholder="Họ và tên có dấu, ví dụ: Phạm Văn Tiến" autocomplete="off" autocapitalize="words" spellcheck="false" required>
+    <div class="note nm-aux" style="margin:-4px 0 12px">Nhập đủ họ tên có dấu, theo mẫu <b>Phạm Văn Tiến</b> hoặc <b>Phạm Tiến</b>. Gõ in hoa hay chữ thường đều được, hệ thống tự viết hoa chữ cái đầu mỗi từ.</div>
+    <div class="err hide nm-aux" id="s-name-err" role="alert"></div>
     <input type="text" id="s-class" placeholder="Lớp, ví dụ 12A1" required>
     <input type="password" id="s-pw" class="hide" placeholder="Mật khẩu đề thi (do giáo viên cung cấp)" autocomplete="off" autocapitalize="off" spellcheck="false">
     <div class="err hide" id="s-pw-err" role="alert"></div>
@@ -723,11 +726,21 @@ $('btn-save-settings').onclick = () => {
 $('btn-clear-sch').onclick = () => { $('open-at').value = ''; $('close-at').value = ''; };
 
 // Xóa lượt thi đã ghi nhận trên trình duyệt này (dùng khi giáo viên thử đề bằng chính máy của mình)
+// Bấm 2 lần để xác nhận (lần đầu đổi chữ nút, 5 giây không bấm tiếp thì tự hủy)
+let resetAttTimer = 0;
 $('btn-reset-att').onclick = () => {
     if(!exam) return;
-    if(!confirm('Xóa toàn bộ lượt thi đã ghi nhận cho đề "' + exam.name + '" trên trình duyệt này? Chỉ dùng khi thử đề. Việc này không ảnh hưởng điểm đã lưu trong Google Sheet hay lượt thi ghi nhận trên máy khác.')) return;
+    const b = $('btn-reset-att');
+    if(!resetAttTimer) {
+        const old = b.textContent;
+        b.textContent = 'Bấm lần nữa để xác nhận xóa';
+        resetAttTimer = setTimeout(() => { resetAttTimer = 0; b.textContent = old; }, 5000);
+        b.dataset.old = old;
+        return;
+    }
+    clearTimeout(resetAttTimer); resetAttTimer = 0; b.textContent = b.dataset.old || 'Xóa lượt thi đã dùng trên máy này (để thử đề)';
     try { localStorage.removeItem('att_' + exam.id); } catch(e) {}
-    showToast('Đã xóa lượt thi của đề này trên máy này.', 4000);
+    showToast('Đã xóa toàn bộ lượt thi của đề "' + exam.name + '" trên máy này. Không ảnh hưởng điểm trong Google Sheet.', 5000);
 };
 
 $('btn-copy-link').onclick = () => {
@@ -1901,6 +1914,34 @@ function showAttemptBlock(used, lim) {
     box.className = 'sch-state closed';
     box.innerHTML = `<b>Em đã hết lượt thi của đề này</b> (đã thi ${Math.min(used, lim)}/${lim} lần với họ tên và lớp này). Nếu em nhập sai họ tên hoặc lớp, hãy sửa lại; nếu cần thi lại, em liên hệ giáo viên.`;
 }
+// ===== Họ tên học sinh: đúng mẫu "Phạm Văn Tiến" hoặc "Phạm Tiến" =====
+// Nhận cả IN HOA lẫn chữ thường, tự chuẩn hóa về dạng viết hoa chữ cái đầu mỗi từ.
+// Điều kiện: 2-6 từ, chỉ gồm chữ cái và dấu cách, có dấu tiếng Việt (tên thật sự không có dấu thì phải xác nhận).
+// Lưu ý: hệ thống chỉ kiểm tra được định dạng, không kiểm tra được chính tả hay việc gõ đúng dấu từng chữ.
+function fmtName(raw) {
+    return String(raw == null ? '' : raw).normalize('NFC').replace(/\s+/g, ' ').trim()
+        .split(' ').filter(Boolean)
+        .map(w => { const a = Array.from(w); return a[0].toLocaleUpperCase('vi') + a.slice(1).join('').toLocaleLowerCase('vi'); })
+        .join(' ');
+}
+const NAME_CHARS = /^[A-Za-zÀ-ÖØ-öø-ɏḀ-ỿ ]+$/;
+function checkName(raw) {
+    const name = fmtName(raw), n = name ? name.split(' ').length : 0;
+    if(!name) return { ok: false, name, msg: 'Em chưa nhập họ tên.' };
+    if(!NAME_CHARS.test(name)) return { ok: false, name, msg: 'Họ tên chỉ gồm chữ cái và dấu cách, không có số hay ký hiệu. Ví dụ: Phạm Văn Tiến.' };
+    if(n < 2) return { ok: false, name, msg: 'Em cần nhập đầy đủ họ và tên (ít nhất 2 từ), theo mẫu: Phạm Văn Tiến hoặc Phạm Tiến.' };
+    if(n > 6) return { ok: false, name, msg: 'Họ tên có quá nhiều từ (tối đa 6 từ). Em kiểm tra lại, theo mẫu: Phạm Văn Tiến.' };
+    return { ok: true, name, noMark: !/[^\u0000-\u007f]/.test(name) };
+}
+function showNameErr(msg) {
+    const e = $('s-name-err');
+    e.textContent = msg || '';
+    e.classList.toggle('hide', !msg);
+    if(msg) $('s-name').focus();
+}
+$('s-name').addEventListener('input', () => showNameErr(''));
+$('s-name').addEventListener('blur', () => { const v = $('s-name').value; if(v.trim()) $('s-name').value = fmtName(v); });
+
 // Sau khi nộp bài mà vẫn còn lượt: quay lại màn hình nhập tên để thi lần nữa
 window.retryExam = () => {
     try { sessionStorage.removeItem(progKey()); } catch(e) {}
@@ -1994,18 +2035,27 @@ async function initStudentFlow(id, deParam) {
     updateGate();
     if(exam.openAt || exam.closeAt) gateTimer = setInterval(updateGate, 1000);
 
-    let startBusy = false;
+    let startBusy = false, noMarkOk = '';
     $('sf').onsubmit = async (e) => {
         e.preventDefault();
         if(startBusy) return;
         if(gateState() !== 'open') { updateGate(); return; }
+        const nv = checkName($('s-name').value);
+        if(!nv.ok) { showNameErr(nv.msg); return; }
+        $('s-name').value = nv.name;
+        if(nv.noMark && noMarkOk !== nv.name) {
+            // Tên không có dấu nào: nhắc 1 lần, học sinh bấm "Bắt đầu" thêm lần nữa mới xác nhận là tên thật không có dấu
+            noMarkOk = nv.name;
+            showNameErr('Họ tên "' + nv.name + '" chưa có dấu nào. Nếu em quên gõ dấu, hãy sửa lại (ví dụ: Phạm Văn Tiến). Nếu tên thật của em không có dấu (ví dụ: Mai Anh), bấm "Bắt đầu làm bài" thêm một lần nữa để xác nhận.');
+            return;
+        }
         if(exam.pwHash && !checkExamPw(exam, $('s-pw').value)) {
             $('s-pw-err').textContent = 'Mật khẩu đề thi không đúng. Em kiểm tra lại hoặc hỏi giáo viên.';
             $('s-pw-err').classList.remove('hide');
             $('s-pw').focus(); $('s-pw').select();
             return;
         }
-        const nm = $('s-name').value.trim(), cl = $('s-class').value.trim();
+        const nm = nv.name, cl = $('s-class').value.trim();
         const lim = attemptLimit(exam), key = attId(nm, cl), btn = $('btn-start-exam'), btnTxt = btn.textContent;
         startBusy = true;
         try {
