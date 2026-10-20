@@ -61,7 +61,6 @@ textarea{width:100%;padding:12px;border:1px solid var(--bd);border-radius:var(--
 .btn.gr{background:var(--ok);border-color:var(--ok)}
 .btn.gr:hover:not(:disabled){background:#10573b;border-color:#10573b}
 .box .btn{width:100%;padding:11px}
-#btn-back-hub{margin-top:8px}
 header{position:sticky;top:0;z-index:10;background:var(--card);border-bottom:1px solid var(--bd);padding:12px 24px;display:flex;justify-content:space-between;align-items:center}
 .hdr-title{margin:0;font-size:18px}
 main{max-width:1160px;margin:24px auto;padding:0 16px 40px}
@@ -218,7 +217,6 @@ body.shot-hide #list-student,body.shot-hide #q-panel{visibility:hidden}
     <input type="password" id="s-pw" class="hide" placeholder="Mật khẩu đề thi (do giáo viên cung cấp)" autocomplete="off" autocapitalize="off" spellcheck="false">
     <div class="err hide" id="s-pw-err" role="alert"></div>
     <button class="btn gr" type="submit" id="btn-start-exam" disabled>Bắt đầu làm bài</button>
-    <button class="btn sec" type="button" id="btn-back-hub">Chọn đề khác</button>
     <div class="copyright">Bản quyền thuộc về số ĐT: 0943.930.787</div>
   </form>
 </div>
@@ -1776,17 +1774,6 @@ async function initStudentFlow(id, deParam) {
     const oldWarn = $('sf').querySelector('.err-not-found');
     if (oldWarn) oldWarn.remove();
 
-    $('btn-back-hub').onclick = () => {
-        if (gateTimer) { clearInterval(gateTimer); gateTimer = null; }
-        $('student-login').classList.add('hide');
-        try {
-            const url = new URL(window.location.href);
-            url.searchParams.delete('de');
-            window.history.replaceState({}, '', url.pathname);
-        } catch(e) {}
-        initTeacherFlow();
-    };
-
     const rawDe = String(deParam || '').trim();
     const rawId = String(id || '').trim();
 
@@ -1835,8 +1822,8 @@ async function initStudentFlow(id, deParam) {
         warn.className = 'err-not-found';
         warn.style.color = 'var(--bad)';
         warn.style.fontWeight = 'bold';
-        warn.textContent = 'Không tìm thấy file "' + targetLabel + '" trên GitHub. Vui lòng báo Giáo viên tải file "' + targetLabel + '" lên Repository hoặc bấm "Đổi đề thi khác" bên dưới!';
-        $('sf').insertBefore(warn, $('btn-back-hub'));
+        warn.textContent = 'Không tìm thấy file "' + targetLabel + '" trên GitHub. Vui lòng báo Giáo viên tải file "' + targetLabel + '" lên Repository!';
+        $('sf').insertBefore(warn, $('sf').querySelector('.copyright'));
         return;
     }
 
