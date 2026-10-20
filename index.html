@@ -210,6 +210,7 @@ body.shot-hide #list-student,body.shot-hide #q-panel{visibility:hidden}
   <form class="box" id="sf">
     <div class="brand"><h1 id="s-exam-name">Đang tải đề thi...</h1><p>Nhập thông tin để bắt đầu làm bài.</p></div>
     <div id="s-schedule" class="sch-state hide"></div>
+    <div id="s-attempt" class="sch-state hide" role="status"></div>
     <div id="s-calc-note" class="sch-state hide"><b>Được dùng máy tính cầm tay</b> (máy tính bỏ túi hoặc máy tính khoa học loại thông thường) để tính toán. <b>Không được dùng điện thoại</b>, máy tính bảng, đồng hồ thông minh hay bất kỳ thiết bị kết nối mạng nào khác. Em cúi nhìn máy tính trong thời gian ngắn thì không bị tính vi phạm, nhưng không rời khỏi khung camera quá lâu.</div>
     <div id="s-pg-note" class="sch-state wait hide">Bài thi có giám sát: em cần cho phép camera và làm bài ở chế độ toàn màn hình. Rời màn hình, chuyển tab hoặc ra khỏi khung camera sẽ bị ghi nhận và có thể bị tự động nộp bài. Trên màn hình luôn có hình mờ ghi tên và lớp của em: mọi ảnh chụp hoặc quay màn hình (kể cả chụp bằng điện thoại khác) đều truy ra được người làm bài.</div>
     <input type="text" id="s-name" placeholder="Họ và tên" required>
@@ -287,6 +288,15 @@ body.shot-hide #list-student,body.shot-hide #q-panel{visibility:hidden}
         </div>
       </div>
       <div class="sect">
+        <h3>Số lần thi</h3>
+        <div class="fld">
+          <label for="max-attempts">Số lần tối đa mỗi học sinh được vào thi (0 = không giới hạn)</label>
+          <input type="number" id="max-attempts" min="0" step="1" style="width:120px">
+        </div>
+        <p class="note">Mặc định là 1: mỗi học sinh chỉ được thi một lần duy nhất. Lượt thi được tính ngay khi học sinh bấm "Bắt đầu làm bài" (kể cả khi chưa nộp), và được nhận diện theo họ tên + lớp (không phân biệt hoa thường, có dấu hay không). Hệ thống ghi nhớ lượt thi ngay trên trình duyệt của học sinh. Để chặn cả trường hợp học sinh đổi máy hoặc dùng chế độ ẩn danh, hãy dùng đoạn mã Apps Script mới trong phần "Kết quả thi" (cần có liên kết Google Sheet ở trên). Khi cho thi nhiều lần, bảng xếp hạng lấy điểm cao nhất của mỗi học sinh. Sau khi lưu, nhớ xuất lại file .json và tải lên GitHub.</p>
+        <button class="btn sec" type="button" id="btn-reset-att" style="margin-top:10px">Xóa lượt thi đã dùng trên máy này (để thử đề)</button>
+      </div>
+      <div class="sect">
         <h3>Thời hạn mở đề</h3>
         <div class="fgrid">
           <div class="fld"><label for="open-at">Giờ mở đề</label><input type="datetime-local" id="open-at"></div>
@@ -327,7 +337,7 @@ body.shot-hide #list-student,body.shot-hide #q-panel{visibility:hidden}
         <summary>Bật tải tự động từ Google Sheet (làm một lần)</summary>
         <ol class="steps">
           <li>Mở Google Sheet nhận điểm, chọn <b>Tiện ích mở rộng → Apps Script</b>.</li>
-          <li>Dán đoạn mã bên dưới vào cuối file, giữ nguyên hàm <code>doPost</code> đang dùng.</li>
+          <li>Dán đoạn mã bên dưới vào cuối file, giữ nguyên hàm <code>doPost</code> đang dùng. Nếu trước đây đã dán bản cũ (có hàm <code>doGet</code>), hãy xóa hàm cũ đó và dán bản mới này: bản mới có thêm chức năng kiểm tra số lần thi của học sinh.</li>
           <li>Bấm <b>Triển khai → Quản lý bản triển khai</b>, chọn biểu tượng bút chì, mục Phiên bản chọn <b>Phiên bản mới</b>, rồi <b>Triển khai</b>. Liên kết cũ vẫn dùng được, không phải sửa lại trong đề.</li>
           <li>Quay lại đây bấm <b>Tải kết quả</b>.</li>
         </ol>
@@ -561,7 +571,7 @@ async function populateStudentHub() {
     box.innerHTML = list.map((x, i) => {
         const fk = normFileKey(x.fileKey, i);
         const qCount = (x.items || []).filter(k => k.k === 'q').length;
-        return `<button type="button" class="hub-item" onclick="openStudentExamByKey('${esc(fk)}','${esc(x.id)}')"><b>${esc(x.name)}</b><span>${qCount} câu · ${x.time ? x.time + ' phút' : 'Tự do'}${x.pwHash ? ' · 🔒 Có mật khẩu' : ''}</span></button>`;
+        return `<button type="button" class="hub-item" onclick="openStudentExamByKey('${esc(fk)}','${esc(x.id)}')"><b>${esc(x.name)}</b><span>${qCount} câu · ${x.time ? x.time + ' phút' : 'Tự do'}${attemptLimit(x) ? ' · Thi tối đa ' + attemptLimit(x) + ' lần' : ''}${x.pwHash ? ' · 🔒 Có mật khẩu' : ''}</span></button>`;
     }).join('');
 }
 
@@ -609,7 +619,7 @@ function showLib() {
             <div class="lr-info"><span class="no">${i+1}</span>
             <div>
                 <b>${esc(x.name)}</b> <span class="tg">${esc(fk)}.json</span>
-                <div class="note">${x.items.filter(k=>k.k==='q').length} câu • Cài đặt: ${x.time||0} phút - Thang điểm: ${tScale} • Link thi: <code>?de=${esc(fk)}</code>${x.pwHash ? ' • 🔒 Có mật khẩu' : ''}${x.webhook ? '' : '<br><span class="warn-t">Chưa có liên kết Google Sheet: điểm sẽ không được lưu.</span>'}${(x.openAt||x.closeAt) ? `<br>${x.openAt ? 'Mở: ' + fmtDT(x.openAt) : 'Mở: ngay'} — ${x.closeAt ? 'Đóng: ' + fmtDT(x.closeAt) : 'không giới hạn'}` : ''}</div>
+                <div class="note">${x.items.filter(k=>k.k==='q').length} câu • Cài đặt: ${x.time||0} phút - Thang điểm: ${tScale} • Số lần thi: ${attemptLimit(x) || 'không giới hạn'} • Link thi: <code>?de=${esc(fk)}</code>${x.pwHash ? ' • 🔒 Có mật khẩu' : ''}${x.webhook ? '' : '<br><span class="warn-t">Chưa có liên kết Google Sheet: điểm sẽ không được lưu.</span>'}${(x.openAt||x.closeAt) ? `<br>${x.openAt ? 'Mở: ' + fmtDT(x.openAt) : 'Mở: ngay'} — ${x.closeAt ? 'Đóng: ' + fmtDT(x.closeAt) : 'không giới hạn'}` : ''}</div>
             </div></div>
             <div class="lr-act">
                 <button class="btn sec" onclick="openExam('${x.id}')">Quản lý</button>
@@ -645,7 +655,8 @@ window.openExam = (id) => {
     $('close-at').value = toLocalInput(exam.closeAt);
     $('exam-scale').value = exam.scale || 'english';
     $('exam-webhook').value = exam.webhook || '';
-    $('chk-shuf-grp').checked = !!exam.shufGrp; 
+    $('max-attempts').value = attemptLimit(exam);
+    $('chk-shuf-grp').checked = !!exam.shufGrp;
     $('chk-shuf-q').checked = exam.shufQ !== false; 
     $('chk-shuf-opt').checked = exam.shufOpt !== false;
     $('chk-proctor').checked = !!exam.proctor; $('max-viol').value = exam.maxViol == null ? 3 : exam.maxViol; $('chk-calc').checked = !!exam.calc; 
@@ -691,6 +702,8 @@ $('btn-save-settings').onclick = () => {
         exam.time = parseInt($('time-limit').value) || 0;
         exam.scale = $('exam-scale').value;
         exam.webhook = $('exam-webhook').value.trim();
+        exam.maxAttempts = normAttempts($('max-attempts').value);
+        $('max-attempts').value = exam.maxAttempts;
         exam.shufGrp = $('chk-shuf-grp').checked;
         exam.shufQ = $('chk-shuf-q').checked;
         exam.shufOpt = $('chk-shuf-opt').checked;
@@ -708,6 +721,14 @@ $('btn-save-settings').onclick = () => {
 };
 
 $('btn-clear-sch').onclick = () => { $('open-at').value = ''; $('close-at').value = ''; };
+
+// Xóa lượt thi đã ghi nhận trên trình duyệt này (dùng khi giáo viên thử đề bằng chính máy của mình)
+$('btn-reset-att').onclick = () => {
+    if(!exam) return;
+    if(!confirm('Xóa toàn bộ lượt thi đã ghi nhận cho đề "' + exam.name + '" trên trình duyệt này? Chỉ dùng khi thử đề. Việc này không ảnh hưởng điểm đã lưu trong Google Sheet hay lượt thi ghi nhận trên máy khác.')) return;
+    try { localStorage.removeItem('att_' + exam.id); } catch(e) {}
+    showToast('Đã xóa lượt thi của đề này trên máy này.', 4000);
+};
 
 $('btn-copy-link').onclick = () => {
     if(!exam) return;
@@ -824,7 +845,8 @@ function normExam(x, fallbackId, fallbackFileKey) {
         ...(/^[0-9a-f]{64}$/.test(String(x.pwHash || '')) ? { pwHash: String(x.pwHash), pwSalt: String(x.pwSalt || '').slice(0, 64) } : {}),
         openAt: +x.openAt || 0,
         closeAt: +x.closeAt || 0,
-        shufGrp: !!x.shufGrp, shufQ: x.shufQ !== false, shufOpt: x.shufOpt !== false, proctor: !!x.proctor, maxViol: x.maxViol == null ? 3 : Math.max(0, parseInt(x.maxViol) || 0), calc: !!x.calc
+        shufGrp: !!x.shufGrp, shufQ: x.shufQ !== false, shufOpt: x.shufOpt !== false, proctor: !!x.proctor, maxViol: x.maxViol == null ? 3 : Math.max(0, parseInt(x.maxViol) || 0), calc: !!x.calc,
+        maxAttempts: normAttempts(x.maxAttempts)
     };
 }
 
@@ -975,25 +997,68 @@ function getResKey() {
     if (!/^[A-Za-z0-9_-]{8,}$/.test(k)) { k = randHex(10); try { localStorage.setItem(RK, k); } catch(e) {} }
     return k;
 }
-const GS_TPL = [
-    '// Thêm vào Apps Script của Google Sheet nhận điểm (giữ nguyên hàm doPost hiện có).',
-    '// Nếu script đã có hàm doGet thì thay bằng hàm này.',
-    '// Nếu script không gắn trong Sheet: thay getActiveSpreadsheet() bằng openById("ID_SHEET").',
-    "const RESULT_KEY = '__KEY__';",
-    '',
-    'function doGet(e) {',
-    '  var ok = !!(e && e.parameter && e.parameter.key === RESULT_KEY);',
-    '  var out = { ok: ok };',
-    '  if (ok) {',
-    '    out.sheets = {};',
-    '    SpreadsheetApp.getActiveSpreadsheet().getSheets().forEach(function (s) {',
-    '      out.sheets[s.getName()] = s.getDataRange().getDisplayValues();',
-    '    });',
-    '  }',
-    '  return ContentService.createTextOutput(JSON.stringify(out))',
-    '    .setMimeType(ContentService.MimeType.JSON);',
-    '}'
-].join('\n');
+const GS_TPL = String.raw`// Thêm vào Apps Script của Google Sheet nhận điểm (giữ nguyên hàm doPost hiện có).
+// Nếu script đã có hàm doGet (bản cũ) thì xóa hàm đó và dán bản dưới đây thay thế.
+// Nếu script không gắn trong Sheet: thay getActiveSpreadsheet() bằng openById("ID_SHEET").
+const RESULT_KEY = '__KEY__';
+
+function doGet(e) {
+  var p = (e && e.parameter) || {};
+  var out;
+  if (p.action === 'attempts') {
+    // Học sinh hỏi: họ tên + lớp này đã nộp mấy bài của đề này (chỉ trả về số lượng)
+    out = { ok: true, attempts: countAttempts_(p) };
+  } else {
+    var ok = p.key === RESULT_KEY;
+    out = { ok: ok };
+    if (ok) {
+      out.sheets = {};
+      SpreadsheetApp.getActiveSpreadsheet().getSheets().forEach(function (s) {
+        out.sheets[s.getName()] = s.getDataRange().getDisplayValues();
+      });
+    }
+  }
+  return ContentService.createTextOutput(JSON.stringify(out))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function norm_(v) {
+  return String(v == null ? '' : v).normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/đ/gi, 'd').toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+function countAttempts_(p) {
+  var name = norm_(p.name), cls = norm_(p.cls).replace(/ /g, '');
+  var exId = String(p.exam || '').trim(), exName = norm_(p.examName);
+  var n = 0;
+  if (!name) return 0;
+  SpreadsheetApp.getActiveSpreadsheet().getSheets().forEach(function (s) {
+    var v = s.getDataRange().getDisplayValues();
+    for (var h = 0; h < Math.min(5, v.length); h++) {
+      var hd = v[h].map(norm_);
+      var find = function (re) {
+        for (var i = 0; i < hd.length; i++) if (re.test(hd[i])) return i;
+        return -1;
+      };
+      var cn = find(/ho va ten|ho ten|hoc sinh|student ?name/);
+      if (cn < 0) cn = find(/^(ten|name)$/);
+      if (cn < 0) continue;
+      var cc = find(/^lop|class/), ci = find(/ma de|exam ?id/), ce = find(/ten de|exam ?name|ten bai/);
+      for (var r = h + 1; r < v.length; r++) {
+        var row = v[r];
+        if (norm_(row[cn]) !== name) continue;
+        if (cc >= 0 && norm_(row[cc]).replace(/ /g, '') !== cls) continue;
+        if (ci >= 0 || ce >= 0) {
+          var hit = (ci >= 0 && String(row[ci]).trim() === exId) || (ce >= 0 && norm_(row[ce]) === exName);
+          if (!hit) continue;
+        }
+        n++;
+      }
+      break;
+    }
+  });
+  return n;
+}`;
 $('gs-code').textContent = GS_TPL.replace('__KEY__', getResKey());
 $('btn-copy-gs').onclick = () => copyTextSafe($('gs-code').textContent, 'Đã sao chép đoạn mã Apps Script.');
 
@@ -1004,7 +1069,7 @@ function setResMsg(kind, text) {
     b.classList.toggle('hide', !text);
 }
 
-function renderResults(skipped) {
+function renderResults(skipped, merged) {
     const rows = resRows, out = $('res-out');
     if (!rows.length) {
         out.innerHTML = '';
@@ -1028,7 +1093,7 @@ function renderResults(skipped) {
         <div class="res-hbar"><h3 class="res-h">Bảng xếp hạng (cao → thấp)</h3><div class="res-exp"><button class="btn sec res-xbtn" type="button" title="Tải bảng xếp hạng và thống kê về file Excel" onclick="exportRank('xlsx')">Xuất Excel (.xlsx)</button><button class="btn sec res-xbtn" type="button" title="Tải bảng xếp hạng và thống kê về file Word" onclick="exportRank('docx')">Xuất Word (.docx)</button></div></div>
         <div class="res-wrap rank"><table class="res-t"><thead><tr><th class="num">Hạng</th><th>Họ và tên</th><th>Lớp</th><th class="num">Điểm</th></tr></thead><tbody>${rank}</tbody></table></div>`;
     const d = new Date();
-    setResMsg('ok', `Đã xếp hạng ${n} bài nộp từ cao xuống thấp${skipped ? `, bỏ qua ${skipped} dòng của đề khác` : ''}. Cập nhật lúc ${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}.`);
+    setResMsg('ok', `Đã xếp hạng ${n} bài nộp từ cao xuống thấp${skipped ? `, bỏ qua ${skipped} dòng của đề khác` : ''}${merged ? `, gộp ${merged} lượt thi lặp (lấy điểm cao nhất của mỗi học sinh)` : ''}. Cập nhật lúc ${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}.`);
 }
 
 // Chỉ giữ các dòng của đúng đề này nếu bảng có cột Mã đề / Tên đề
@@ -1039,8 +1104,20 @@ function applyResults(t) {
         rows = t.rows.filter(r => (r.id && r.id === exam.id) || (r.en && r.en === exam.name));
         skipped = t.rows.length - rows.length;
     }
+    // Đề cho thi nhiều lần (hoặc không giới hạn): mỗi học sinh chỉ tính 1 dòng, lấy điểm cao nhất.
+    // Đề chỉ cho thi 1 lần thì giữ nguyên mọi dòng để giáo viên thấy nếu có bài nộp trùng.
+    let merged = 0;
+    if (attemptLimit(exam) !== 1) {
+        const best = new Map();
+        rows.forEach(r => {
+            const k = attId(r.name, r.cls), o = best.get(k);
+            if (!o || r.score > o.score) best.set(k, r);
+        });
+        merged = rows.length - best.size;
+        rows = [...best.values()];
+    }
     resRows = rows;
-    renderResults(skipped);
+    renderResults(skipped, merged);
 }
 
 function pickTable(data) {
@@ -1563,10 +1640,10 @@ $('file').onchange = async e => {
     const ex={
         id:'e'+Date.now(), fileKey:'de'+(nextIdx+1), name:f.name.replace(/\.docx$/i,''), at:Date.now(), 
         items, eq, img:IM, time:0, scale:'english', webhook:'', openAt:0, closeAt:0,
-        shufGrp: false, shufQ: true, shufOpt: true
+        shufGrp: false, shufQ: true, shufOpt: true, maxAttempts: 1
     };
     const old=lib.find(y=>y.name===ex.name);
-    if(old){ ex.id=old.id; ex.fileKey=old.fileKey||ex.fileKey; ex.time=old.time||0; ex.openAt=old.openAt||0; ex.closeAt=old.closeAt||0; ex.scale=old.scale||'english'; ex.webhook=old.webhook||''; ex.shufGrp=!!old.shufGrp; ex.shufQ=old.shufQ!==false; ex.shufOpt=old.shufOpt!==false; ex.proctor=!!old.proctor; ex.maxViol=old.maxViol; ex.calc=!!old.calc; if(old.pwHash){ ex.pwHash=old.pwHash; ex.pwSalt=old.pwSalt; if(old.pwPlain) ex.pwPlain=old.pwPlain; } }
+    if(old){ ex.id=old.id; ex.fileKey=old.fileKey||ex.fileKey; ex.time=old.time||0; ex.openAt=old.openAt||0; ex.closeAt=old.closeAt||0; ex.scale=old.scale||'english'; ex.webhook=old.webhook||''; ex.shufGrp=!!old.shufGrp; ex.shufQ=old.shufQ!==false; ex.shufOpt=old.shufOpt!==false; ex.proctor=!!old.proctor; ex.maxViol=old.maxViol; ex.calc=!!old.calc; ex.maxAttempts=normAttempts(old.maxAttempts); if(old.pwHash){ ex.pwHash=old.pwHash; ex.pwSalt=old.pwSalt; if(old.pwPlain) ex.pwPlain=old.pwPlain; } }
     lib=lib.filter(y=>y.name!==ex.name); lib.push(ex); saveLib();
     openExam(ex.id);
     
@@ -1762,9 +1839,78 @@ function matchExamInList(list, id, deKey) {
     return null;
 }
 
+// ===================== GIỚI HẠN SỐ LẦN THI =====================
+// maxAttempts = số lần tối đa mỗi học sinh được vào thi (0 = không giới hạn; đề cũ chưa có giá trị thì mặc định 1).
+// Lượt thi được tính ngay khi học sinh bấm "Bắt đầu làm bài" và nhận diện theo họ tên + lớp:
+//  1) Ghi nhớ trên trình duyệt (localStorage): chặn thi lại, tải lại trang, mở tab mới trên cùng máy.
+//     Tính theo họ tên + lớp nên nhiều học sinh dùng chung một máy (phòng máy) vẫn không ảnh hưởng nhau.
+//  2) Nếu đề có liên kết Google Sheet đã cập nhật Apps Script: hỏi thêm số bài đã nộp của họ tên + lớp đó,
+//     chặn được cả trường hợp đổi máy hoặc dùng chế độ ẩn danh. Không kết nối được thì chỉ dựa vào bước 1.
+function normAttempts(v) { const n = parseInt(v, 10); return isFinite(n) && n >= 0 ? n : 1; }
+function attemptLimit(ex) { return normAttempts(ex && ex.maxAttempts); }
+function attId(name, cls) { return nrm(name).replace(/\s+/g, ' ') + '|' + nrm(cls).replace(/\s+/g, ''); }
+const attLsKey = () => 'att_' + (exam && exam.id);
+const memAtt = {};
+function attStore() {
+    let m = null;
+    try { m = JSON.parse(localStorage.getItem(attLsKey()) || 'null'); } catch(e) {}
+    return m && typeof m === 'object' && !Array.isArray(m) ? m : {};
+}
+function localAttempts(key) {
+    const r = attStore()[key];
+    return Math.max(r && +r.n > 0 ? Math.floor(+r.n) : 0, memAtt[attLsKey() + key] || 0);
+}
+function addLocalAttempt(key) {
+    const m = attStore(), n = localAttempts(key) + 1;
+    m[key] = { n, t: Date.now() };
+    memAtt[attLsKey() + key] = n;
+    try { localStorage.setItem(attLsKey(), JSON.stringify(m)); } catch(e) {}
+    return n;
+}
+
+// Hỏi Google Sheet (Apps Script mới) xem họ tên + lớp này đã nộp mấy bài của đề này; null nếu không hỏi được
+async function serverAttempts(name, cls) {
+    const url = (exam.webhook || '').trim();
+    if(!url) return null;
+    const ctl = typeof AbortController === 'function' ? new AbortController() : null;
+    const tm = ctl ? setTimeout(() => ctl.abort(), 8000) : 0;
+    try {
+        const q = 'action=attempts&exam=' + encodeURIComponent(exam.id) + '&examName=' + encodeURIComponent(exam.name) +
+            '&name=' + encodeURIComponent(name) + '&cls=' + encodeURIComponent(cls) + '&t=' + Date.now();
+        const res = await fetch(url + (url.includes('?') ? '&' : '?') + q, { cache: 'no-store', signal: ctl ? ctl.signal : undefined });
+        const d = await res.json();
+        return d && d.ok === true && typeof d.attempts === 'number' ? Math.max(0, Math.floor(d.attempts)) : null;
+    } catch(e) { return null; }
+    finally { if(tm) clearTimeout(tm); }
+}
+async function usedAttempts(key, name, cls) {
+    const sv = await serverAttempts(name, cls);
+    return Math.max(localAttempts(key), sv == null ? 0 : sv);
+}
+
+function renderAttemptInfo() {
+    const box = $('s-attempt'), lim = attemptLimit(exam);
+    if(!lim) { box.className = 'sch-state hide'; box.textContent = ''; return; }
+    box.className = 'sch-state wait';
+    box.innerHTML = lim === 1
+        ? '<b>Đề này chỉ được thi 1 lần duy nhất.</b> Lượt thi được tính ngay khi em bấm "Bắt đầu làm bài", kể cả khi chưa nộp bài, nên em hãy chuẩn bị kỹ và không thoát giữa chừng.'
+        : `<b>Mỗi học sinh được thi tối đa ${lim} lần.</b> Lượt thi được tính ngay khi em bấm "Bắt đầu làm bài", kể cả khi chưa nộp bài.`;
+}
+function showAttemptBlock(used, lim) {
+    const box = $('s-attempt');
+    box.className = 'sch-state closed';
+    box.innerHTML = `<b>Em đã hết lượt thi của đề này</b> (đã thi ${Math.min(used, lim)}/${lim} lần với họ tên và lớp này). Nếu em nhập sai họ tên hoặc lớp, hãy sửa lại; nếu cần thi lại, em liên hệ giáo viên.`;
+}
+// Sau khi nộp bài mà vẫn còn lượt: quay lại màn hình nhập tên để thi lần nữa
+window.retryExam = () => {
+    try { sessionStorage.removeItem(progKey()); } catch(e) {}
+    location.href = location.pathname + '?de=' + encodeURIComponent((exam && (exam.fileKey || exam.id)) || studentDeParam);
+};
+
 async function initStudentFlow(id, deParam) {
     exam = null;
     $('student-login').classList.remove('hide');
+    $('s-attempt').className = 'sch-state hide'; $('s-attempt').textContent = '';
     $('s-exam-name').textContent = 'Đang tải đề thi...';
     $('s-exam-name').style.color = '';
     $('s-name').style.display = '';
@@ -1844,11 +1990,14 @@ async function initStudentFlow(id, deParam) {
     }
     if(sv && sv.cur && sv.studentData) { startStudentExam(sv); return; }
 
+    renderAttemptInfo();
     updateGate();
     if(exam.openAt || exam.closeAt) gateTimer = setInterval(updateGate, 1000);
-    
+
+    let startBusy = false;
     $('sf').onsubmit = async (e) => {
         e.preventDefault();
+        if(startBusy) return;
         if(gateState() !== 'open') { updateGate(); return; }
         if(exam.pwHash && !checkExamPw(exam, $('s-pw').value)) {
             $('s-pw-err').textContent = 'Mật khẩu đề thi không đúng. Em kiểm tra lại hoặc hỏi giáo viên.';
@@ -1856,10 +2005,31 @@ async function initStudentFlow(id, deParam) {
             $('s-pw').focus(); $('s-pw').select();
             return;
         }
-        studentData.name = $('s-name').value.trim();
-        studentData.class = $('s-class').value.trim();
-        if(exam.proctor && !(await pgStart())) return;
-        startStudentExam();
+        const nm = $('s-name').value.trim(), cl = $('s-class').value.trim();
+        const lim = attemptLimit(exam), key = attId(nm, cl), btn = $('btn-start-exam'), btnTxt = btn.textContent;
+        startBusy = true;
+        try {
+            if(lim) {
+                renderAttemptInfo();
+                btn.disabled = true; btn.textContent = 'Đang kiểm tra lượt thi...';
+                const used = await usedAttempts(key, nm, cl);
+                if(used >= lim) { showAttemptBlock(used, lim); return; }
+            }
+            studentData.name = nm;
+            studentData.class = cl;
+            if(exam.proctor && !(await pgStart())) return;
+            if(lim) {
+                // Kiểm tra lại ngay trước khi ghi lượt (phòng khi mở 2 tab cùng lúc trong lúc chờ cấp quyền camera)
+                const u2 = localAttempts(key);
+                if(u2 >= lim) { showAttemptBlock(u2, lim); pgStop(true); return; }
+                addLocalAttempt(key);
+            }
+            startStudentExam();
+        } finally {
+            startBusy = false;
+            btn.textContent = btnTxt;
+            btn.disabled = gateState() !== 'open';
+        }
     };
 }
 
@@ -1895,6 +2065,7 @@ function updateGate() {
         if(gateTimer) { clearInterval(gateTimer); gateTimer = null; }
         html += `<br><b>Đề thi đã đóng.</b> Em không thể làm bài nữa. Vui lòng liên hệ giáo viên nếu cần.`;
         $('s-name').style.display = 'none';$('s-class').style.display = 'none'; btn.style.display = 'none'; setPwField(false);
+        $('s-attempt').classList.add('hide');
     } else if(c) {
         html += `<br>Đề đang mở. Còn <b>${fmtCountdown(Math.ceil((c - n) / 1000))}</b> đến giờ đóng đề.`;
     } else if(o) {
@@ -2148,6 +2319,9 @@ function showResult(res, canReview) {
     const head = `
         <h2 class="ok-title">Nộp bài thành công</h2>
         <p>Cảm ơn em đã hoàn thành bài thi.</p>`;
+    // Còn lượt thi thì cho phép làm lại (không giới hạn thì luôn cho phép)
+    const lim = attemptLimit(exam), left = lim ? lim - (res.ak != null ? localAttempts(res.ak) : lim) : Infinity;
+    const retry = left > 0 ? `<button class="btn gr" style="margin-top:12px" onclick="retryExam()">Làm lại bài${isFinite(left) ? ' (còn ' + left + ' lượt)' : ''}</button>` : '';
     const showScore = () => {
         box.innerHTML = head + `
             <div class="score-result">
@@ -2157,7 +2331,7 @@ function showResult(res, canReview) {
                     • Đúng/Sai (Điểm lũy tiến): Đã làm ${res.tfQuestions} câu<br>
                     • Trả lời ngắn (${res.isMath?'0.5đ':'0.25đ'}/câu): Đúng ${res.correctSA}/${res.totalSA} câu
                 </div>
-            </div>` + (canReview ? `<button class="btn" style="margin-top:16px" onclick="reviewExam()">Xem lại bài làm</button>` : '');
+            </div>` + (canReview ? `<button class="btn" style="margin-top:16px" onclick="reviewExam()">Xem lại bài làm</button>` : '') + retry;
     };
     if(!(res.revealAt > nowMs())) { showScore(); return; }
     box.innerHTML = head + `
@@ -2165,7 +2339,7 @@ function showResult(res, canReview) {
             Điểm và số câu đúng sẽ được công bố sau khi hết thời gian thi, lúc <b>${fmtDT(res.revealAt)}</b>.
             <span class="sch-count" id="reveal-count"></span>
             <div class="note">Em vui lòng giữ nguyên trang này, kết quả sẽ tự hiện khi đến giờ.</div>
-        </div>`;
+        </div>` + retry;
     const tick = () => {
         const left = Math.ceil((res.revealAt - nowMs()) / 1000);
         if(left <= 0) { clearInterval(resultTimer); showScore(); return; }
@@ -2232,7 +2406,7 @@ async function processSubmission() {
         details: JSON.stringify({ 
             score, 
             mc: `${correctMC}/${totalMC}`, 
-            tf_qs: tfQuestions, violations: PG.viol.length, viol_log: PG.viol.map(v => new Date(v.t).toLocaleTimeString('vi-VN') + ' ' + v.r).join(' | '), 
+            attempt: localAttempts(attId(studentData.name, studentData.class)) || 1, tf_qs: tfQuestions, violations: PG.viol.length, viol_log: PG.viol.map(v => new Date(v.t).toLocaleTimeString('vi-VN') + ' ' + v.r).join(' | '), 
             sa: `${correctSA}/${totalSA}` 
         })
     };
@@ -2251,7 +2425,7 @@ async function processSubmission() {
         if (rotLocked) exitLandscape();
         examRunning = false;
         pgStop(); $('list-student').style.pointerEvents = 'none';$('list-student').setAttribute('inert', '');
-        const res = { score, correctMC, totalMC, tfQuestions, correctSA, totalSA, isMath, revealAt: revealAtMs() };
+        const res = { score, correctMC, totalMC, tfQuestions, correctSA, totalSA, isMath, revealAt: revealAtMs(), ak: attId(studentData.name, studentData.class) };
         try { sessionStorage.setItem(progKey(), JSON.stringify({ done: true, res })); } catch(e) {}
         showResult(res, true);
     } catch(err) {
