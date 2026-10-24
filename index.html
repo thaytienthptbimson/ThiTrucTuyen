@@ -220,7 +220,7 @@ body.shot-hide #list-student,body.shot-hide #q-panel{visibility:hidden}
 
 <div id="student-login" class="center-screen hide">
   <form class="box" id="sf">
-    <div class="brand"><h1 id="s-exam-name">Đang tải đề thi...</h1><p>Nhập thông tin để bắt đầu làm bài.</p></div>
+    <div class="brand"><h1 id="s-exam-name">Đang tải đề thi...</h1><p>Nhập đủ họ và tên và lớp để bắt đầu làm bài.</p></div>
     <div id="s-schedule" class="sch-state hide"></div>
     <div id="s-attempt" class="sch-state hide" role="status"></div>
     <div id="s-calc-note" class="sch-state hide"><b>Được dùng máy tính cầm tay</b> (máy tính bỏ túi hoặc máy tính khoa học loại thông thường) để tính toán. <b>Không được dùng điện thoại</b>, máy tính bảng, đồng hồ thông minh hay bất kỳ thiết bị kết nối mạng nào khác. Em cúi nhìn máy tính trong thời gian ngắn thì không bị tính vi phạm, nhưng không rời khỏi khung camera quá lâu.</div>
@@ -228,7 +228,9 @@ body.shot-hide #list-student,body.shot-hide #q-panel{visibility:hidden}
     <input type="text" id="s-name" placeholder="Họ và tên có dấu, ví dụ: Phạm Văn Tiến" autocomplete="off" autocapitalize="words" spellcheck="false" required>
     <div class="note nm-aux" style="margin:-4px 0 12px">Nhập đủ họ tên có dấu, theo mẫu <b>Phạm Văn Tiến</b> hoặc <b>Phạm Tiến</b>. Gõ in hoa hay chữ thường đều được, hệ thống tự viết hoa chữ cái đầu mỗi từ.</div>
     <div class="err hide nm-aux" id="s-name-err" role="alert"></div>
-    <input type="text" id="s-class" placeholder="Lớp, ví dụ 12A1" required>
+    <input type="text" id="s-class" placeholder="Lớp (bắt buộc), ví dụ 12A1" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="20" required>
+    <div class="note nm-aux" style="margin:-4px 0 12px">Bắt buộc nhập <b>đủ họ tên và lớp</b> mới được vào thi. Lớp theo mẫu <b>12A1</b>.</div>
+    <div class="err hide nm-aux" id="s-class-err" role="alert"></div>
     <input type="password" id="s-pw" class="hide" placeholder="Mật khẩu đề thi (do giáo viên cung cấp)" autocomplete="off" autocapitalize="off" spellcheck="false">
     <div class="err hide" id="s-pw-err" role="alert"></div>
     <button class="btn gr" type="submit" id="btn-start-exam" disabled>Bắt đầu làm bài</button>
@@ -1171,6 +1173,16 @@ function vBadge(r) {
     return `<span class="vb ${k}">${r.viol}</span>${more}`;
 }
 
+// Lỗi vi phạm của từng học sinh (số lần từng loại lỗi + diễn biến), hiện ngay trong bảng xếp hạng
+function violErrCell(r) {
+    if (r.viol == null) return '<span class="vsub">–</span>';
+    if (r.viol === 0) return '<span class="vsub">Không vi phạm</span>';
+    const rc = reasonCounts(r);
+    if (!rc.length) return '<span class="vsub">Không có nhật ký chi tiết</span>';
+    return `<div class="vrs">${rc.map(([k, c]) => `<span>${esc(k)}: <b>${c} lần</b></span>`).join('')}</div>` +
+        `<details class="vd"><summary>Xem ${r.vlog.length} lần</summary><div class="vtl">${numberedLog(r).map(e => (e.t ? `<b>${esc(e.t)}</b> ` : '') + esc(e.r) + ` (lần ${e.k}/${e.of})`).join('<br>')}</div></details>`;
+}
+
 function violHtml(vs, total) {
     const f = v => String(Math.round(v * 100) / 100);
     const pc = (a, b) => (b ? Math.round(a / b * 1000) / 10 : 0) + '%';
@@ -1185,14 +1197,7 @@ function violHtml(vs, total) {
             vs.reasons.map(x => `<tr><td>${esc(x.k)}</td><td class="num">${x.c}</td><td class="num">${x.s}</td><td><span class="res-bar"><i style="width:${x.c / mx * 100}%;background:var(--bad)"></i></span></td></tr>`).join('') +
             '</tbody></table></div>';
     }
-    h += '<h3 class="res-h">Danh sách học sinh vi phạm (nhiều → ít)</h3>';
-    h += `<div class="res-wrap rank"><table class="res-t"><thead><tr><th class="num">STT</th><th>Họ và tên</th><th>Lớp</th><th class="num">Điểm</th><th class="num">Tổng số lần</th><th>Số lần từng loại lỗi</th><th>Diễn biến</th></tr></thead><tbody>` +
-        vs.bad.map((r, i) => {
-            const rc = reasonCounts(r);
-            const chips = rc.length ? `<div class="vrs">${rc.map(([k, c]) => `<span>${esc(k)}: <b>${c} lần</b></span>`).join('')}</div>` : '<span class="vsub">Không có nhật ký chi tiết</span>';
-            const det = r.vlog.length ? `<details class="vd"><summary>Xem ${r.vlog.length} lần</summary><div class="vtl">${numberedLog(r).map(e => (e.t ? `<b>${esc(e.t)}</b> ` : '') + esc(e.r) + ` (lần ${e.k}/${e.of})`).join('<br>')}</div></details>` : '';
-            return `<tr><td class="num">${i + 1}</td><td>${esc(r.name)}</td><td>${esc(r.cls)}</td><td class="num"><b>${f(r.score)}</b></td><td class="num">${vBadge(r)}</td><td>${chips}</td><td>${det}</td></tr>`;
-        }).join('') + '</tbody></table></div>';
+    h += '<p class="note">Số lần vi phạm, từng loại lỗi và diễn biến của mỗi học sinh nằm ngay trong bảng xếp hạng ở trên.</p>';
     return h;
 }
 
@@ -1211,7 +1216,7 @@ function renderResults(skipped, merged) {
     let rk = 0, prev = null;
     const rank = sorted.map((r, i) => {
         if (r.score !== prev) { rk = i + 1; prev = r.score; }
-        return `<tr><td class="num">${rk}</td><td>${esc(r.name)}</td><td>${esc(r.cls)}</td><td class="num"><b>${f(r.score)}</b></td>${hv ? `<td class="num">${vBadge(r)}</td>` : ''}</tr>`;
+        return `<tr><td class="num">${rk}</td><td>${esc(r.name)}</td><td>${esc(r.cls)}</td><td class="num"><b>${f(r.score)}</b></td>${hv ? `<td class="num">${vBadge(r)}</td><td>${violErrCell(r)}</td>` : ''}</tr>`;
     }).join('');
     const bands = BANDS.map((b, i) => `<tr><td>${b.lb}</td><td class="num">${cnt[i]}</td><td class="num">${pct(cnt[i])}</td><td><span class="res-bar"><i style="width:${n ? cnt[i] / n * 100 : 0}%;background:${b.col}"></i></span></td></tr>`).join('');
     out.innerHTML = `
@@ -1219,7 +1224,7 @@ function renderResults(skipped, merged) {
         <h3 class="res-h">Thống kê theo khoảng điểm</h3>
         <div class="res-wrap"><table class="res-t"><thead><tr><th>Khoảng điểm</th><th class="num">Số bài</th><th class="num">Tỉ lệ</th><th>Biểu đồ</th></tr></thead><tbody>${bands}</tbody><tfoot><tr><td>Tổng</td><td class="num">${n}</td><td class="num">100%</td><td></td></tr></tfoot></table></div>
         <div class="res-hbar"><h3 class="res-h">Bảng xếp hạng (cao → thấp)</h3><div class="res-exp"><button class="btn sec res-xbtn" type="button" title="Tải bảng xếp hạng, thống kê điểm và lỗi vi phạm về file Excel" onclick="exportRank('xlsx')">Xuất Excel (.xlsx)</button><button class="btn sec res-xbtn" type="button" title="Tải bảng xếp hạng, thống kê điểm và lỗi vi phạm về file Word" onclick="exportRank('docx')">Xuất Word (.docx)</button></div></div>
-        <div class="res-wrap rank"><table class="res-t"><thead><tr><th class="num">Hạng</th><th>Họ và tên</th><th>Lớp</th><th class="num">Điểm</th>${hv ? '<th class="num">Vi phạm</th>' : ''}</tr></thead><tbody>${rank}</tbody></table></div>
+        <div class="res-wrap rank"><table class="res-t"><thead><tr><th class="num">Hạng</th><th>Họ và tên</th><th>Lớp</th><th class="num">Điểm</th>${hv ? '<th class="num">Số lần vi phạm</th><th>Lỗi vi phạm (số lần từng lỗi)</th>' : ''}</tr></thead><tbody>${rank}</tbody></table></div>
         ${hv ? violHtml(vs, n) : '<p class="note">Bảng điểm chưa có cột “Chi tiết” (hoặc “Vi phạm”) nên chưa thống kê được lỗi vi phạm. Xem hướng dẫn ở mục “Bật tải tự động từ Google Sheet” bên dưới.</p>'}`;
     const d = new Date();
     setResMsg('ok', `Đã xếp hạng ${n} bài nộp từ cao xuống thấp${skipped ? `, bỏ qua ${skipped} dòng của đề khác` : ''}${merged ? `, gộp ${merged} lượt thi lặp (lấy điểm cao nhất của mỗi học sinh)` : ''}. Cập nhật lúc ${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}.`);
@@ -1351,7 +1356,7 @@ function rankData() {
     let rk = 0, prev = null;
     const list = sorted.map((r, i) => {
         if (r.score !== prev) { rk = i + 1; prev = r.score; }
-        return { rk, name: r.name, cls: r.cls, score: r.score, viol: r.viol == null ? null : r.viol };
+        return { rk, name: r.name, cls: r.cls, score: r.score, viol: r.viol == null ? null : r.viol, rc: reasonCounts(r), log: numberedLog(r), tries: r.tries, violAll: r.violAll };
     });
     const total = sorted.reduce((t, r) => t + r.score, 0);
     const hv = sorted.some(r => r.viol != null);
@@ -1430,19 +1435,24 @@ const X_STYLES = XML_HEAD +
     '<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="top" wrapText="1"/></xf>' + // 8 chữ nhiều dòng
     '</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
 
+// Văn bản lỗi vi phạm của từng học sinh (dùng chung cho Excel và Word)
+const errText = r => r.viol == null ? '' : r.viol === 0 ? 'Không vi phạm'
+    : (r.rc.length ? r.rc.map(([k, c]) => k + ': ' + c + ' lần').join('\n') : 'Không có nhật ký chi tiết');
+const logText = r => r.log.map(e => (e.t ? e.t + ' ' : '') + e.r + ' (lần ' + e.k + '/' + e.of + ')').join('\n');
+
 function buildXlsx(d) {
     const name = (exam && exam.name) || '', when = 'Xuất lúc ' + fmtDT(Date.now());
     const longest = d.list.reduce((m, r) => Math.max(m, String(r.name).length), 0);
-    const hv = d.hv, vs = d.vs, last = hv ? 'E' : 'D';
+    const hv = d.hv, vs = d.vs, last = hv ? 'G' : 'D';
 
     const s1 = [
-        [['BẢNG XẾP HẠNG KẾT QUẢ THI', 1], ['', 1], ['', 1], ['', 1]].concat(hv ? [['', 1]] : []),
+        [['BẢNG XẾP HẠNG KẾT QUẢ THI', 1], ['', 1], ['', 1], ['', 1]].concat(hv ? [['', 1], ['', 1], ['', 1]] : []),
         [['Đề thi: ' + name, 0]],
         [[when, 0]],
         [],
-        [['Hạng', 2], ['Họ và tên', 2], ['Lớp', 2], ['Điểm', 2]].concat(hv ? [['Vi phạm', 2]] : [])
-    ].concat(d.list.map(r => [[r.rk, 4], [r.name, 3], [r.cls, 4], [r.score, 4]].concat(hv ? [[r.viol == null ? '' : r.viol, 4]] : [])));
-    const sheet1 = xSheet(s1, [8, Math.max(26, Math.min(52, longest + 4)), 14, 10].concat(hv ? [12] : []),
+        [['Hạng', 2], ['Họ và tên', 2], ['Lớp', 2], ['Điểm', 2]].concat(hv ? [['Số lần vi phạm', 2], ['Lỗi vi phạm (số lần từng lỗi)', 2], ['Chi tiết (giờ - lỗi - lần thứ)', 2]] : [])
+    ].concat(d.list.map(r => [[r.rk, 4], [r.name, 3], [r.cls, 4], [r.score, 4]].concat(hv ? [[r.viol == null ? '' : r.viol, 4], [errText(r), 8], [logText(r), 8]] : [])));
+    const sheet1 = xSheet(s1, [8, Math.max(26, Math.min(52, longest + 4)), 14, 10].concat(hv ? [14, 42, 50] : []),
         { merges: ['A1:' + last + '1', 'A2:' + last + '2', 'A3:' + last + '3'], freeze: 5, heights: { 0: 30 } });
 
     let s2 = [
@@ -1566,8 +1576,8 @@ function buildDocx(d) {
             d.bands.map(b => [b.lb, b.c, pct(b.p)]).concat([['Tổng', d.n, '100%']]), ['left', 'center', 'center'], true) +
         wPara('Bảng xếp hạng (cao → thấp)', { b: 1, keep: 1, after: 80, before: 280 }) +
         (hv
-            ? wTable([900, 3638, 1500, 1300, 2300], ['Hạng', 'Họ và tên', 'Lớp', 'Điểm', 'Số lần vi phạm'],
-                d.list.map(r => [r.rk, r.name, r.cls, f(r.score), r.viol == null ? '–' : r.viol]), ['center', 'left', 'center', 'center', 'center'], false)
+            ? wTable([700, 2200, 800, 800, 1100, 4038], ['Hạng', 'Họ và tên', 'Lớp', 'Điểm', 'Số lần vi phạm', 'Lỗi vi phạm (số lần từng lỗi)'],
+                d.list.map(r => [r.rk, r.name, r.cls, f(r.score), r.viol == null ? '–' : r.viol, r.viol == null ? '–' : errText(r).replace(/: (\d+) lần/g, ': $1\u00a0lần')]), ['center', 'left', 'center', 'center', 'center', 'left'], false)
             : wTable([1000, 5038, 1800, 1800], ['Hạng', 'Họ và tên', 'Lớp', 'Điểm'],
                 d.list.map(r => [r.rk, r.name, r.cls, f(r.score)]), ['center', 'left', 'center', 'center'], false));
     if (hv) {
@@ -1575,30 +1585,9 @@ function buildDocx(d) {
             wPara(`Học sinh có vi phạm: ${vs.bad.length}/${vs.n} (${vs.n ? pct(vs.bad.length / vs.n) : '0%'})   |   Tổng số lần vi phạm: ${vs.total}` + (vs.lim ? `   |   Vượt giới hạn ${vs.lim} lần (bị tự nộp): ${vs.over}` : ''), { after: 120 });
         if (vs.reasons.length) body += wTable([5638, 2000, 2000], ['Loại lỗi', 'Số lần', 'Số học sinh'],
             vs.reasons.map(x => [x.k, x.c, x.s]), ['left', 'center', 'center'], false);
-        if (vs.bad.length) body += wPara('Danh sách học sinh vi phạm (nhiều → ít)', { b: 1, keep: 1, after: 80, before: 280 }) +
-            wTable([800, 2400, 1000, 900, 4538], ['STT', 'Họ và tên', 'Lớp', 'Điểm', 'Số lần từng loại lỗi'],
-                vs.bad.map((r, i) => [i + 1, r.name, r.cls, f(r.score), r.vlog.length ? reasonCounts(r).map(([k, c]) => k + ': ' + c + '\u00a0lần').join('\n') : 'Không có nhật ký chi tiết']),
-                ['center', 'left', 'center', 'center', 'left'], false);
-        else body += wPara('Không có học sinh nào vi phạm.', { i: 1, after: 80 });
-        if (vs.bad.length) {
-            body += wPara('Chi tiết vi phạm của từng học sinh', { b: 1, sz: 28, keep: 1, pb: 1, after: 60 }) +
-                wPara('Thời điểm ghi theo giờ trên máy của học sinh; các lỗi xếp theo thứ tự xảy ra.', { i: 1, sz: 24, after: 120 });
-            vs.bad.forEach((r, i) => {
-                const over = vs.lim && r.viol > vs.lim ? ' (vượt giới hạn, bị tự nộp bài)' : '';
-                const more = r.tries > 1 && r.violAll != null && r.violAll !== r.viol ? `; tổng ${r.violAll} lần ở ${r.tries} lượt thi` : '';
-                body += wPara(`${i + 1}. ${r.name}${r.cls ? ' - Lớp ' + r.cls : ''} - Điểm ${f(r.score)} - ${r.viol} lần vi phạm${over}${more}`, { b: 1, keep: 1, before: 240, after: 60 });
-                if (r.vlog.length) {
-                    body += wTable([6838, 2800], ['Loại lỗi vi phạm', 'Số lần'],
-                        reasonCounts(r).map(([k, c]) => [k, c + ' lần']).concat([['Tổng cộng', r.viol + ' lần']]), ['left', 'center'], true) +
-                        wPara('Diễn biến theo thời gian', { b: 1, sz: 24, keep: 1, before: 120, after: 40 }) +
-                        wTable([700, 1500, 5638, 1800], ['STT', 'Thời điểm', 'Lỗi vi phạm', 'Lần thứ'],
-                            numberedLog(r).map((e, k) => [k + 1, e.t || '–', e.r, 'lần ' + e.k + '/' + e.of]), ['center', 'center', 'left', 'center'], false);
-                    if (r.vlog.length < r.viol) body += wPara(`Nhật ký chỉ ghi được ${r.vlog.length}/${r.viol} lần.`, { i: 1, sz: 24, before: 40, after: 40 });
-                } else {
-                    body += wPara('Bảng điểm không có nhật ký chi tiết cho bài này.', { i: 1, sz: 24, after: 40 });
-                }
-            });
-        }
+        body += vs.bad.length
+            ? wPara('Số lần và lỗi vi phạm của từng học sinh được ghi ngay trong bảng xếp hạng ở trên.', { i: 1, sz: 24, before: 120, after: 80 })
+            : wPara('Không có học sinh nào vi phạm.', { i: 1, after: 80 });
     }
     body += '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="567" w:footer="567" w:gutter="0"/></w:sectPr>';
 
@@ -2137,12 +2126,28 @@ function checkName(raw) {
     if(n > 6) return { ok: false, name, msg: 'Họ tên có quá nhiều từ (tối đa 6 từ). Em kiểm tra lại, theo mẫu: Phạm Văn Tiến.' };
     return { ok: true, name, noMark: !/[^\u0000-\u007f]/.test(name) };
 }
-function showNameErr(msg) {
+function showNameErr(msg, nofocus) {
     const e = $('s-name-err');
     e.textContent = msg || '';
     e.classList.toggle('hide', !msg);
-    if(msg) $('s-name').focus();
+    if(msg && !nofocus) $('s-name').focus();
 }
+// Lớp: bắt buộc nhập, 2-15 ký tự, chỉ gồm chữ, số, dấu cách và . - _ / (ví dụ 12A1, 10 Anh 1). Tự viết hoa, gộp dấu cách thừa.
+const CLASS_CHARS = /^[0-9A-Za-zÀ-ÖØ-öø-ɏḀ-ỿ][0-9A-Za-zÀ-ÖØ-öø-ɏḀ-ỿ .\-_\/]*$/;
+function checkClass(raw) {
+    const cls = String(raw == null ? '' : raw).normalize('NFC').replace(/\s+/g, ' ').trim().toLocaleUpperCase('vi');
+    if(!cls) return { ok: false, cls, msg: 'Em chưa nhập lớp. Cần nhập đủ họ tên và lớp mới được vào thi, ví dụ: 12A1.' };
+    if(cls.length < 2 || cls.length > 15 || !CLASS_CHARS.test(cls)) return { ok: false, cls, msg: 'Lớp chưa đúng. Em nhập theo mẫu 12A1 (chỉ gồm chữ, số, tối đa 15 ký tự).' };
+    return { ok: true, cls };
+}
+function showClassErr(msg, nofocus) {
+    const e = $('s-class-err');
+    e.textContent = msg || '';
+    e.classList.toggle('hide', !msg);
+    if(msg && !nofocus) $('s-class').focus();
+}
+$('s-class').addEventListener('input', () => showClassErr(''));
+$('s-class').addEventListener('blur', () => { const v = $('s-class').value; if(v.trim()) $('s-class').value = checkClass(v).cls; });
 $('s-name').addEventListener('input', () => showNameErr(''));
 $('s-name').addEventListener('blur', () => { const v = $('s-name').value; if(v.trim()) $('s-name').value = fmtName(v); });
 
@@ -2244,9 +2249,14 @@ async function initStudentFlow(id, deParam) {
         e.preventDefault();
         if(startBusy) return;
         if(gateState() !== 'open') { updateGate(); return; }
-        const nv = checkName($('s-name').value);
-        if(!nv.ok) { showNameErr(nv.msg); return; }
-        $('s-name').value = nv.name;
+        const nv = checkName($('s-name').value), cv = checkClass($('s-class').value);
+        if(!nv.ok || !cv.ok) {
+            // Bắt buộc có đủ họ tên và lớp mới được vào thi: báo lỗi ở từng ô còn thiếu hoặc sai
+            showNameErr(nv.ok ? '' : nv.msg, true); showClassErr(cv.ok ? '' : cv.msg, true);
+            (nv.ok ? $('s-class') : $('s-name')).focus();
+            return;
+        }
+        $('s-name').value = nv.name; $('s-class').value = cv.cls;
         if(nv.noMark && noMarkOk !== nv.name) {
             // Tên không có dấu nào: nhắc 1 lần, học sinh bấm "Bắt đầu" thêm lần nữa mới xác nhận là tên thật không có dấu
             noMarkOk = nv.name;
@@ -2259,7 +2269,7 @@ async function initStudentFlow(id, deParam) {
             $('s-pw').focus(); $('s-pw').select();
             return;
         }
-        const nm = nv.name, cl = $('s-class').value.trim();
+        const nm = nv.name, cl = cv.cls;
         const lim = attemptLimit(exam), key = attId(nm, cl), btn = $('btn-start-exam'), btnTxt = btn.textContent;
         startBusy = true;
         try {
