@@ -1576,9 +1576,9 @@ function buildDocx(d) {
         if (vs.reasons.length) body += wTable([5638, 2000, 2000], ['Loại lỗi', 'Số lần', 'Số học sinh'],
             vs.reasons.map(x => [x.k, x.c, x.s]), ['left', 'center', 'center'], false);
         if (vs.bad.length) body += wPara('Danh sách học sinh vi phạm (nhiều → ít)', { b: 1, keep: 1, after: 80, before: 280 }) +
-            wTable([800, 2000, 900, 800, 900, 4238], ['STT', 'Họ và tên', 'Lớp', 'Điểm', 'Tổng số lần', 'Số lần từng loại lỗi'],
-                vs.bad.map((r, i) => [i + 1, r.name, r.cls, f(r.score), r.viol, r.vlog.length ? reasonCounts(r).map(([k, c]) => k + ': ' + c + '\u00a0lần').join('\n') : 'Không có nhật ký chi tiết']),
-                ['center', 'left', 'center', 'center', 'center', 'left'], false);
+            wTable([800, 2400, 1000, 900, 4538], ['STT', 'Họ và tên', 'Lớp', 'Điểm', 'Số lần từng loại lỗi'],
+                vs.bad.map((r, i) => [i + 1, r.name, r.cls, f(r.score), r.vlog.length ? reasonCounts(r).map(([k, c]) => k + ': ' + c + '\u00a0lần').join('\n') : 'Không có nhật ký chi tiết']),
+                ['center', 'left', 'center', 'center', 'left'], false);
         else body += wPara('Không có học sinh nào vi phạm.', { i: 1, after: 80 });
         if (vs.bad.length) {
             body += wPara('Chi tiết vi phạm của từng học sinh', { b: 1, sz: 28, keep: 1, pb: 1, after: 60 }) +
