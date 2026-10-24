@@ -169,6 +169,17 @@ img.im{max-width:100%;height:auto;border-radius:6px;margin:8px 0}
 .res-t tfoot td{font-weight:700;border-bottom:0}
 .res-bar{display:block;height:8px;min-width:110px;border-radius:4px;background:var(--bg)}
 .res-bar i{display:block;height:100%;border-radius:4px}
+.vb{display:inline-block;min-width:28px;padding:1px 9px;border-radius:999px;font-size:13px;font-weight:700;text-align:center;font-variant-numeric:tabular-nums}
+.vb.v0{background:var(--okbg);color:var(--ok)}
+.vb.v1{background:#fdf3dc;color:#8a5a00}
+.vb.v2{background:var(--badbg);color:var(--bad)}
+.vb.vn{background:var(--bg);color:var(--mut);font-weight:500}
+.vsub{display:block;font-size:12px;color:var(--mut);font-weight:400;white-space:normal}
+.res-t td .vrs{display:flex;flex-wrap:wrap;gap:4px 6px;white-space:normal;min-width:240px;max-width:440px}
+.res-t td .vrs span{font-size:12.5px;line-height:1.5;background:var(--bg);border:1px solid var(--bd);border-radius:4px;padding:1px 7px}
+.res-t td .vd summary{cursor:pointer;color:var(--pri);font-size:13px;font-weight:600}
+.res-t td .vtl{white-space:normal;font-size:13px;line-height:1.7;color:var(--mut);min-width:260px;padding-top:4px}
+.res-t td .vtl b{color:var(--tx);font-variant-numeric:tabular-nums}
 .res-code{background:#0f1c26;color:#d6e6ee;padding:12px 14px;border-radius:var(--r);font:12.5px/1.55 ui-monospace,Consolas,monospace;overflow:auto;max-height:280px;margin:10px 0;white-space:pre}
 .copyright{margin:18px 0 0;padding:0 12px 14px;font-size:12px;color:var(--mut);text-align:center}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);max-width:min(92vw,460px);background:var(--tx);color:#fff;padding:10px 16px;border-radius:var(--r);font-size:14px;line-height:1.5;z-index:100;box-shadow:0 6px 24px rgba(0,0,0,.3);text-align:center}
@@ -346,6 +357,7 @@ body.shot-hide #list-student,body.shot-hide #q-panel{visibility:hidden}
         </ol>
         <pre id="gs-code" class="res-code"></pre>
         <button class="btn sec" type="button" id="btn-copy-gs">Sao chép đoạn mã</button>
+        <p class="note"><b>Thống kê lỗi vi phạm:</b> mỗi bài nộp gửi kèm trường <code>details</code> (số lần và nhật ký vi phạm). Hàm <code>doPost</code> cần ghi trường này vào một cột có tiêu đề <b>Chi tiết</b> (hoặc <b>details</b>) của Google Sheet; cột riêng tên <b>Vi phạm</b> và <b>Nhật ký vi phạm</b> cũng được nhận. Với bảng nhập từ file .csv thì giữ nguyên các cột này khi tải về.</p>
         <p class="note">Đoạn mã đã kèm sẵn một mã truy cập ngẫu nhiên để người khác không đọc được điểm qua liên kết này. Mã chỉ lưu trên máy này; dùng máy khác thì sao chép lại đoạn mã từ máy đó.</p>
       </details>
     </section>
@@ -958,6 +970,36 @@ const parseScore = v => {
     return m ? Math.round(parseFloat(m[0].replace(',', '.')) * 100) / 100 : NaN;
 };
 
+// ===== Lỗi vi phạm: đọc từ cột "Vi phạm"/"Nhật ký vi phạm" hoặc từ cột "Chi tiết" (JSON do bài thi gửi lên) =====
+// Mỗi bài nộp có details = {"violations": số lần, "viol_log": "giờ lỗi | giờ lỗi | ..."}
+function parseViolLog(s) {
+    return String(s == null ? '' : s).split(/\s*\|\s*/).map(x => x.trim()).filter(Boolean).map(x => {
+        const m = x.match(/^(\d{1,2}:\d{2}(?::\d{2})?(?:\s?(?:AM|PM|SA|CH))?)\s+(.+)$/i);
+        return m ? { t: m[1], r: m[2].trim() } : { t: '', r: x };
+    });
+}
+function violOfRow(r, c) {
+    let n = null, log = null;
+    const get = i => i >= 0 && r[i] != null ? String(r[i]).trim() : '';
+    if (c.vc >= 0 && /\d/.test(get(c.vc))) n = parseInt(get(c.vc).replace(/\D/g, ''), 10);
+    if (c.vl >= 0) log = get(c.vl);
+    if (n == null || log == null) {
+        const cells = c.det >= 0 ? [get(c.det)] : r.map(x => String(x == null ? '' : x).trim());
+        for (const t of cells) {
+            if (t.charAt(0) !== '{' || t.indexOf('"violations"') < 0) continue;
+            try {
+                const o = JSON.parse(t);
+                if (n == null && o.violations != null) { const k = parseInt(o.violations, 10); if (isFinite(k)) n = k; }
+                if (log == null) log = o.viol_log == null ? '' : String(o.viol_log);
+                break;
+            } catch (e) {}
+        }
+    }
+    const vlog = log ? parseViolLog(log) : [];
+    if (n == null && log != null) n = vlog.length;
+    return { viol: n, vlog };
+}
+
 // Nhận diện cột theo tiêu đề (không phân biệt hoa/thường, có hoặc không dấu) trong 5 dòng đầu của bảng
 function tableToRows(values) {
     if (!Array.isArray(values)) return null;
@@ -970,8 +1012,12 @@ function tableToRows(values) {
             cls: pick(/^lop|class/),
             score: pick(/^(diem|diem so|tong diem|score|scorestr)$/, /^(?!.*thoi diem).*(^|\s)(diem|score\w*)(\s|$)/),
             id: pick(/ma de|exam ?id/),
-            en: pick(/ten de|exam ?name|ten bai/)
+            en: pick(/ten de|exam ?name|ten bai/),
+            vl: pick(/nhat ky|viol(ation)?s? ?log|chi tiet vi pham|log vi pham/),
+            vc: pick(/^(so )?(lan )?(vi pham|violations?)$/, /vi pham|violation/),
+            det: pick(/^(chi tiet|details?)$/)
         };
+        if (c.vc >= 0 && c.vc === c.vl) c.vc = -1;
         if (c.name < 0 || c.score < 0) continue;
         const cell = (r, i) => i >= 0 && r[i] != null ? String(r[i]).trim() : '';
         const rows = [];
@@ -979,9 +1025,9 @@ function tableToRows(values) {
             if (!Array.isArray(r)) return;
             const score = parseScore(r[c.score]);
             if (!isFinite(score)) return;
-            rows.push({ name: cell(r, c.name) || '(không tên)', cls: cell(r, c.cls), score, id: cell(r, c.id), en: cell(r, c.en) });
+            rows.push(Object.assign({ name: cell(r, c.name) || '(không tên)', cls: cell(r, c.cls), score, id: cell(r, c.id), en: cell(r, c.en) }, violOfRow(r, c)));
         });
-        return { rows, hasExam: c.id >= 0 || c.en >= 0 };
+        return { rows, hasExam: c.id >= 0 || c.en >= 0, hasViol: rows.some(x => x.viol != null) };
     }
     return null;
 }
@@ -1082,6 +1128,64 @@ function setResMsg(kind, text) {
     b.classList.toggle('hide', !text);
 }
 
+// ===== Thống kê lỗi vi phạm theo học sinh =====
+const violLim = () => { const m = exam && exam.maxViol; return m == null ? 3 : m; };
+
+function reasonCounts(r) {
+    const m = new Map();
+    (r.vlog || []).forEach(e => m.set(e.r, (m.get(e.r) || 0) + 1));
+    return [...m.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'vi'));
+}
+
+function violStats(rows) {
+    const known = rows.filter(r => r.viol != null), lim = violLim();
+    const bad = known.filter(r => r.viol > 0).sort((a, b) => b.viol - a.viol || a.name.localeCompare(b.name, 'vi'));
+    const map = new Map();
+    bad.forEach(r => reasonCounts(r).forEach(([k, c]) => {
+        const o = map.get(k) || { k, c: 0, s: 0 };
+        o.c += c; o.s++; map.set(k, o);
+    }));
+    return {
+        n: known.length, lim, bad,
+        total: known.reduce((t, r) => t + r.viol, 0),
+        over: lim ? known.filter(r => r.viol > lim).length : 0,
+        reasons: [...map.values()].sort((a, b) => b.c - a.c || b.s - a.s || a.k.localeCompare(b.k, 'vi'))
+    };
+}
+
+// Xanh: 0 lần; vàng: có vi phạm nhưng chưa vượt giới hạn; đỏ: vượt giới hạn (bị tự nộp bài)
+function vBadge(r) {
+    if (r.viol == null) return '<span class="vb vn" title="Bảng điểm không có dữ liệu vi phạm của bài này">–</span>';
+    const lim = violLim(), k = r.viol === 0 ? 'v0' : (lim && r.viol > lim ? 'v2' : 'v1');
+    const more = r.tries > 1 && r.violAll != null && r.violAll !== r.viol ? `<span class="vsub">tổng ${r.violAll}/${r.tries} lượt</span>` : '';
+    return `<span class="vb ${k}">${r.viol}</span>${more}`;
+}
+
+function violHtml(vs, total) {
+    const f = v => String(Math.round(v * 100) / 100);
+    const pc = (a, b) => (b ? Math.round(a / b * 1000) / 10 : 0) + '%';
+    let h = '<h3 class="res-h">Thống kê lỗi vi phạm theo học sinh</h3>';
+    h += `<div class="res-stats"><span>Học sinh có vi phạm: <b>${vs.bad.length}/${vs.n}</b> (${pc(vs.bad.length, vs.n)})</span><span>Tổng số lần vi phạm: <b>${vs.total}</b></span>` +
+        (vs.lim ? `<span>Vượt giới hạn ${vs.lim} lần (bị tự nộp): <b>${vs.over}</b></span>` : '') + '</div>';
+    if (vs.n < total) h += `<p class="note">${total - vs.n} bài không có dữ liệu vi phạm trong bảng điểm (hiện dấu “–”).</p>`;
+    if (!vs.bad.length) return h + `<p class="note">${exam && !exam.proctor ? 'Đề này chưa bật chế độ giám sát nên không ghi nhận vi phạm.' : 'Không có học sinh nào vi phạm.'}</p>`;
+    if (vs.reasons.length) {
+        const mx = vs.reasons[0].c;
+        h += `<div class="res-wrap"><table class="res-t"><thead><tr><th>Loại lỗi</th><th class="num">Số lần</th><th class="num">Số học sinh</th><th>Biểu đồ</th></tr></thead><tbody>` +
+            vs.reasons.map(x => `<tr><td>${esc(x.k)}</td><td class="num">${x.c}</td><td class="num">${x.s}</td><td><span class="res-bar"><i style="width:${x.c / mx * 100}%;background:var(--bad)"></i></span></td></tr>`).join('') +
+            '</tbody></table></div>';
+    }
+    h += '<h3 class="res-h">Danh sách học sinh vi phạm (nhiều → ít)</h3>';
+    h += `<div class="res-wrap rank"><table class="res-t"><thead><tr><th class="num">STT</th><th>Họ và tên</th><th>Lớp</th><th class="num">Điểm</th><th class="num">Vi phạm</th><th>Các lỗi</th><th>Chi tiết</th></tr></thead><tbody>` +
+        vs.bad.map((r, i) => {
+            const rc = reasonCounts(r);
+            const chips = rc.length ? `<div class="vrs">${rc.map(([k, c]) => `<span>${esc(k)}${c > 1 ? ' ×' + c : ''}</span>`).join('')}</div>` : '<span class="vsub">Không có nhật ký chi tiết</span>';
+            const det = r.vlog.length ? `<details class="vd"><summary>Xem ${r.vlog.length} lần</summary><div class="vtl">${r.vlog.map(e => (e.t ? `<b>${esc(e.t)}</b> ` : '') + esc(e.r)).join('<br>')}</div></details>` : '';
+            return `<tr><td class="num">${i + 1}</td><td>${esc(r.name)}</td><td>${esc(r.cls)}</td><td class="num"><b>${f(r.score)}</b></td><td class="num">${vBadge(r)}</td><td>${chips}</td><td>${det}</td></tr>`;
+        }).join('') + '</tbody></table></div>';
+    return h;
+}
+
 function renderResults(skipped, merged) {
     const rows = resRows, out = $('res-out');
     if (!rows.length) {
@@ -1093,18 +1197,20 @@ function renderResults(skipped, merged) {
     const cnt = BANDS.map(b => sorted.filter(r => b.hit(r.score)).length);
     const pct = c => (Math.round(c / n * 1000) / 10) + '%';
     const f = v => String(Math.round(v * 100) / 100);
+    const hv = sorted.some(r => r.viol != null), vs = hv ? violStats(sorted) : null;
     let rk = 0, prev = null;
     const rank = sorted.map((r, i) => {
         if (r.score !== prev) { rk = i + 1; prev = r.score; }
-        return `<tr><td class="num">${rk}</td><td>${esc(r.name)}</td><td>${esc(r.cls)}</td><td class="num"><b>${f(r.score)}</b></td></tr>`;
+        return `<tr><td class="num">${rk}</td><td>${esc(r.name)}</td><td>${esc(r.cls)}</td><td class="num"><b>${f(r.score)}</b></td>${hv ? `<td class="num">${vBadge(r)}</td>` : ''}</tr>`;
     }).join('');
     const bands = BANDS.map((b, i) => `<tr><td>${b.lb}</td><td class="num">${cnt[i]}</td><td class="num">${pct(cnt[i])}</td><td><span class="res-bar"><i style="width:${n ? cnt[i] / n * 100 : 0}%;background:${b.col}"></i></span></td></tr>`).join('');
     out.innerHTML = `
-        <div class="res-stats"><span>Số bài đã nộp: <b>${n}</b></span><span>Điểm trung bình: <b>${f(total / n)}</b></span><span>Cao nhất: <b>${f(sorted[0].score)}</b></span><span>Thấp nhất: <b>${f(sorted[n - 1].score)}</b></span></div>
+        <div class="res-stats"><span>Số bài đã nộp: <b>${n}</b></span><span>Điểm trung bình: <b>${f(total / n)}</b></span><span>Cao nhất: <b>${f(sorted[0].score)}</b></span><span>Thấp nhất: <b>${f(sorted[n - 1].score)}</b></span>${hv ? `<span>Có vi phạm: <b>${vs.bad.length}/${vs.n}</b></span>` : ''}</div>
         <h3 class="res-h">Thống kê theo khoảng điểm</h3>
         <div class="res-wrap"><table class="res-t"><thead><tr><th>Khoảng điểm</th><th class="num">Số bài</th><th class="num">Tỉ lệ</th><th>Biểu đồ</th></tr></thead><tbody>${bands}</tbody><tfoot><tr><td>Tổng</td><td class="num">${n}</td><td class="num">100%</td><td></td></tr></tfoot></table></div>
-        <div class="res-hbar"><h3 class="res-h">Bảng xếp hạng (cao → thấp)</h3><div class="res-exp"><button class="btn sec res-xbtn" type="button" title="Tải bảng xếp hạng và thống kê về file Excel" onclick="exportRank('xlsx')">Xuất Excel (.xlsx)</button><button class="btn sec res-xbtn" type="button" title="Tải bảng xếp hạng và thống kê về file Word" onclick="exportRank('docx')">Xuất Word (.docx)</button></div></div>
-        <div class="res-wrap rank"><table class="res-t"><thead><tr><th class="num">Hạng</th><th>Họ và tên</th><th>Lớp</th><th class="num">Điểm</th></tr></thead><tbody>${rank}</tbody></table></div>`;
+        <div class="res-hbar"><h3 class="res-h">Bảng xếp hạng (cao → thấp)</h3><div class="res-exp"><button class="btn sec res-xbtn" type="button" title="Tải bảng xếp hạng, thống kê điểm và lỗi vi phạm về file Excel" onclick="exportRank('xlsx')">Xuất Excel (.xlsx)</button><button class="btn sec res-xbtn" type="button" title="Tải bảng xếp hạng, thống kê điểm và lỗi vi phạm về file Word" onclick="exportRank('docx')">Xuất Word (.docx)</button></div></div>
+        <div class="res-wrap rank"><table class="res-t"><thead><tr><th class="num">Hạng</th><th>Họ và tên</th><th>Lớp</th><th class="num">Điểm</th>${hv ? '<th class="num">Vi phạm</th>' : ''}</tr></thead><tbody>${rank}</tbody></table></div>
+        ${hv ? violHtml(vs, n) : '<p class="note">Bảng điểm chưa có cột “Chi tiết” (hoặc “Vi phạm”) nên chưa thống kê được lỗi vi phạm. Xem hướng dẫn ở mục “Bật tải tự động từ Google Sheet” bên dưới.</p>'}`;
     const d = new Date();
     setResMsg('ok', `Đã xếp hạng ${n} bài nộp từ cao xuống thấp${skipped ? `, bỏ qua ${skipped} dòng của đề khác` : ''}${merged ? `, gộp ${merged} lượt thi lặp (lấy điểm cao nhất của mỗi học sinh)` : ''}. Cập nhật lúc ${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}.`);
 }
@@ -1121,13 +1227,16 @@ function applyResults(t) {
     // Đề chỉ cho thi 1 lần thì giữ nguyên mọi dòng để giáo viên thấy nếu có bài nộp trùng.
     let merged = 0;
     if (attemptLimit(exam) !== 1) {
-        const best = new Map();
+        const best = new Map(), agg = new Map();
         rows.forEach(r => {
-            const k = attId(r.name, r.cls), o = best.get(k);
+            const k = attId(r.name, r.cls), o = best.get(k), a = agg.get(k) || { n: 0, v: 0, hv: false };
+            a.n++; if (r.viol != null) { a.v += r.viol; a.hv = true; }
+            agg.set(k, a);
             if (!o || r.score > o.score) best.set(k, r);
         });
         merged = rows.length - best.size;
-        rows = [...best.values()];
+        // Giữ lượt điểm cao nhất; vi phạm hiển thị là của lượt đó, kèm tổng vi phạm của mọi lượt
+        rows = [...best.entries()].map(([k, r]) => Object.assign({}, r, { tries: agg.get(k).n, violAll: agg.get(k).hv ? agg.get(k).v : null }));
     }
     resRows = rows;
     renderResults(skipped, merged);
@@ -1232,11 +1341,13 @@ function rankData() {
     let rk = 0, prev = null;
     const list = sorted.map((r, i) => {
         if (r.score !== prev) { rk = i + 1; prev = r.score; }
-        return { rk, name: r.name, cls: r.cls, score: r.score };
+        return { rk, name: r.name, cls: r.cls, score: r.score, viol: r.viol == null ? null : r.viol };
     });
     const total = sorted.reduce((t, r) => t + r.score, 0);
+    const hv = sorted.some(r => r.viol != null);
     return {
-        list, n,
+        list, n, hv,
+        vs: hv ? violStats(sorted) : null,
         avg: Math.round(total / n * 100) / 100,
         max: sorted[0].score,
         min: sorted[n - 1].score,
@@ -1297,7 +1408,7 @@ const X_STYLES = XML_HEAD +
     '<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border>' +
     '<border><left style="thin"><color auto="1"/></left><right style="thin"><color auto="1"/></right><top style="thin"><color auto="1"/></top><bottom style="thin"><color auto="1"/></bottom><diagonal/></border></borders>' +
     '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
-    '<cellXfs count="8">' +
+    '<cellXfs count="9">' +
     '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +                                                   // 0 thường
     '<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>' + // 1 tiêu đề
     '<xf numFmtId="0" fontId="2" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>' + // 2 đầu bảng
@@ -1306,23 +1417,25 @@ const X_STYLES = XML_HEAD +
     '<xf numFmtId="164" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>' + // 5 phần trăm
     '<xf numFmtId="0" fontId="2" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="center"/></xf>' + // 6 nhãn đậm
     '<xf numFmtId="0" fontId="2" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>' + // 7 số đậm
+    '<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="top" wrapText="1"/></xf>' + // 8 chữ nhiều dòng
     '</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
 
 function buildXlsx(d) {
     const name = (exam && exam.name) || '', when = 'Xuất lúc ' + fmtDT(Date.now());
     const longest = d.list.reduce((m, r) => Math.max(m, String(r.name).length), 0);
+    const hv = d.hv, vs = d.vs, last = hv ? 'E' : 'D';
 
     const s1 = [
-        [['BẢNG XẾP HẠNG KẾT QUẢ THI', 1], ['', 1], ['', 1], ['', 1]],
+        [['BẢNG XẾP HẠNG KẾT QUẢ THI', 1], ['', 1], ['', 1], ['', 1]].concat(hv ? [['', 1]] : []),
         [['Đề thi: ' + name, 0]],
         [[when, 0]],
         [],
-        [['Hạng', 2], ['Họ và tên', 2], ['Lớp', 2], ['Điểm', 2]]
-    ].concat(d.list.map(r => [[r.rk, 4], [r.name, 3], [r.cls, 4], [r.score, 4]]));
-    const sheet1 = xSheet(s1, [8, Math.max(26, Math.min(52, longest + 4)), 14, 10],
-        { merges: ['A1:D1', 'A2:D2', 'A3:D3'], freeze: 5, heights: { 0: 30 } });
+        [['Hạng', 2], ['Họ và tên', 2], ['Lớp', 2], ['Điểm', 2]].concat(hv ? [['Vi phạm', 2]] : [])
+    ].concat(d.list.map(r => [[r.rk, 4], [r.name, 3], [r.cls, 4], [r.score, 4]].concat(hv ? [[r.viol == null ? '' : r.viol, 4]] : [])));
+    const sheet1 = xSheet(s1, [8, Math.max(26, Math.min(52, longest + 4)), 14, 10].concat(hv ? [12] : []),
+        { merges: ['A1:' + last + '1', 'A2:' + last + '2', 'A3:' + last + '3'], freeze: 5, heights: { 0: 30 } });
 
-    const s2 = [
+    let s2 = [
         [['THỐNG KÊ KẾT QUẢ THI', 1], ['', 1], ['', 1]],
         [['Đề thi: ' + name, 0]],
         [],
@@ -1335,7 +1448,39 @@ function buildXlsx(d) {
         [['Khoảng điểm', 2], ['Số bài', 2], ['Tỉ lệ', 2]]
     ].concat(d.bands.map(b => [[b.lb, 3], [b.c, 4], [b.p, 5]]))
      .concat([[['Tổng', 6], [d.n, 7], [1, 5]]]);
-    const sheet2 = xSheet(s2, [26, 14, 14], { merges: ['A1:C1', 'A2:C2'], heights: { 0: 30 } });
+    if (hv) {
+        s2 = s2.concat([
+            [],
+            [['Thống kê lỗi vi phạm', 2], ['Giá trị', 2], ['', 2]],
+            [['Học sinh có vi phạm', 6], [vs.bad.length, 4]],
+            [['Tỉ lệ học sinh có vi phạm', 6], [vs.n ? vs.bad.length / vs.n : 0, 5]],
+            [['Tổng số lần vi phạm', 6], [vs.total, 4]]
+        ]);
+        if (vs.lim) s2.push([['Vượt giới hạn ' + vs.lim + ' lần (bị tự nộp)', 6], [vs.over, 4]]);
+        if (vs.reasons.length) {
+            s2.push([]);
+            s2.push([['Loại lỗi vi phạm', 2], ['Số lần', 2], ['Số học sinh', 2]]);
+            vs.reasons.forEach(x => s2.push([[x.k, 3], [x.c, 4], [x.s, 4]]));
+        }
+    }
+    const sheet2 = xSheet(s2, [hv ? 52 : 26, 14, 14], { merges: ['A1:C1', 'A2:C2'], heights: { 0: 30 } });
+
+    let sheet3 = '';
+    if (hv) {
+        const wl = Math.max(26, Math.min(40, vs.bad.reduce((m, r) => Math.max(m, String(r.name).length), 0) + 4));
+        const s3 = [
+            [['VI PHẠM CỦA HỌC SINH TRONG BÀI THI', 1], ['', 1], ['', 1], ['', 1], ['', 1], ['', 1]],
+            [['Đề thi: ' + name, 0]],
+            [[when, 0]],
+            [],
+            [['STT', 2], ['Họ và tên', 2], ['Lớp', 2], ['Điểm', 2], ['Số vi phạm', 2], ['Chi tiết vi phạm', 2]]
+        ].concat(vs.bad.length
+            ? vs.bad.map((r, i) => [[i + 1, 4], [r.name, 3], [r.cls, 4], [r.score, 4], [r.viol, 4], [r.vlog.map(e => (e.t ? e.t + ' ' : '') + e.r).join('\n'), 8]])
+            : [[['Không có học sinh nào vi phạm', 3]]]);
+        const m3 = ['A1:F1', 'A2:F2', 'A3:F3'];
+        if (!vs.bad.length) m3.push('A6:F6');
+        sheet3 = xSheet(s3, [7, wl, 12, 9, 12, 70], { merges: m3, freeze: 5, heights: { 0: 30 } });
+    }
 
     const zip = new JSZip();
     zip.file('[Content_Types].xml', XML_HEAD + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
@@ -1343,19 +1488,22 @@ function buildXlsx(d) {
         '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' +
         '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>' +
         '<Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>' +
+        (hv ? '<Override PartName="/xl/worksheets/sheet3.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>' : '') +
         '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>');
     zip.file('_rels/.rels', XML_HEAD + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
         '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>');
     zip.file('xl/workbook.xml', XML_HEAD + '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">' +
-        '<sheets><sheet name="Xếp hạng" sheetId="1" r:id="rId1"/><sheet name="Thống kê" sheetId="2" r:id="rId2"/></sheets>' +
+        '<sheets><sheet name="Xếp hạng" sheetId="1" r:id="rId1"/><sheet name="Thống kê" sheetId="2" r:id="rId2"/>' + (hv ? '<sheet name="Vi phạm" sheetId="3" r:id="rId4"/>' : '') + '</sheets>' +
         '<definedNames><definedName name="_xlnm.Print_Titles" localSheetId="0">\'Xếp hạng\'!$5:$5</definedName></definedNames></workbook>');
     zip.file('xl/_rels/workbook.xml.rels', XML_HEAD + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
         '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>' +
         '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/>' +
+        (hv ? '<Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet3.xml"/>' : '') +
         '<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>');
     zip.file('xl/styles.xml', X_STYLES);
     zip.file('xl/worksheets/sheet1.xml', sheet1);
     zip.file('xl/worksheets/sheet2.xml', sheet2);
+    if (hv) zip.file('xl/worksheets/sheet3.xml', sheet3);
     return zip;
 }
 
@@ -1385,7 +1533,8 @@ function wTable(widths, head, rows, aligns, boldLast) {
 function buildDocx(d) {
     const f = v => String(Math.round(v * 100) / 100);
     const pct = p => (Math.round(p * 1000) / 10) + '%';
-    const body =
+    const hv = d.hv, vs = d.vs;
+    let body =
         wPara('BẢNG XẾP HẠNG KẾT QUẢ THI', { b: 1, sz: 32, jc: 'center', after: 80 }) +
         wPara('Đề thi: ' + ((exam && exam.name) || ''), { b: 1, jc: 'center', after: 40 }) +
         wPara('Xuất lúc ' + fmtDT(Date.now()), { i: 1, sz: 24, jc: 'center', after: 200 }) +
@@ -1394,9 +1543,23 @@ function buildDocx(d) {
         wTable([4638, 2500, 2500], ['Khoảng điểm', 'Số bài', 'Tỉ lệ'],
             d.bands.map(b => [b.lb, b.c, pct(b.p)]).concat([['Tổng', d.n, '100%']]), ['left', 'center', 'center'], true) +
         wPara('Bảng xếp hạng (cao → thấp)', { b: 1, keep: 1, after: 80, before: 280 }) +
-        wTable([1000, 5038, 1800, 1800], ['Hạng', 'Họ và tên', 'Lớp', 'Điểm'],
-            d.list.map(r => [r.rk, r.name, r.cls, f(r.score)]), ['center', 'left', 'center', 'center'], false) +
-        '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="567" w:footer="567" w:gutter="0"/></w:sectPr>';
+        (hv
+            ? wTable([900, 3938, 1700, 1500, 1600], ['Hạng', 'Họ và tên', 'Lớp', 'Điểm', 'Vi phạm'],
+                d.list.map(r => [r.rk, r.name, r.cls, f(r.score), r.viol == null ? '–' : r.viol]), ['center', 'left', 'center', 'center', 'center'], false)
+            : wTable([1000, 5038, 1800, 1800], ['Hạng', 'Họ và tên', 'Lớp', 'Điểm'],
+                d.list.map(r => [r.rk, r.name, r.cls, f(r.score)]), ['center', 'left', 'center', 'center'], false));
+    if (hv) {
+        body += wPara('Thống kê lỗi vi phạm theo học sinh', { b: 1, keep: 1, after: 80, before: 280 }) +
+            wPara(`Học sinh có vi phạm: ${vs.bad.length}/${vs.n}   |   Tổng số lần vi phạm: ${vs.total}` + (vs.lim ? `   |   Vượt giới hạn ${vs.lim} lần (bị tự nộp): ${vs.over}` : ''), { after: 120 });
+        if (vs.reasons.length) body += wTable([5638, 2000, 2000], ['Loại lỗi', 'Số lần', 'Số học sinh'],
+            vs.reasons.map(x => [x.k, x.c, x.s]), ['left', 'center', 'center'], false);
+        if (vs.bad.length) body += wPara('Danh sách học sinh vi phạm (nhiều → ít)', { b: 1, keep: 1, after: 80, before: 280 }) +
+            wTable([700, 2600, 1300, 1000, 1100, 2938], ['STT', 'Họ và tên', 'Lớp', 'Điểm', 'Số lần', 'Các lỗi vi phạm'],
+                vs.bad.map((r, i) => [i + 1, r.name, r.cls, f(r.score), r.viol, reasonCounts(r).map(([k, c]) => k + (c > 1 ? ' (×' + c + ')' : '')).join('; ')]),
+                ['center', 'left', 'center', 'center', 'center', 'left'], false);
+        else body += wPara('Không có học sinh nào vi phạm.', { i: 1, after: 80 });
+    }
+    body += '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="567" w:footer="567" w:gutter="0"/></w:sectPr>';
 
     const zip = new JSZip();
     zip.file('[Content_Types].xml', XML_HEAD + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
