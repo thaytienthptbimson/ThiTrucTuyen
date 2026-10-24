@@ -1512,7 +1512,7 @@ function buildXlsx(d) {
 function wPara(text, o) {
     o = o || {};
     const rpr = (o.b ? '<w:b/>' : '') + (o.i ? '<w:i/>' : '') + `<w:sz w:val="${o.sz || 26}"/><w:szCs w:val="${o.sz || 26}"/>`;
-    const ppr = `<w:pPr>${o.keep ? '<w:keepNext/>' : ''}<w:spacing w:before="${o.before || 0}" w:after="${o.after == null ? 60 : o.after}"/><w:jc w:val="${o.jc || 'left'}"/></w:pPr>`;
+    const ppr = `<w:pPr>${o.keep ? '<w:keepNext/>' : ''}${o.pb ? '<w:pageBreakBefore/>' : ''}<w:spacing w:before="${o.before || 0}" w:after="${o.after == null ? 60 : o.after}"/><w:jc w:val="${o.jc || 'left'}"/></w:pPr>`;
     return `<w:p>${ppr}` + (text === '' ? '' : `<w:r><w:rPr>${rpr}</w:rPr><w:t xml:space="preserve">${xe(text)}</w:t></w:r>`) + '</w:p>';
 }
 function wTable(widths, head, rows, aligns, boldLast) {
@@ -1550,7 +1550,7 @@ function buildDocx(d) {
                 d.list.map(r => [r.rk, r.name, r.cls, f(r.score)]), ['center', 'left', 'center', 'center'], false));
     if (hv) {
         body += wPara('Thống kê lỗi vi phạm theo học sinh', { b: 1, keep: 1, after: 80, before: 280 }) +
-            wPara(`Học sinh có vi phạm: ${vs.bad.length}/${vs.n}   |   Tổng số lần vi phạm: ${vs.total}` + (vs.lim ? `   |   Vượt giới hạn ${vs.lim} lần (bị tự nộp): ${vs.over}` : ''), { after: 120 });
+            wPara(`Học sinh có vi phạm: ${vs.bad.length}/${vs.n} (${vs.n ? pct(vs.bad.length / vs.n) : '0%'})   |   Tổng số lần vi phạm: ${vs.total}` + (vs.lim ? `   |   Vượt giới hạn ${vs.lim} lần (bị tự nộp): ${vs.over}` : ''), { after: 120 });
         if (vs.reasons.length) body += wTable([5638, 2000, 2000], ['Loại lỗi', 'Số lần', 'Số học sinh'],
             vs.reasons.map(x => [x.k, x.c, x.s]), ['left', 'center', 'center'], false);
         if (vs.bad.length) body += wPara('Danh sách học sinh vi phạm (nhiều → ít)', { b: 1, keep: 1, after: 80, before: 280 }) +
@@ -1558,6 +1558,22 @@ function buildDocx(d) {
                 vs.bad.map((r, i) => [i + 1, r.name, r.cls, f(r.score), r.viol, reasonCounts(r).map(([k, c]) => k + (c > 1 ? ' (×' + c + ')' : '')).join('; ')]),
                 ['center', 'left', 'center', 'center', 'center', 'left'], false);
         else body += wPara('Không có học sinh nào vi phạm.', { i: 1, after: 80 });
+        if (vs.bad.length) {
+            body += wPara('Chi tiết vi phạm của từng học sinh', { b: 1, sz: 28, keep: 1, pb: 1, after: 60 }) +
+                wPara('Thời điểm ghi theo giờ trên máy của học sinh; các lỗi xếp theo thứ tự xảy ra.', { i: 1, sz: 24, after: 120 });
+            vs.bad.forEach((r, i) => {
+                const over = vs.lim && r.viol > vs.lim ? ' (vượt giới hạn, bị tự nộp bài)' : '';
+                const more = r.tries > 1 && r.violAll != null && r.violAll !== r.viol ? `; tổng ${r.violAll} lần ở ${r.tries} lượt thi` : '';
+                body += wPara(`${i + 1}. ${r.name}${r.cls ? ' - Lớp ' + r.cls : ''} - Điểm ${f(r.score)} - ${r.viol} lần vi phạm${over}${more}`, { b: 1, keep: 1, before: 240, after: 60 });
+                if (r.vlog.length) {
+                    body += wTable([800, 1800, 7038], ['STT', 'Thời điểm', 'Lỗi vi phạm'],
+                        r.vlog.map((e, k) => [k + 1, e.t || '–', e.r]), ['center', 'center', 'left'], false);
+                    if (r.vlog.length < r.viol) body += wPara(`Nhật ký chỉ ghi được ${r.vlog.length}/${r.viol} lần.`, { i: 1, sz: 24, before: 40, after: 40 });
+                } else {
+                    body += wPara('Bảng điểm không có nhật ký chi tiết cho bài này.', { i: 1, sz: 24, after: 40 });
+                }
+            });
+        }
     }
     body += '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="567" w:footer="567" w:gutter="0"/></w:sectPr>';
 
