@@ -429,14 +429,14 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;',
 const _nativeAlert = typeof window.alert === 'function' ? window.alert.bind(window) : null;
 const _nativeConfirm = typeof window.confirm === 'function' ? window.confirm.bind(window) : null;
 const _inIframe = () => { try { return window.self !== window.top; } catch(e) { return true; } };
-function alert(msg) {
+window.alert = function(msg) {
     if (!_inIframe() && _nativeAlert) { try { _nativeAlert(msg); return; } catch(e) {} }
     if (typeof showToast === 'function') showToast(String(msg), 6000);
-}
-function confirm(msg) {
+};
+window.confirm = function(msg) {
     if (!_inIframe() && _nativeConfirm) { try { return _nativeConfirm(msg); } catch(e) {} }
     return true;
-}
+};
 
 let base=[], cur=[], lib=[], exam=null;
 let studentData = { name: '', class: '', startTime: 0 };
@@ -2159,6 +2159,7 @@ window.retryExam = () => {
 
 async function initStudentFlow(id, deParam) {
     exam = null;
+    if (gateTimer) { clearInterval(gateTimer); gateTimer = null; }
     $('student-login').classList.remove('hide');
     $('s-attempt').className = 'sch-state hide'; $('s-attempt').textContent = '';
     $('s-exam-name').textContent = 'Đang tải đề thi...';
@@ -2937,7 +2938,7 @@ function shWmSvg() {
   const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '"><text x="' + w / 2 + '" y="' + h / 2 +
     '" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#475569" fill-opacity=".2" transform="rotate(-24 ' +
     w / 2 + ' ' + h / 2 + ')">' + x(txt) + '</text></svg>';
-  return 'url("data:image/svg+xml," + encodeURIComponent(svg) + "")';
+  return 'url("data:image/svg+xml,' + encodeURIComponent(svg) + '")';
 }
 
 function shWmMake() {
