@@ -1,0 +1,8 @@
+{
+  "appId": "vn.edu.thitructuyen",
+  "appName": "THITRUCTUYEN",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}
