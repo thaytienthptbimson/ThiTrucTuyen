@@ -3236,18 +3236,34 @@ function hsgSplit(items, n) {
 
 // Tiêu đề phần có sẵn trong file Word (ví dụ "PART A. MULTIPLE CHOICE", "I. LISTENING:", "II. LEXICO-GRAMMAR", "III. READING").
 // Hệ thống tự đặt tiêu đề Phần I/II/III ở đầu mỗi phần, nên bỏ các dòng này để không bị trùng hoặc lạc giữa phần khi đảo nhóm.
+const HSG_KW = /listening|lexico|grammar|reading|vocabulary|language|use of english|writing|cloze|multiple choice|nghe|đọc|từ vựng|ngữ pháp|trắc nghiệm/i;
+function hsgPlain(it) { return it.runs.map(r => r.t).join('').replace(/\s+/g, ' ').trim(); }
 function hsgIsPartTitle(it) {
     if (!it || (it.k !== 'h' && it.k !== 'p')) return false;
-    const t = it.runs.map(r => r.t).join('').replace(/\s+/g, ' ').trim();
+    const t = hsgPlain(it);
     if (!t || t.length > 70) return false;
-    if (it.k === 'p' && t !== t.toUpperCase()) return false;     // đoạn văn thường chỉ bị coi là tiêu đề khi viết HOA toàn bộ (vd. "II. LEXICO-GRAMMAR AND READING")
+    // dòng chữ thường (không in đậm): chỉ coi là tiêu đề khi ngắn và có dấu ngăn rõ ràng, tránh nhầm với đoạn văn
+    if (it.k === 'p' && (t.length > 60 || /^(?:PART|SECTION|PHẦN)\s+(?:[IVX]+|[A-Z])\b(?!\s*[.:)–-]|\s*$)/i.test(t))) return false;
     if (/^(?:PART|SECTION|PHẦN)\s+(?:[IVX]+|[A-Z])\b/i.test(t)) return true;                       // PART A..., PART II..., PHẦN I...
     // "I. LISTENING", "II. LEXICO-GRAMMAR", "III. READING": số La Mã kèm tên phần (không đụng tới tiêu đề nhỏ trong bài đọc như "I. Early life")
-    return /^[IVX]{1,4}\s*[.:)]/.test(t) && /listening|lexico|grammar|reading|vocabulary|language|use of english|writing|cloze|multiple choice|nghe|đọc|từ vựng|ngữ pháp|trắc nghiệm/i.test(t);
+    return /^[IVX]{1,4}\s*[.:)]/.test(t) && HSG_KW.test(t);
+}
+// Tiêu đề phần dính liền lời dẫn, ví dụ "III. READING Read the following passage...": trả về độ dài đoạn tiêu đề cần cắt (0 nếu không phải)
+function hsgGluedLen(it) {
+    if (!it || (it.k !== 'h' && it.k !== 'p')) return 0;
+    const t = it.runs.map(r => r.t).join('');
+    const m = /^\s*(?:(?:PART|SECTION|PHẦN)\s+(?:[IVX]+|[A-Z])\b\s*[.:)]?|[IVX]{1,4}\s*[.:)])\s*([^.:()\n]{3,45}?)\s*(?:\([^)]*\))?\s*[.:–-]?\s+(?=(?:Read|Listen|Mark|Choose|Complete|Fill|You|For|Questions?)\b)/i.exec(t);
+    return m && m[1] === m[1].toUpperCase() && HSG_KW.test(m[1]) ? m[0].length : 0;
+}
+function hsgCutPrefix(it, n) {
+    const c = JSON.parse(JSON.stringify(it)); let k = n;
+    c.runs = c.runs.map(r => { if (k <= 0) return r; const d = Math.min(k, r.t.length); k -= d; return Object.assign({}, r, { t: r.t.slice(d) }); }).filter(r => r.t !== '');
+    return c;
 }
 // pre = các dòng đứng trước tiêu đề phần đầu tiên (ví dụ tên đề thi), hiện phía trên Phần I; body = phần còn lại đã bỏ tiêu đề phần
 function hsgPrep(items) {
-    const t0 = items.findIndex(hsgIsPartTitle), q0 = items.findIndex(x => x.k === 'q');
+    const isT = x => hsgIsPartTitle(x) || hsgGluedLen(x) > 0;
+    const t0 = items.findIndex(isT), q0 = items.findIndex(x => x.k === 'q');
     let pre = [];
     if (t0 > 0 && (q0 < 0 || t0 < q0)) pre = items.slice(0, t0);
     else if (t0 < 0 && items.length > 1 && items[0].k === 'h' && items[1].k !== 'q') {
@@ -3255,7 +3271,13 @@ function hsgPrep(items) {
         const t = items[0].runs.map(r => r.t).join('').trim();
         if (t.length <= 100 && !/^(?:part|section|question|listen|you\s+(?:will|are)|read|mark|choose|complete|fill|the\s+following)\b/i.test(t)) pre = [items[0]];
     }
-    return { pre, body: items.slice(pre.length).filter(x => !hsgIsPartTitle(x)) };
+    const body = [];
+    items.slice(pre.length).forEach(x => {
+        const g = hsgGluedLen(x);
+        if (g > 0) { const c = hsgCutPrefix(x, g); if (c.runs.length) body.push(c); }
+        else if (!hsgIsPartTitle(x)) body.push(x);
+    });
+    return { pre, body };
 }
 
 // Đảo đáp án A-D của một câu (giữ nguyên nếu có đáp án kiểu "tất cả các đáp án trên")
