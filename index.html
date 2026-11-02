@@ -274,11 +274,45 @@ body.shot-hide #list-student,body.shot-hide #q-panel{visibility:hidden}
       </div>
       <ol class="steps">
         <li>Tải từng file Word lên. Mỗi đề được gán một tên file (<code>de1.json</code>, <code>de2.json</code>...), có thể đổi trong phần cài đặt đề.</li>
-        <li>Bấm <b>Xuất</b> ở từng đề, hoặc <b>Xuất tất cả</b> để có một file <code>exams.json</code>, rồi tải lên cùng một Repository GitHub.</li>
+        <li>Bấm <b>Xuất</b> ở từng đề, hoặc <b>Xuất tất cả</b> để có một file <code>exams.json</code>, rồi tải lên cùng một Repository GitHub. Hoặc kết nối GitHub ở mục bên dưới để app tự đẩy file lên mỗi khi bấm <b>Lưu cài đặt</b>.</li>
         <li>Bấm <b>Sao chép liên kết</b> để lấy link riêng của đề, dạng <code>.../?de=de1</code>, gửi cho học sinh. Trang chủ tự liệt kê các đề có trong <code>exams.json</code>.</li>
         <li><b>Đề HSG Tiếng Anh:</b> trong phần cài đặt chọn thang điểm "HSG Tiếng Anh tỉnh Thanh Hóa", đặt số câu Phần I, chọn file nghe (.mp3) rồi tải chính file đó lên cùng Repository GitHub với <code>index.html</code>.</li>
       </ol>
     </section>
+
+    <details id="ghbox" class="card">
+      <summary>Kết nối GitHub (tự đẩy đề lên sau khi lưu cài đặt) <span class="tg" id="gh-badge">Chưa kết nối</span></summary>
+      <div style="margin-top:14px">
+        <p class="note" style="margin:0 0 14px">Kết nối một lần, sau đó mỗi lần bấm <b>Lưu cài đặt</b> app tự đẩy file <code>de1.json</code> (tên file của đề) lên Repository GitHub. Nếu Repository đã có <code>exams.json</code> thì đề này cũng được cập nhật trong <code>exams.json</code> (các đề khác giữ nguyên). File nghe .mp3 của đề HSG vẫn tải lên bằng tay. Token chỉ lưu trên máy này, không nằm trong file .json và không gửi đi đâu ngoài GitHub.</p>
+        <div class="fgrid">
+          <div class="fld"><label for="gh-owner">Tài khoản GitHub</label><input type="text" id="gh-owner" placeholder="tên tài khoản GitHub" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+          <div class="fld"><label for="gh-repo">Tên Repository</label><input type="text" id="gh-repo" placeholder="tên Repository chứa web thi" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+          <div class="fld"><label for="gh-branch">Nhánh (để trống = nhánh mặc định)</label><input type="text" id="gh-branch" placeholder="main" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+          <div class="fld"><label for="gh-dir">Thư mục chứa index.html (để trống = thư mục gốc)</label><input type="text" id="gh-dir" placeholder="để trống" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+        </div>
+        <div class="fld" style="margin-top:14px"><label for="gh-token">Token GitHub (dán một lần)</label><input type="password" id="gh-token" placeholder="github_pat_..." autocomplete="new-password" autocapitalize="off" spellcheck="false"></div>
+        <div class="chks" style="margin-top:12px">
+          <label class="chk"><input type="checkbox" id="chk-gh-auto" checked><span>Tự động đẩy lên GitHub sau khi bấm "Lưu cài đặt"</span></label>
+          <label class="chk"><input type="checkbox" id="chk-gh-remember" checked><span>Ghi nhớ token trên máy này (bỏ chọn thì token chỉ giữ đến khi đóng trình duyệt). Chỉ nên ghi nhớ trên máy của riêng Thầy/Cô.</span></label>
+        </div>
+        <div class="bar" style="margin-top:14px">
+          <button class="btn" type="button" id="btn-gh-save">Lưu kết nối</button>
+          <button class="btn sec" type="button" id="btn-gh-test">Kiểm tra kết nối</button>
+          <button class="btn sec" type="button" id="btn-gh-clear" style="color:var(--bad);border-color:var(--bad)">Xóa token khỏi máy này</button>
+        </div>
+        <p class="note" id="gh-st"></p>
+        <details class="sect">
+          <summary style="font-size:14px">Cách tạo token (làm một lần)</summary>
+          <ol class="steps">
+            <li>Đăng nhập GitHub, bấm ảnh đại diện ở góc phải trên &rarr; <b>Settings</b> &rarr; kéo xuống cuối menu bên trái chọn <b>Developer settings</b> &rarr; <b>Personal access tokens</b> &rarr; <b>Fine-grained tokens</b> &rarr; <b>Generate new token</b>.</li>
+            <li>Đặt tên tùy ý (ví dụ "Web thi"), chọn thời hạn (<b>Expiration</b>, nên 90 ngày). Ở <b>Repository access</b> chọn <b>Only select repositories</b> rồi chọn đúng Repository chứa web thi.</li>
+            <li>Ở <b>Permissions</b> &rarr; <b>Repository permissions</b> &rarr; <b>Contents</b> chọn <b>Read and write</b>. Không cần quyền nào khác.</li>
+            <li>Bấm <b>Generate token</b>, sao chép cả chuỗi (bắt đầu bằng <code>github_pat_</code>) rồi dán vào ô "Token GitHub" ở trên. GitHub chỉ hiện chuỗi này một lần.</li>
+            <li>Token giống như mật khẩu: không gửi cho ai, không dán vào file hay đăng lên mạng. Khi hết hạn chỉ cần tạo token mới và dán lại.</li>
+          </ol>
+        </details>
+      </div>
+    </details>
 
     <details id="libbox" class="card" open>
       <summary id="lt">Danh sách đề thi</summary>
@@ -380,8 +414,10 @@ body.shot-hide #list-student,body.shot-hide #q-panel{visibility:hidden}
       <div class="actions">
         <button class="btn" id="btn-save-settings">Lưu cài đặt</button>
         <button class="btn sec" id="btn-export-cur" type="button">Xuất file .json</button>
+        <button class="btn sec" id="btn-push-cur" type="button" title="Lưu cài đặt rồi đẩy file .json của đề này lên GitHub">Đẩy lên GitHub</button>
         <button class="btn gr" id="btn-copy-link">Sao chép liên kết</button>
       </div>
+      <p class="note" id="gh-push-st"></p>
     </section>
     <section id="resbox" class="card hide">
       <h2 class="card-t">Kết quả thi: <span id="res-name" style="color:var(--pri)"></span></h2>
@@ -679,7 +715,7 @@ window.copyExamLink = (id) => {
     const x = lib[idx];
     const fk = normFileKey(x.fileKey, idx);
     const link = buildExamStudentLink(x, idx);
-    copyTextSafe(link, `Đã copy link thi của "${x.name}":\n${link}\n\nLưu ý: Hãy xuất file "${fk}.json" (hoặc "exams.json") và tải lên GitHub.`);
+    copyTextSafe(link, `Đã copy link thi của "${x.name}":\n${link}\n\n` + (ghState().ready ? `Lưu ý: nhớ bấm "Lưu cài đặt" (hoặc "Đẩy lên GitHub") để file "${fk}.json" có trên GitHub.` : `Lưu ý: Hãy xuất file "${fk}.json" (hoặc "exams.json") và tải lên GitHub.`));
 };
 
 function showLib() {
@@ -766,7 +802,7 @@ $('btn-export-all').onclick = () => {
     showToast(`Đã xuất tất cả ${lib.length} đề vào file exams.json!`);
 };
 
-$('btn-save-settings').onclick = () => {
+function applySettingsForm() {
     if(exam) {
         const oa = fromLocalInput($('open-at').value), ca = fromLocalInput($('close-at').value);
         if(oa && ca && ca <= oa) return alert('Giờ đóng đề phải sau giờ mở đề. Vui lòng kiểm tra lại.');
@@ -805,8 +841,18 @@ $('btn-save-settings').onclick = () => {
         updatePwNote();
         scheduleAutoResults(); resIdleMsg();
         saveLib();
-        alert(`Đã lưu cài đặt! Nhớ bấm "Xuất ${exam.fileKey}.json" (hoặc "Xuất tất cả exams.json") và tải lên GitHub.` + (exam.scale === 'hsg' ? hsgSaveNote() : ''));
+        return true;
     }
+    return false;
+}
+
+$('btn-save-settings').onclick = () => {
+    if(!exam || !applySettingsForm()) return;
+    const hs = exam.scale === 'hsg' ? hsgSaveNote() : '', st = ghState();
+    if(st.auto) { showToast('Đã lưu cài đặt. Đang đẩy lên GitHub...', 4000); ghRun(exam, hs); return; }
+    alert(st.ready
+        ? `Đã lưu cài đặt! Bấm "Đẩy lên GitHub" để cập nhật file ${exam.fileKey}.json lên GitHub (hoặc bật tự động đẩy trong mục "Kết nối GitHub").` + hs
+        : `Đã lưu cài đặt! Nhớ bấm "Xuất ${exam.fileKey}.json" (hoặc "Xuất tất cả exams.json") và tải lên GitHub. Muốn app tự đẩy lên, hãy kết nối GitHub ở mục "Kết nối GitHub" phía trên.` + hs);
 };
 
 $('btn-clear-sch').onclick = () => { $('open-at').value = ''; $('close-at').value = ''; };
@@ -3402,6 +3448,208 @@ function hsgStop() {
     };
 })();
 
+
+// ===================== ĐẨY FILE .json LÊN GITHUB =====================
+// Dùng GitHub Contents API: ghi thẳng <tên-đề>.json vào Repository, không cần Xuất rồi tải lên bằng tay.
+// Token CHỈ nằm trong trình duyệt của giáo viên (localStorage hoặc sessionStorage), không đưa vào đề, không xuất ra .json,
+// và chỉ được gửi tới https://api.github.com. Nếu repo đã có exams.json thì đề này cũng được cập nhật trong exams.json (các đề khác giữ nguyên).
+const GH_CK = 'gh_cfg_v1', GH_TK = 'gh_tok_v1', GH_PK = 'gh_pushed_v1', GH_API = 'https://api.github.com';
+const GH = { busy: 0, last: null };
+
+function ghLoad() { try { const c = JSON.parse(localStorage.getItem(GH_CK) || '{}'); return c && typeof c === 'object' ? c : {}; } catch (e) { return {}; } }
+function ghTokenGet() { try { return sessionStorage.getItem(GH_TK) || localStorage.getItem(GH_TK) || ''; } catch (e) { return ''; } }
+function ghTokenSet(t, remember) {
+    try { sessionStorage.removeItem(GH_TK); } catch (e) {}
+    try { localStorage.removeItem(GH_TK); } catch (e) {}
+    if (!t) return true;
+    try { (remember ? localStorage : sessionStorage).setItem(GH_TK, t); } catch (e) {}
+    return ghTokenGet() === t;
+}
+// Gợi ý tên tài khoản / repository từ địa chỉ GitHub Pages (https://<tài-khoản>.github.io/<repository>/)
+function ghGuess() {
+    const m = /^([a-z0-9-]+)\.github\.io$/i.exec(String(location.hostname || ''));
+    if (!m) return {};
+    const seg = String(location.pathname || '/').split('/').filter(Boolean)[0] || '';
+    return { owner: m[1], repo: seg && !/\.html?$/i.test(seg) ? seg : m[1] + '.github.io' };
+}
+function ghCheck(c) {
+    if (!/^[A-Za-z0-9][A-Za-z0-9_-]{0,38}$/.test(c.owner || '')) return 'Tên tài khoản GitHub chưa đúng (chỉ gồm chữ, số, dấu gạch).';
+    if (!/^[A-Za-z0-9._-]{1,100}$/.test(c.repo || '') || /^\.+$/.test(c.repo)) return 'Tên Repository chưa đúng (chỉ gồm chữ, số, dấu . _ -).';
+    if (c.branch && !/^[A-Za-z0-9._\/-]{1,100}$/.test(c.branch)) return 'Tên nhánh chưa đúng.';
+    if (c.dir && (!/^[A-Za-z0-9._\-\/]{1,100}$/.test(c.dir) || c.dir.split('/').some(s => !s || s === '.' || s === '..'))) return 'Tên thư mục chưa đúng (không dùng dấu cách, ".." hay "//").';
+    return '';
+}
+function ghConf() { const c = ghLoad(); return c.owner && c.repo && ghTokenGet() && !ghCheck(c) ? c : null; }
+function ghState() { const c = ghConf(); return { ready: !!c, auto: !!(c && c.auto), c }; }
+const ghRepoPath = c => '/repos/' + encodeURIComponent(c.owner) + '/' + encodeURIComponent(c.repo);
+const ghFilePath = (c, name) => (c.dir ? c.dir + '/' : '') + name;
+function ghB64(s) {
+    const b = new TextEncoder().encode(s); let o = '';
+    for (let i = 0; i < b.length; i += 0x8000) o += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000));
+    return btoa(o);
+}
+function ghErr(status, msg, data) { const e = new Error(msg); e.status = status; e.data = data; return e; }
+function ghMsg(s, d) {
+    const m = d && d.message ? String(d.message) : '';
+    if (s === 401) return 'Token không đúng hoặc đã hết hạn. Hãy tạo token mới rồi dán lại ở mục "Kết nối GitHub".';
+    if (s === 403) return /rate limit|abuse|secondary/i.test(m) ? 'GitHub đang giới hạn số lần gọi. Chờ vài phút rồi thử lại.' : 'Token chưa đủ quyền ghi. Khi tạo token cần chọn đúng Repository và quyền "Contents: Read and write".';
+    if (s === 404) return 'Không tìm thấy Repository hoặc nhánh, hoặc token chưa được cấp quyền cho Repository này. Kiểm tra lại tên tài khoản, tên Repository, nhánh và quyền của token.';
+    if (s === 409 || s === 422) return 'GitHub báo xung đột khi ghi file' + (m ? ' (' + m + ')' : '') + '. Bấm đẩy lại một lần nữa.';
+    if (s === 413) return 'File quá lớn để đẩy qua GitHub.';
+    return 'GitHub trả về lỗi ' + s + (m ? ': ' + m : '') + '.';
+}
+async function ghReq(c, method, path, body, token) {
+    const tok = token || ghTokenGet();
+    let res;
+    try {
+        res = await fetch(GH_API + path, {
+            method, cache: 'no-store',
+            headers: Object.assign({ 'Accept': 'application/vnd.github+json', 'Authorization': 'Bearer ' + tok }, body ? { 'Content-Type': 'application/json' } : {}),
+            body: body ? JSON.stringify(body) : undefined
+        });
+    } catch (e) { throw ghErr(0, 'Không kết nối được tới GitHub. Kiểm tra mạng rồi thử lại.'); }
+    let data = null; try { data = await res.json(); } catch (e) {}
+    if (!res.ok) throw ghErr(res.status, ghMsg(res.status, data), data);
+    return data;
+}
+// Mã sha hiện tại của file trên GitHub; null nếu file chưa có
+async function ghSha(c, name, token) {
+    const q = c.branch ? '?ref=' + encodeURIComponent(c.branch) : '';
+    try {
+        const d = await ghReq(c, 'GET', ghRepoPath(c) + '/contents/' + ghFilePath(c, name).split('/').map(encodeURIComponent).join('/') + q, null, token);
+        if (Array.isArray(d)) throw ghErr(0, 'Trên GitHub đã có thư mục tên "' + name + '". Hãy đổi tên file.');
+        return d && d.sha ? d.sha : null;
+    } catch (e) { if (e.status === 404) return null; throw e; }
+}
+async function ghPut(c, name, text, msg, sha, tries) {
+    tries = tries || 0;
+    if (new TextEncoder().encode(text).length > 50 * 1024 * 1024) throw ghErr(413, ghMsg(413));
+    if (sha === undefined) sha = await ghSha(c, name);
+    const body = { message: msg, content: ghB64(text) };
+    if (c.branch) body.branch = c.branch;
+    if (sha) body.sha = sha;
+    try { await ghReq(c, 'PUT', ghRepoPath(c) + '/contents/' + ghFilePath(c, name).split('/').map(encodeURIComponent).join('/'), body); return { created: !sha }; }
+    catch (e) { if ((e.status === 409 || e.status === 422) && tries < 2) return ghPut(c, name, text, msg, undefined, tries + 1); throw e; }
+}
+// Đọc nội dung file JSON trên GitHub (qua blob nên đọc được cả file lớn); null nếu file chưa có
+async function ghReadText(c, name) {
+    const sha = await ghSha(c, name);
+    if (!sha) return null;
+    const d = await ghReq(c, 'GET', ghRepoPath(c) + '/git/blobs/' + encodeURIComponent(sha));
+    const bin = atob(String((d && d.content) || '').replace(/\s/g, ''));
+    const u8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+    return { sha, text: new TextDecoder('utf-8').decode(u8) };
+}
+// Thay đề x trong danh sách exams.json (khớp theo id hoặc tên file); chưa có thì thêm vào cuối; các đề khác giữ nguyên
+function ghMerge(list, x) {
+    const pub = pubExam(x), fk = String(x.fileKey || '').toLowerCase(), out = []; let done = false;
+    list.forEach(y => {
+        const same = y && typeof y === 'object' && (String(y.id) === String(x.id) || (fk && String(y.fileKey || '').toLowerCase() === fk));
+        if (!same) out.push(y); else if (!done) { out.push(pub); done = true; }
+    });
+    if (!done) out.push(pub);
+    return out;
+}
+async function ghPushExam(x) {
+    const c = ghConf();
+    if (!c) throw ghErr(0, 'Chưa kết nối GitHub.');
+    const fk = normFileKey(x.fileKey, lib.indexOf(x)), msg = 'Cập nhật đề thi: ' + x.name + ' (' + fk + '.json)';
+    const res = { files: [], warn: [] };
+    await ghPut(c, fk + '.json', JSON.stringify([pubExam(x)]), msg);
+    res.files.push(fk + '.json');
+    try {
+        const cur = await ghReadText(c, 'exams.json');
+        if (cur) {
+            let arr = null; try { arr = JSON.parse(cur.text); } catch (e) {}
+            if (arr === null || typeof arr !== 'object') res.warn.push('File exams.json trên GitHub không đọc được nên chưa sửa. Hãy kiểm tra hoặc bấm "Xuất tất cả (exams.json)" rồi tải lên.');
+            else { await ghPut(c, 'exams.json', JSON.stringify(ghMerge(Array.isArray(arr) ? arr : [arr], x)), msg, cur.sha); res.files.push('exams.json'); }
+        }
+    } catch (e) { res.warn.push('Đã đẩy ' + fk + '.json nhưng chưa cập nhật được exams.json: ' + e.message); }
+    let pm = {}; try { pm = JSON.parse(localStorage.getItem(GH_PK) || '{}') || {}; } catch (e) {}
+    if (pm[x.id] && String(pm[x.id]).toLowerCase() !== fk.toLowerCase()) res.warn.push('Đề đã đổi tên file: file cũ "' + pm[x.id] + '.json" vẫn còn trên GitHub, hãy xóa thủ công nếu không dùng nữa.');
+    pm[x.id] = fk; try { localStorage.setItem(GH_PK, JSON.stringify(pm)); } catch (e) {}
+    return res;
+}
+
+// ----- Giao diện -----
+function ghBtns(dis) { ['btn-push-cur', 'btn-gh-save', 'btn-gh-test'].forEach(id => { $(id).disabled = !!dis; }); }
+function ghUpdateUi(msg) {
+    const c = ghConf();
+    $('gh-badge').textContent = c ? 'Đã kết nối: ' + c.owner + '/' + c.repo : 'Chưa kết nối';
+    $('gh-st').textContent = msg != null ? msg : (ghTokenGet() ? 'Đã lưu token trên máy này.' : 'Chưa có token.');
+}
+function ghPushStatus(t, bad) { const n = $('gh-push-st'); n.textContent = t; n.classList.toggle('warn-t', !!bad); }
+const ghHHmm = () => { const d = new Date(); return p2(d.getHours()) + ':' + p2(d.getMinutes()); };
+
+// Đẩy đề x lên GitHub và báo kết quả; extra = ghi chú thêm (ví dụ nhắc tải file nghe)
+function ghRun(x, extra) {
+    if (GH.busy) return GH.last;
+    GH.busy = 1; ghBtns(true); ghPushStatus('⏳ Đang đẩy lên GitHub...');
+    GH.last = ghPushExam(x).then(r => {
+        const t = '✔ ' + ghHHmm() + ' — Đã đẩy lên GitHub: ' + r.files.join(', ') + '. Trang web cập nhật sau khoảng 1–2 phút.' + (r.warn.length ? '\n⚠ ' + r.warn.join('\n⚠ ') : '');
+        ghPushStatus(t, r.warn.length > 0);
+        if (extra || r.warn.length) alert('Đã lưu cài đặt và đẩy lên GitHub: ' + r.files.join(', ') + '.' + (r.warn.length ? '\n\n⚠ ' + r.warn.join('\n⚠ ') : '') + (extra || ''));
+        else showToast('Đã lưu cài đặt và đẩy ' + r.files.join(', ') + ' lên GitHub. Trang web cập nhật sau khoảng 1–2 phút.', 9000);
+        return r;
+    }).catch(e => {
+        ghPushStatus('✖ ' + ghHHmm() + ' — Chưa đẩy được lên GitHub: ' + e.message, true);
+        alert('Cài đặt đã được lưu trên máy này nhưng CHƯA đẩy được lên GitHub.\n\n' + e.message + '\n\nBấm "Đẩy lên GitHub" để thử lại, hoặc dùng "Xuất file .json" rồi tải lên bằng tay.');
+    }).finally(() => { GH.busy = 0; ghBtns(false); });
+    return GH.last;
+}
+function ghForm() {
+    let owner = $('gh-owner').value.trim(), repo = $('gh-repo').value.trim();
+    const m = /github\.com\/([^\/\s]+)\/([^\/#?\s]+)/i.exec(owner + ' ' + repo) || /^([^\/\s]+)\/([^\/\s]+)$/.exec(repo);   // cho phép dán cả địa chỉ repository
+    if (m) { owner = m[1]; repo = m[2]; }
+    return { owner, repo: repo.replace(/\.git$/i, ''), branch: $('gh-branch').value.trim(), dir: $('gh-dir').value.trim().replace(/^\/+|\/+$/g, ''), auto: $('chk-gh-auto').checked };
+}
+async function ghTest() {
+    const c = ghForm(), bad = ghCheck(c), tok = $('gh-token').value.trim() || ghTokenGet();
+    if (bad) return ghUpdateUi('✖ ' + bad);
+    if (!tok) return ghUpdateUi('✖ Chưa có token. Dán token vào ô "Token GitHub".');
+    ghBtns(true); ghUpdateUi('⏳ Đang kiểm tra kết nối...');
+    try {
+        const d = await ghReq(c, 'GET', ghRepoPath(c), null, tok);
+        if (d && d.archived) throw ghErr(0, 'Repository này đã bị lưu trữ (archived) nên không ghi được.');
+        let br = c.branch || (d && d.default_branch) || '';
+        if (c.branch) await ghReq(c, 'GET', ghRepoPath(c) + '/branches/' + c.branch.split('/').map(encodeURIComponent).join('/'), null, tok);
+        ghUpdateUi('✔ Kết nối được Repository ' + c.owner + '/' + c.repo + (br ? ' (nhánh ' + br + ')' : '') + '. Quyền ghi sẽ được GitHub kiểm tra khi đẩy đề lần đầu.');
+    } catch (e) { ghUpdateUi('✖ ' + e.message); }
+    finally { ghBtns(false); }
+}
+$('btn-gh-save').onclick = async () => {
+    const c = ghForm(), bad = ghCheck(c), typed = $('gh-token').value.trim();
+    if (bad) return ghUpdateUi('✖ ' + bad);
+    if (typed && !/^[A-Za-z0-9_]{20,255}$/.test(typed)) return ghUpdateUi('✖ Token chưa đúng định dạng (thường bắt đầu bằng github_pat_ hoặc ghp_, không có dấu cách). Hãy sao chép lại cả chuỗi.');
+    if (!typed && !ghTokenGet()) return ghUpdateUi('✖ Chưa có token. Dán token vào ô "Token GitHub".');
+    if (typed && !ghTokenSet(typed, $('chk-gh-remember').checked)) return ghUpdateUi('✖ Trình duyệt không cho lưu token. Hãy tắt chế độ ẩn danh hoặc cho phép lưu dữ liệu trang web.');
+    if (!typed && ghTokenGet()) ghTokenSet(ghTokenGet(), $('chk-gh-remember').checked);
+    try { localStorage.setItem(GH_CK, JSON.stringify(c)); } catch (e) { return ghUpdateUi('✖ Trình duyệt không cho lưu cài đặt kết nối.'); }
+    $('gh-token').value = '';
+    ghUpdateUi();
+    await ghTest();
+};
+$('btn-gh-test').onclick = () => ghTest();
+$('btn-gh-clear').onclick = () => {
+    ghTokenSet('', false); $('gh-token').value = '';
+    ghUpdateUi('Đã xóa token khỏi máy này. Muốn đẩy lên GitHub lại thì dán token mới.');
+};
+$('btn-push-cur').onclick = () => {
+    if (!exam) return;
+    if (!ghState().ready) { $('ghbox').open = true; $('ghbox').scrollIntoView(); return alert('Chưa kết nối GitHub. Hãy điền thông tin và dán token ở mục "Kết nối GitHub" (phía trên), bấm "Lưu kết nối" rồi thử lại.'); }
+    if (!applySettingsForm()) return;
+    ghRun(exam, exam.scale === 'hsg' ? hsgSaveNote() : '');
+};
+(function ghInit() {
+    const c = ghLoad(), g = ghGuess();
+    $('gh-owner').value = c.owner || g.owner || ''; $('gh-repo').value = c.repo || g.repo || '';
+    $('gh-branch').value = c.branch || ''; $('gh-dir').value = c.dir || '';
+    $('chk-gh-auto').checked = c.auto !== false;
+    let rem = false; try { rem = !!localStorage.getItem(GH_TK); } catch (e) {}
+    $('chk-gh-remember').checked = rem || !ghTokenGet();
+    ghUpdateUi();
+})();
 
 // Tiêu đề khung đăng nhập: luôn 1 dòng, cỡ chữ tự chỉnh cho vừa khít hai mép khung
 (function(){
