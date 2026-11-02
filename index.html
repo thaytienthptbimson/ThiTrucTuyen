@@ -545,6 +545,9 @@ let timerInterval, timeLeft = 0, submitted = false;
 let examEndAt = Infinity, examRunning = false;
 const PG = { on: 0, mute: 0, busy: 0, viol: [], stream: null, det: null, tm: null, last: 0, none: 0, many: 0, lostF: 0, manyF: 0 };
 const LK = 'exams_v2';
+// Tên file danh sách các đề trên GitHub và các file .json không phải đề thi (khai báo sớm vì trang chọn đề chạy ngay khi mở)
+const EXAM_INDEX_FILE = 'danh-sach-de.json';
+const NON_EXAM_JSON = /^(?:package(?:-lock)?|tsconfig|manifest|composer|vocabulary|danh-sach-de|exams)\.json$/i;
 const L4 = 'ABCD';
 const HS = { a: null, src: '', bad: 0, ready: 0, go: 0, on: 0, done: 0, free: 0, saveT: 0 };
 
@@ -643,37 +646,75 @@ window.openStudentExamByKey = (deKey, examId) => {
     initStudentFlow(examId || '', cleanDe);
 };
 
+// ===== Trang chọn đề của học sinh: tìm TẤT CẢ các đề đã đưa lên =====
+// Nguồn, theo thứ tự ưu tiên: (1) file danh sách danh-sach-de.json (app tự cập nhật mỗi khi giáo viên đẩy đề lên GitHub),
+// (2) liệt kê các file .json ở thư mục gốc của repo trên GitHub (khi trang chạy trên github.io),
+// (3) các tên mặc định de1.json ... de20.json, (4) exams.json, (5) đề đang lưu trên chính máy này.
+async function fetchJsonQuiet(fname) {
+    try {
+        const res = await fetch(fname.split('/').map(encodeURIComponent).join('/') + '?t=' + Date.now(), { cache: 'no-store' });
+        return res.ok ? await res.json() : null;
+    } catch(e) { return null; }
+}
+// Liệt kê file .json ở gốc repo GitHub Pages; lưu tạm 10 phút để không vượt giới hạn gọi API của GitHub
+async function listRepoJsonFiles() {
+    const m = /^([a-z0-9-]+)\.github\.io$/i.exec(String(location.hostname || ''));
+    if(!m) return [];
+    const seg = String(location.pathname || '/').split('/').filter(Boolean)[0] || '';
+    const owner = m[1], repo = seg && !/\.html?$/i.test(seg) ? seg : m[1] + '.github.io', ck = 'exam_files_' + owner + '/' + repo;
+    try { const c = JSON.parse(localStorage.getItem(ck) || 'null'); if(c && Date.now() - c.t < 600000 && Array.isArray(c.f)) return c.f; } catch(e) {}
+    try {
+        const res = await fetch('https://api.github.com/repos/' + encodeURIComponent(owner) + '/' + encodeURIComponent(repo) + '/contents/', { headers: { Accept: 'application/vnd.github+json' } });
+        if(!res.ok) return [];
+        const arr = await res.json();
+        const f = (Array.isArray(arr) ? arr : []).filter(x => x && x.type === 'file' && /\.json$/i.test(x.name)).map(x => x.name);
+        try { localStorage.setItem(ck, JSON.stringify({ t: Date.now(), f })); } catch(e) {}
+        return f;
+    } catch(e) { return []; }
+}
+
 async function discoverAvailableExams() {
     const found = [];
     const seen = new Set();
-    const addExam = (x, sourceFile) => {
+    const addExam = (x, fk) => {
         if(!x || !x.id || !Array.isArray(x.items)) return;
-        const fk = normFileKey(x.fileKey || sourceFile, found.length);
+        fk = normFileKey(fk, found.length);
         const key = (fk + '::' + x.id).toLowerCase();
         if(seen.has(key)) return;
         seen.add(key);
         found.push(Object.assign({}, x, { fileKey: fk }));
     };
 
-    // 1. Thử đọc từ exams.json và de1.json .. de10.json trên cùng repository
-    const candidateFiles = ['exams.json', 'de1.json', 'de2.json', 'de3.json', 'de4.json', 'de5.json', 'de6.json', 'de7.json', 'de8.json', 'de9.json', 'de10.json'];
-    await Promise.all(candidateFiles.map(async fname => {
-        try {
-            const res = await fetch(fname + '?t=' + Date.now(), { cache: 'no-store' });
-            if(!res.ok) return;
-            const data = await res.json();
-            const arr = Array.isArray(data) ? data : [data];
-            arr.forEach((item, idx) => {
-                const srcKey = fname === 'exams.json' ? (item.fileKey || ('de' + (idx + 1))) : fname.replace(/\.json$/i, '');
-                addExam(item, srcKey);
-            });
-        } catch(e) {}
-    }));
+    // 1. Gom tên các file đề: danh sách do app cập nhật + liệt kê repo + tên mặc định
+    const [idx, api] = await Promise.all([fetchJsonQuiet(EXAM_INDEX_FILE), listRepoJsonFiles()]);
+    const names = [];
+    const addName = n => {
+        n = String(n || '').trim();
+        if(!n) return;
+        if(!/\.json$/i.test(n)) n += '.json';
+        if(!/^[A-Za-z0-9_-]+\.json$/.test(n) || NON_EXAM_JSON.test(n)) return;      // tên có dấu cách/ký tự lạ không mở được bằng liên kết ?de=
+        if(!names.some(y => y.toLowerCase() === n.toLowerCase())) names.push(n);
+    };
+    (Array.isArray(idx) ? idx : (idx && Array.isArray(idx.files) ? idx.files : [])).forEach(x => addName(typeof x === 'string' ? x : (x && (x.file || x.fileKey))));
+    api.forEach(addName);
+    for(let i = 1; i <= 20; i++) addName('de' + i + '.json');
+    names.sort((a, b) => a.localeCompare(b, 'en', { numeric: true, sensitivity: 'base' }));
 
-    // 2. Đọc từ localStorage (nếu giáo viên vừa tạo trên máy này)
+    // 2. Đọc song song, nhưng thêm vào danh sách theo đúng thứ tự tên (de1, de2, ... de10)
+    const files = await Promise.all(names.slice(0, 120).map(async fn => [fn, await fetchJsonQuiet(fn)]));
+    files.forEach(([fn, data]) => {
+        if(!data) return;
+        (Array.isArray(data) ? data : [data]).forEach(item => addExam(item, fn.replace(/\.json$/i, '')));
+    });
+
+    // 3. exams.json (tập hợp nhiều đề): chỉ bổ sung những đề chưa có file riêng
+    const all = await fetchJsonQuiet('exams.json');
+    if(all) (Array.isArray(all) ? all : [all]).forEach((item, i) => addExam(item, (item && item.fileKey) || ('de' + (i + 1))));
+
+    // 4. Đề giáo viên vừa tạo trên máy này
     try {
         const local = JSON.parse(localStorage.getItem(LK) || '[]');
-        if(Array.isArray(local)) local.forEach((x, idx) => addExam(x, x.fileKey || ('de' + (idx + 1))));
+        if(Array.isArray(local)) local.forEach((x, i) => addExam(x, (x && x.fileKey) || ('de' + (i + 1))));
     } catch(e) {}
     return found;
 }
@@ -687,7 +728,7 @@ async function populateStudentHub() {
         box.innerHTML = '<div class="note" style="margin:0">Chưa có đề nào được mở. Em dùng liên kết đề do giáo viên gửi.</div>';
         return;
     }
-    box.innerHTML = list.map((x, i) => {
+    box.innerHTML = '<div class="note" style="margin:0 0 8px">Có ' + list.length + ' đề thi. Em chọn đề của mình:</div>' + list.map((x, i) => {
         const fk = normFileKey(x.fileKey, i);
         const qCount = (x.items || []).filter(k => k.k === 'q').length;
         return `<button type="button" class="hub-item" onclick="openStudentExamByKey('${esc(fk)}','${esc(x.id)}')"><b>${esc(x.name)}</b><span>${qCount} câu · ${x.time ? x.time + ' phút' : 'Tự do'}${attemptLimit(x) ? ' · Thi tối đa ' + attemptLimit(x) + ' lần' : ''}${x.scale === 'hsg' && x.hsgAudio ? ' · 🎧 Có phần nghe' : ''}${x.pwHash ? ' · 🔒 Có mật khẩu' : ''}</span></button>`;
@@ -3709,6 +3750,17 @@ async function ghPushExam(x) {
             else { await ghPut(c, 'exams.json', JSON.stringify(ghMerge(Array.isArray(arr) ? arr : [arr], x)), msg, cur.sha); res.files.push('exams.json'); }
         }
     } catch (e) { res.warn.push('Đã đẩy ' + fk + '.json nhưng chưa cập nhật được exams.json: ' + e.message); }
+    // Danh sách đề (danh-sach-de.json): thêm tên file của đề vừa đẩy để trang học sinh luôn hiện đủ tất cả các đề đã đưa lên
+    try {
+        const cur = await ghReadText(c, EXAM_INDEX_FILE);
+        let arr = []; if (cur) { try { arr = JSON.parse(cur.text); } catch (e) { arr = null; } }
+        if (!Array.isArray(arr)) res.warn.push('File ' + EXAM_INDEX_FILE + ' trên GitHub không đọc được nên chưa cập nhật danh sách đề.');
+        else if (!arr.some(k => String(k && k.fileKey || k).toLowerCase() === fk.toLowerCase())) {
+            arr.push(fk);
+            await ghPut(c, EXAM_INDEX_FILE, JSON.stringify(arr), msg, cur ? cur.sha : undefined);
+            res.files.push(EXAM_INDEX_FILE);
+        }
+    } catch (e) { res.warn.push('Đã đẩy ' + fk + '.json nhưng chưa cập nhật được ' + EXAM_INDEX_FILE + ': ' + e.message); }
     let pm = {}; try { pm = JSON.parse(localStorage.getItem(GH_PK) || '{}') || {}; } catch (e) {}
     if (pm[x.id] && String(pm[x.id]).toLowerCase() !== fk.toLowerCase()) res.warn.push('Đề đã đổi tên file: file cũ "' + pm[x.id] + '.json" vẫn còn trên GitHub, hãy xóa thủ công nếu không dùng nữa.');
     pm[x.id] = fk; try { localStorage.setItem(GH_PK, JSON.stringify(pm)); } catch (e) {}
