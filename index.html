@@ -343,14 +343,12 @@ body.shot-hide #list-student,body.shot-hide #q-panel{visibility:hidden}
       </div>
       <div class="sect hide" id="hsg-box">
         <h3>Đề HSG Tiếng Anh tỉnh Thanh Hóa</h3>
-        <p class="note" style="margin:0 0 14px"><b>Cấu trúc theo hướng dẫn (thứ tự cố định I → II → III):</b><br>• <b>Phần I – Listening:</b> câu 1–15 (15 câu): luôn đứng đầu, giữ nguyên thứ tự câu, chỉ đảo đáp án A–D; file nghe tự động phát khi học sinh bấm "Bắt đầu làm bài".<br>• <b>Phần II – Lexico-Grammar:</b> câu 16–52 (37 câu): 16–25 câu độc lập; 26–31 và 32–37 điền thông tin vào quảng cáo/tờ rơi; 38–42 điền khuyết (ngữ pháp – ngữ cảnh); 43–52 cloze test.<br>• <b>Phần III – Reading:</b> câu 53–70 (18 câu): bài 1 gồm 8 câu, bài 2 gồm 10 câu.<br>Phần Viết (30 điểm) chấm riêng, không nằm trong hệ thống này. Ở Phần II và III, thứ tự câu trong mỗi bài/đoạn văn luôn được giữ nguyên; mục Xáo trộn bên dưới chỉ đảo đáp án A–D (và đảo thứ tự các nhóm nếu tích "Đảo vị trí nhóm", chỉ trong nội bộ từng phần). Các câu được chia phần theo số thứ tự trong đề (15 + 37 + 18 = 70 câu) nên file Word cần xếp đúng thứ tự phần và đánh số liên tục 1, 2, 3... 70. Điểm: mặc định mỗi câu 1 điểm (tổng 70 = phần trắc nghiệm trong thang 100); muốn quy đổi sang thang 20 thì nhập tổng điểm 14. Phần nào để điểm bằng 0 thì tự chia đều theo số câu.</p>
+        <p class="note" style="margin:0 0 14px"><b>Cấu trúc đề HSG gồm 2 phần (thứ tự cố định I → II):</b><br>• <b>Phần I – Listening:</b> câu 1–15 (15 câu): luôn đứng đầu, giữ nguyên thứ tự câu, chỉ đảo đáp án A–D; file nghe tự động phát khi học sinh bấm "Bắt đầu làm bài".<br>• <b>Phần II – Lexico-Grammar and Reading:</b> câu 16–70 (55 câu): 16–25 câu độc lập; 26–31 và 32–37 điền thông tin vào quảng cáo/tờ rơi; 38–42 điền khuyết (ngữ pháp – ngữ cảnh); 43–52 cloze test; 53–70 hai bài đọc hiểu (8 câu + 10 câu).<br>Phần Viết (30 điểm) chấm riêng, không nằm trong hệ thống này. Ở Phần II, thứ tự câu trong mỗi bài/đoạn văn luôn được giữ nguyên; mục Xáo trộn bên dưới chỉ đảo đáp án A–D (và đảo thứ tự các nhóm nếu tích "Đảo vị trí nhóm", chỉ trong nội bộ Phần II). Các câu được chia phần theo số thứ tự trong đề (Phần I = số câu đặt bên dưới, Phần II = tất cả các câu còn lại; đề chuẩn 15 + 55 = 70 câu) nên file Word cần xếp đúng thứ tự phần và đánh số liên tục 1, 2, 3... 70. Điểm: mặc định mỗi câu 1 điểm (tổng 70 = phần trắc nghiệm trong thang 100); muốn quy đổi sang thang 20 thì nhập tổng điểm 14. Phần nào để điểm bằng 0 thì tự chia đều theo số câu.</p>
         <div class="fgrid">
           <div class="fld"><label for="hsg-lis">Số câu Phần I – Listening</label><input type="number" id="hsg-lis" min="1" step="1" placeholder="15"></div>
-          <div class="fld"><label for="hsg-p2">Số câu Phần II – Lexico-Grammar (Phần III là các câu còn lại)</label><input type="number" id="hsg-p2" min="0" step="1" placeholder="37"></div>
           <div class="fld"><label for="hsg-max">Tổng điểm của đề (70 = mỗi câu 1 điểm; 14 = quy đổi thang 20)</label><input type="number" id="hsg-max" min="1" step="0.5" placeholder="70"></div>
           <div class="fld"><label for="hsg-lispts">Điểm Phần I (0 = tự chia)</label><input type="number" id="hsg-lispts" min="0" step="0.25" placeholder="0"></div>
-          <div class="fld"><label for="hsg-p2pts">Điểm Phần II (0 = tự chia)</label><input type="number" id="hsg-p2pts" min="0" step="0.25" placeholder="0"></div>
-          <div class="fld"><label for="hsg-p3pts">Điểm Phần III (0 = tự chia)</label><input type="number" id="hsg-p3pts" min="0" step="0.25" placeholder="0"></div>
+          <div class="fld"><label for="hsg-p2pts">Điểm Phần II – Lexico-Grammar and Reading (0 = tự chia)</label><input type="number" id="hsg-p2pts" min="0" step="0.25" placeholder="0"></div>
         </div>
         <div class="fld" style="margin-top:14px">
           <label for="hsg-audio-name">Tên file nghe (đã tải lên cùng Repository GitHub) hoặc đường dẫn https</label>
@@ -737,7 +735,7 @@ function showLib() {
             <div class="lr-info"><span class="no">${i+1}</span>
             <div>
                 <b>${esc(x.name)}</b> <span class="tg">${esc(fk)}.json</span>
-                <div class="note">${x.items.filter(k=>k.k==='q').length} câu • Cài đặt: ${x.time||0} phút - Thang điểm: ${tScale} • Số lần thi: ${attemptLimit(x) || 'không giới hạn'} • Link thi: <code>?de=${esc(fk)}</code>${x.pwHash ? ' • 🔒 Có mật khẩu' : ''}${x.webhook ? '' : '<br><span class="warn-t">Chưa có liên kết Google Sheet: điểm sẽ không được lưu.</span>'}${x.scale === 'hsg' ? (x.hsgAudio ? '<br>🎧 File nghe: <code>' + esc(x.hsgAudio) + '</code> • Phần I: ' + hsgLisN(x) + ' câu • Phần II: ' + hsgP2N(x) + ' câu • Tổng ' + hsgMax(x) + ' điểm' : '<br><span class="warn-t">Chưa có file nghe cho Phần I – Listening.</span>') : ''}${(x.openAt||x.closeAt) ? `<br>${x.openAt ? 'Mở: ' + fmtDT(x.openAt) : 'Mở: ngay'} — ${x.closeAt ? 'Đóng: ' + fmtDT(x.closeAt) : 'không giới hạn'}` : ''}</div>
+                <div class="note">${x.items.filter(k=>k.k==='q').length} câu • Cài đặt: ${x.time||0} phút - Thang điểm: ${tScale} • Số lần thi: ${attemptLimit(x) || 'không giới hạn'} • Link thi: <code>?de=${esc(fk)}</code>${x.pwHash ? ' • 🔒 Có mật khẩu' : ''}${x.webhook ? '' : '<br><span class="warn-t">Chưa có liên kết Google Sheet: điểm sẽ không được lưu.</span>'}${x.scale === 'hsg' ? (x.hsgAudio ? '<br>🎧 File nghe: <code>' + esc(x.hsgAudio) + '</code> • Phần I: ' + hsgLisN(x) + ' câu • Phần II: ' + Math.max(0, x.items.filter(k => k.k === 'q').length - hsgLisN(x)) + ' câu • Tổng ' + hsgMax(x) + ' điểm' : '<br><span class="warn-t">Chưa có file nghe cho Phần I – Listening.</span>') : ''}${(x.openAt||x.closeAt) ? `<br>${x.openAt ? 'Mở: ' + fmtDT(x.openAt) : 'Mở: ngay'} — ${x.closeAt ? 'Đóng: ' + fmtDT(x.closeAt) : 'không giới hạn'}` : ''}</div>
             </div></div>
             <div class="lr-act">
                 <button class="btn sec" onclick="openExam('${x.id}')">Quản lý</button>
@@ -774,8 +772,8 @@ window.openExam = (id) => {
     $('exam-scale').value = exam.scale || 'english';
     $('exam-webhook').value = exam.webhook || '';
     $('max-attempts').value = attemptLimit(exam);
-    $('hsg-lis').value = hsgLisN(exam); $('hsg-p2').value = hsgP2N(exam); $('hsg-max').value = hsgMax(exam);
-    $('hsg-lispts').value = +exam.hsgLisPts || 0; $('hsg-p2pts').value = +exam.hsgP2Pts || 0; $('hsg-p3pts').value = +exam.hsgP3Pts || 0;
+    $('hsg-lis').value = hsgLisN(exam); $('hsg-max').value = hsgMax(exam);
+    $('hsg-lispts').value = +exam.hsgLisPts || 0; $('hsg-p2pts').value = +exam.hsgP2Pts || 0;
     $('hsg-audio-name').value = exam.hsgAudio || ''; $('chk-hsg-free').checked = !!exam.hsgFree;
     hsgTestReset(); hsgToggleBox();
     $('chk-shuf-grp').checked = !!exam.shufGrp;
@@ -828,12 +826,11 @@ function applySettingsForm() {
         exam.hsgLis = Math.max(1, parseInt($('hsg-lis').value, 10) || 15);
         exam.hsgMax = Math.max(1, parseFloat($('hsg-max').value) || 70);
         exam.hsgLisPts = Math.min(exam.hsgMax, Math.max(0, parseFloat($('hsg-lispts').value) || 0));
-        exam.hsgP2 = Math.max(0, isFinite(parseInt($('hsg-p2').value, 10)) ? parseInt($('hsg-p2').value, 10) : 37);
         exam.hsgP2Pts = Math.min(exam.hsgMax, Math.max(0, parseFloat($('hsg-p2pts').value) || 0));
-        exam.hsgP3Pts = Math.min(exam.hsgMax, Math.max(0, parseFloat($('hsg-p3pts').value) || 0));
         exam.hsgFree = $('chk-hsg-free').checked;
+        delete exam.hsgP2; delete exam.hsgP3Pts;
         $('hsg-audio-name').value = exam.hsgAudio; $('hsg-lis').value = exam.hsgLis; $('hsg-max').value = exam.hsgMax; $('hsg-lispts').value = exam.hsgLisPts;
-        $('hsg-p2').value = exam.hsgP2; $('hsg-p2pts').value = exam.hsgP2Pts; $('hsg-p3pts').value = exam.hsgP3Pts;
+        $('hsg-p2pts').value = exam.hsgP2Pts;
         hsgAudioNote();
         exam.maxAttempts = normAttempts($('max-attempts').value);
         $('max-attempts').value = exam.maxAttempts;
@@ -1004,9 +1001,7 @@ function normExam(x, fallbackId, fallbackFileKey) {
         hsgLis: Math.max(1, parseInt(x.hsgLis, 10) || 15),
         hsgMax: Math.max(1, parseFloat(x.hsgMax) || 70),
         hsgLisPts: Math.max(0, parseFloat(x.hsgLisPts) || 0),
-        hsgP2: isFinite(parseInt(x.hsgP2, 10)) && parseInt(x.hsgP2, 10) >= 0 ? parseInt(x.hsgP2, 10) : 37,
         hsgP2Pts: Math.max(0, parseFloat(x.hsgP2Pts) || 0),
-        hsgP3Pts: Math.max(0, parseFloat(x.hsgP3Pts) || 0),
         hsgFree: !!x.hsgFree
     };
 }
@@ -1982,10 +1977,10 @@ $('file').onchange = async e => {
     const ex={
         id:'e'+Date.now(), fileKey:'de'+(nextIdx+1), name:f.name.replace(/\.docx$/i,''), at:Date.now(), 
         items, eq, img:IM, time:0, scale:'english', webhook:'', openAt:0, closeAt:0,
-        shufGrp: false, shufQ: true, shufOpt: true, maxAttempts: 1, hsgAudio: '', hsgLis: 15, hsgP2: 37, hsgMax: 70, hsgLisPts: 0, hsgP2Pts: 0, hsgP3Pts: 0, hsgFree: false
+        shufGrp: false, shufQ: true, shufOpt: true, maxAttempts: 1, hsgAudio: '', hsgLis: 15, hsgMax: 70, hsgLisPts: 0, hsgP2Pts: 0, hsgFree: false
     };
     const old=lib.find(y=>y.name===ex.name);
-    if(old){ ex.id=old.id; ex.fileKey=old.fileKey||ex.fileKey; ex.time=old.time||0; ex.openAt=old.openAt||0; ex.closeAt=old.closeAt||0; ex.scale=old.scale||'english'; ex.webhook=old.webhook||''; ex.shufGrp=!!old.shufGrp; ex.shufQ=old.shufQ!==false; ex.shufOpt=old.shufOpt!==false; ex.proctor=!!old.proctor; ex.maxViol=old.maxViol; ex.calc=!!old.calc; ex.maxAttempts=normAttempts(old.maxAttempts); ex.hsgAudio=old.hsgAudio||''; ex.hsgLis=old.hsgLis||15; ex.hsgMax=old.hsgMax||70; ex.hsgLisPts=old.hsgLisPts||0; ex.hsgP2=old.hsgP2==null?37:old.hsgP2; ex.hsgP2Pts=old.hsgP2Pts||0; ex.hsgP3Pts=old.hsgP3Pts||0; ex.hsgFree=!!old.hsgFree; if(old.pwHash){ ex.pwHash=old.pwHash; ex.pwSalt=old.pwSalt; if(old.pwPlain) ex.pwPlain=old.pwPlain; } }
+    if(old){ ex.id=old.id; ex.fileKey=old.fileKey||ex.fileKey; ex.time=old.time||0; ex.openAt=old.openAt||0; ex.closeAt=old.closeAt||0; ex.scale=old.scale||'english'; ex.webhook=old.webhook||''; ex.shufGrp=!!old.shufGrp; ex.shufQ=old.shufQ!==false; ex.shufOpt=old.shufOpt!==false; ex.proctor=!!old.proctor; ex.maxViol=old.maxViol; ex.calc=!!old.calc; ex.maxAttempts=normAttempts(old.maxAttempts); ex.hsgAudio=old.hsgAudio||''; ex.hsgLis=old.hsgLis||15; ex.hsgMax=old.hsgMax||70; ex.hsgLisPts=old.hsgLisPts||0; ex.hsgP2Pts=old.hsgP2Pts||0; ex.hsgFree=!!old.hsgFree; if(old.pwHash){ ex.pwHash=old.pwHash; ex.pwSalt=old.pwSalt; if(old.pwPlain) ex.pwPlain=old.pwPlain; } }
     lib=lib.filter(y=>y.name!==ex.name); lib.push(ex); saveLib();
     openExam(ex.id);
     
@@ -2167,13 +2162,13 @@ function shuffleExamItems(items, examConf) {
     };
 
     if (examConf.scale === 'hsg') {
-        // Thứ tự cố định: Phần I (Listening) -> Phần II (Lexico-Grammar) -> Phần III (Reading)
-        const pp = hsgPrep(clone), sp1 = hsgSplit(pp.body, hsgLisN(examConf)), sp2 = hsgSplit(sp1.rest, hsgP2N(examConf));
+        // Thứ tự cố định: Phần I (Listening) -> Phần II (Lexico-Grammar and Reading = tất cả các câu còn lại)
+        const pp = hsgPrep(clone), sp1 = hsgSplit(pp.body, hsgLisN(examConf));
         const tag = (list, p) => list.forEach(it => { it.part = p; if (it.k === 'q' && p === 1) it.lis = 1; });
-        tag(pp.pre, 0); tag(sp1.lis, 1); tag(sp2.lis, 2); tag(sp2.rest, 3);
+        tag(pp.pre, 0); tag(sp1.lis, 1); tag(sp1.rest, 2);
         // Phần I: chỉ đảo đáp án A-D, giữ nguyên thứ tự câu và thứ tự nhóm
         if (examConf.shufOpt !== false) sp1.lis.forEach(it => { if (it.k === 'q') hsgShufOpts(it); });
-        return pp.pre.concat(sp1.lis, shufSeg(sp2.lis), shufSeg(sp2.rest));
+        return pp.pre.concat(sp1.lis, shufSeg(sp1.rest));
     }
     return shufSeg(clone);
 }
@@ -2559,7 +2554,12 @@ function updateTimerUI() {
 
 // Đo chiều cao thanh tiêu đề bài thi để tiêu đề phần được ghim ngay dưới thanh (kể cả khi thanh tự xuống dòng trên điện thoại)
 function syncHdr() {
-    try { const h = document.querySelector('.student-hdr'); if (h && h.offsetHeight > 20) document.documentElement.style.setProperty('--hs', h.offsetHeight + 'px'); } catch (e) {}
+    try {
+        const h = document.querySelector('.student-hdr'); if (h && h.offsetHeight > 20) document.documentElement.style.setProperty('--hs', h.offsetHeight + 'px');
+        // chiều cao khung tiêu đề phần (cao hơn khi tên phần xuống dòng trên điện thoại) để các câu cuộn tới không bị khung che
+        const ls = document.getElementById('list-student'), ts = [...document.querySelectorAll('#list-student .part-t')];
+        if (ls && ts.length) ls.style.setProperty('--ph', Math.max.apply(null, ts.map(e => e.offsetHeight).concat(44)) + 'px');
+    } catch (e) {}
 }
 window.addEventListener('resize', syncHdr); window.addEventListener('orientationchange', syncHdr);
 window.hsgGoPart = p => { const e = document.getElementById('part-' + p); if (e) e.scrollIntoView({ behavior: 'smooth' }); };
@@ -2773,7 +2773,7 @@ function showResult(res, canReview) {
                 <div class="score-big">${res.score}<small>/${res.max || 10} điểm</small></div>
                 <div class="score-list">
                     ${res.hsg ? `• Phần I – Nghe: Đúng ${res.hsg.lisOk}/${res.hsg.lisTot} câu<br>` : `• Trắc nghiệm (0.25đ/câu): Đúng ${res.correctMC}/${res.totalMC} câu<br>`}
-                    ${res.hsg ? `• Phần II – Lexico-Grammar: Đúng ${res.hsg.p2Ok}/${res.hsg.p2Tot} câu<br>• Phần III – Reading: Đúng ${res.hsg.p3Ok}/${res.hsg.p3Tot} câu` : `• Đúng/Sai (Điểm lũy tiến): Đã làm ${res.tfQuestions} câu<br>`}
+                    ${res.hsg ? `• Phần II – Lexico-Grammar and Reading: Đúng ${res.hsg.p2Ok}/${res.hsg.p2Tot} câu` : `• Đúng/Sai (Điểm lũy tiến): Đã làm ${res.tfQuestions} câu<br>`}
                     ${res.hsg ? '' : `• Trả lời ngắn (${res.isMath?'0.5đ':'0.25đ'}/câu): Đúng ${res.correctSA}/${res.totalSA} câu`}
                 </div>
             </div>` + (canReview ? `<button class="btn" style="margin-top:16px" onclick="reviewExam()">Xem lại bài làm</button>` : '') + retry;
@@ -2854,7 +2854,7 @@ async function processSubmission() {
             score, 
             mc: `${correctMC}/${totalMC}`, 
             attempt: localAttempts(attId(studentData.name, studentData.class)) || 1, tf_qs: tfQuestions, violations: PG.viol.length, viol_log: PG.viol.map(v => new Date(v.t).toLocaleTimeString('vi-VN') + ' ' + v.r).join(' | '), 
-            sa: `${correctSA}/${totalSA}`, ...(hsgRes ? { max: hsgRes.max, lis: hsgRes.lisOk + '/' + hsgRes.lisTot, p2: hsgRes.p2Ok + '/' + hsgRes.p2Tot, p3: hsgRes.p3Ok + '/' + hsgRes.p3Tot } : {}) 
+            sa: `${correctSA}/${totalSA}`, ...(hsgRes ? { max: hsgRes.max, lis: hsgRes.lisOk + '/' + hsgRes.lisTot, p2: hsgRes.p2Ok + '/' + hsgRes.p2Tot } : {}) 
         })
     };
 
@@ -3177,23 +3177,22 @@ window.addEventListener('beforeprint', () => { if (SH.on) shShot('Cố in hoặc
 function isEnS(s) { return s === 'english' || s === 'hsg'; }
 function hsgMax(ex) { const v = parseFloat(ex && ex.hsgMax); return isFinite(v) && v > 0 ? v : 70; }
 function hsgLisN(ex) { const v = parseInt(ex && ex.hsgLis, 10); return isFinite(v) && v > 0 ? v : 15; }
-function hsgP2N(ex) { const v = parseInt(ex && ex.hsgP2, 10); return isFinite(v) && v >= 0 ? v : 37; }
-function hsgPartName(i) { return ['', 'Phần I – Listening', 'Phần II – Lexico-Grammar', 'Phần III – Reading'][i] || ''; }
-// Số câu từng phần [Phần I, Phần II, Phần III] theo đề gốc; Phần III là toàn bộ các câu còn lại
+function hsgPartName(i) { return ['', 'Phần I – Listening', 'Phần II – Lexico-Grammar and Reading'][i] || ''; }
+// Số câu từng phần [Phần I, Phần II]; Phần II là toàn bộ các câu còn lại sau Phần I
 function hsgCounts(items, ex) {
     const tot = items.filter(x => x.k === 'q').length;
-    const c1 = Math.min(hsgLisN(ex), tot), c2 = Math.min(hsgP2N(ex), tot - c1);
-    return [c1, c2, tot - c1 - c2];
+    const c1 = Math.min(hsgLisN(ex), tot);
+    return [c1, tot - c1];
 }
 // Điểm từng phần: phần nào giáo viên đã đặt điểm thì giữ nguyên; các phần chưa đặt chia đều số điểm còn lại theo số câu
 function hsgPts(ex, cnt) {
-    const T = hsgMax(ex), g = [+ex.hsgLisPts, +ex.hsgP2Pts, +ex.hsgP3Pts].map(v => v > 0 ? v : 0);
-    const fixed = [0, 1, 2].filter(i => g[i] > 0 && cnt[i] > 0);
+    const T = hsgMax(ex), g = [+ex.hsgLisPts, +ex.hsgP2Pts].map(v => v > 0 ? v : 0), all = cnt.map((_, i) => i);
+    const fixed = all.filter(i => g[i] > 0 && cnt[i] > 0);
     let sum = fixed.reduce((a, i) => a + g[i], 0);
-    const k = sum > T ? T / sum : 1, pts = [0, 0, 0];
+    const k = sum > T ? T / sum : 1, pts = cnt.map(() => 0);
     fixed.forEach(i => { pts[i] = g[i] * k; });
     sum *= k;
-    const free = [0, 1, 2].filter(i => !fixed.includes(i) && cnt[i] > 0), nf = free.reduce((a, i) => a + cnt[i], 0);
+    const free = all.filter(i => !fixed.includes(i) && cnt[i] > 0), nf = free.reduce((a, i) => a + cnt[i], 0);
     free.forEach(i => { pts[i] = (T - sum) * cnt[i] / nf; });
     return { pts, total: free.length ? T : sum };
 }
@@ -3289,9 +3288,9 @@ function hsgShufOpts(q) {
 
 // Chấm điểm đề HSG: mỗi câu cùng phần có điểm bằng nhau; tổng điểm và điểm Phần I do giáo viên đặt
 function hsgCalc(items) {
-    const qs = items.filter(q => q.k === 'q'), part = q => q.part || (q.lis ? 1 : 3);
-    const cnt = [1, 2, 3].map(p => qs.filter(q => part(q) === p).length);
-    const P = hsgPts(exam, cnt), w = cnt.map((c, i) => c ? P.pts[i] / c : 0), ok = [0, 0, 0];
+    const qs = items.filter(q => q.k === 'q'), part = q => (q.part === 1 || q.lis) ? 1 : 2;
+    const cnt = [1, 2].map(p => qs.filter(q => part(q) === p).length);
+    const P = hsgPts(exam, cnt), w = cnt.map((c, i) => c ? P.pts[i] / c : 0), ok = [0, 0];
     let score = 0;
     qs.forEach(q => {
         let fr = 0;
@@ -3310,29 +3309,27 @@ function hsgCalc(items) {
     });
     return {
         score: Math.round(score * 100) / 100, max: Math.round(P.total * 100) / 100,
-        lisOk: ok[0], lisTot: cnt[0], p2Ok: ok[1], p2Tot: cnt[1], p3Ok: ok[2], p3Tot: cnt[2],
-        restOk: ok[1] + ok[2], restTot: cnt[1] + cnt[2]
+        lisOk: ok[0], lisTot: cnt[0], p2Ok: ok[1], p2Tot: cnt[1],
+        restOk: ok[1], restTot: cnt[1]
     };
 }
 
 // ----- Giáo viên: xem trước, cài đặt, nghe thử -----
 function hsgPreviewHtml() {
-    const ex = { hsgLis: $('hsg-lis').value, hsgP2: $('hsg-p2').value, hsgMax: $('hsg-max').value, hsgLisPts: $('hsg-lispts').value, hsgP2Pts: $('hsg-p2pts').value, hsgP3Pts: $('hsg-p3pts').value };
+    const ex = { hsgLis: $('hsg-lis').value, hsgMax: $('hsg-max').value, hsgLisPts: $('hsg-lispts').value, hsgP2Pts: $('hsg-p2pts').value };
     const nL = hsgLisN(ex), tot = cur.filter(x => x.k === 'q').length, cnt = hsgCounts(cur, ex), P = hsgPts(ex, cnt);
-    const pp = hsgPrep(cur), sp1 = hsgSplit(pp.body, nL), sp2 = hsgSplit(sp1.rest, hsgP2N(ex));
+    const pp = hsgPrep(cur), sp1 = hsgSplit(pp.body, nL);
     const f = v => String(Math.round(v * 100) / 100);
     const ban = (i, cls, txt) => '<div class="sch-state ' + cls + '"><b>' + hsgPartName(i) + ' (' + cnt[i - 1] + ' câu, ' + f(P.pts[i - 1]) + ' điểm)</b>' + txt + '</div>';
-    const STD = [15, 37, 18], dif = cnt.some((c, i) => c !== STD[i]);
+    const STD = [15, 55], dif = cnt.some((c, i) => c !== STD[i]);
     let h = '<div class="note" style="margin-bottom:12px;text-align:center">Tổng ' + tot + ' câu · ' + f(P.total) + ' điểm' +
-        (dif ? '<br><span class="warn-t">Khác hướng dẫn (Phần I 15 câu, Phần II 37 câu, Phần III 18 câu = 70 câu). Nếu đề của Thầy đúng cấu trúc hướng dẫn, hãy kiểm tra lại file Word (thiếu/thừa câu hoặc đánh số chưa liên tục).</span>' : '') + '</div>' +
+        (dif ? '<br><span class="warn-t">Khác hướng dẫn (Phần I 15 câu, Phần II 55 câu = 70 câu). Nếu đề của Thầy đúng cấu trúc hướng dẫn, hãy kiểm tra lại file Word (thiếu/thừa câu hoặc đánh số chưa liên tục).</span>' : '') + '</div>' +
         renderBlocks(pp.pre, true, teacherQHtml, 0) +
         ban(1, 'open', ': luôn đứng đầu, giữ nguyên thứ tự câu, chỉ đảo đáp án A–D. File nghe tự động phát khi học sinh bấm "Bắt đầu làm bài".' +
             (tot < nL ? '<br><span class="warn-t">Đề chỉ có ' + tot + ' câu, ít hơn số câu Phần I đã đặt (' + nL + ').</span>' : '')) +
         renderBlocks(sp1.lis, true, teacherQHtml, 0);
     if (cnt[1]) h += ban(2, 'wait', ': thứ tự câu trong mỗi bài được giữ nguyên, đảo đáp án A–D' + (exam && exam.shufGrp ? ', có thể đảo thứ tự các nhóm trong phần này.' : '.')) +
-        renderBlocks(sp2.lis, true, teacherQHtml, cnt[0]);
-    if (cnt[2]) h += ban(3, 'wait', ': thứ tự câu trong mỗi bài được giữ nguyên, đảo đáp án A–D' + (exam && exam.shufGrp ? ', có thể đảo thứ tự các nhóm trong phần này.' : '.')) +
-        renderBlocks(sp2.rest, true, teacherQHtml, cnt[0] + cnt[1]);
+        renderBlocks(sp1.rest, true, teacherQHtml, cnt[0]);
     return h;
 }
 
@@ -3358,16 +3355,16 @@ function hsgTestReset() {
 }
 
 function hsgSaveNote() {
-    const cnt = hsgCounts(exam.items, exam), tot = cnt[0] + cnt[1] + cnt[2];
+    const cnt = hsgCounts(exam.items, exam), tot = cnt[0] + cnt[1];
     let t = '\n\nĐề HSG: ' + (exam.hsgAudio ? 'nhớ tải file nghe "' + exam.hsgAudio + '" lên cùng Repository GitHub.' : 'chưa có file nghe nên đề sẽ không có tiếng.');
-    t += '\nCấu trúc: Phần I ' + cnt[0] + ' câu, Phần II ' + cnt[1] + ' câu, Phần III ' + cnt[2] + ' câu (tổng ' + tot + ' câu).';
+    t += '\nCấu trúc: Phần I ' + cnt[0] + ' câu, Phần II ' + cnt[1] + ' câu (tổng ' + tot + ' câu).';
     if (tot < exam.hsgLis) t += '\nLưu ý: đề chỉ có ' + tot + ' câu, ít hơn số câu Phần I (' + exam.hsgLis + ').';
-    else if ((cnt[1] === 0 && exam.hsgP2 > 0) || cnt[2] === 0) t += '\nLưu ý: có phần chưa có câu hỏi nào, hãy kiểm tra lại số câu từng phần.';
+    else if (cnt[1] === 0) t += '\nLưu ý: Phần II chưa có câu hỏi nào, hãy kiểm tra lại số câu Phần I.';
     return t;
 }
 
 $('hsg-audio-name').addEventListener('input', hsgAudioNote);
-['hsg-lis', 'hsg-p2', 'hsg-max', 'hsg-lispts', 'hsg-p2pts', 'hsg-p3pts'].forEach(id => $(id).addEventListener('input', () => { if (exam && $('exam-scale').value === 'hsg') renderTeacherPreview(); }));
+['hsg-lis', 'hsg-max', 'hsg-lispts', 'hsg-p2pts'].forEach(id => $(id).addEventListener('input', () => { if (exam && $('exam-scale').value === 'hsg') renderTeacherPreview(); }));
 $('hsg-file').onchange = e => {
     const f = e.target.files[0]; e.target.value = '';
     if (!f) return;
