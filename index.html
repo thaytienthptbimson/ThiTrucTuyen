@@ -195,6 +195,20 @@ main{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env
 body.pg-lock,body.pg-lock *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 body.pg-lock input,body.pg-lock textarea{-webkit-user-select:text;user-select:text}
 body.pg-lock img{-webkit-user-drag:none}
+.hsg-bar{position:fixed;left:0;right:0;bottom:0;z-index:55;display:flex;align-items:center;gap:12px;padding:10px max(16px,env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));background:var(--tx);color:#fff;box-shadow:0 -4px 16px rgba(0,0,0,.25)}
+.hsg-bar.pc{padding-right:156px}
+.q-part{grid-column:1/-1;margin-top:8px;font-size:12px;font-weight:700;color:var(--mut)}
+.q-part:first-child{margin-top:0}
+.hsg-ic{font-size:22px;line-height:1;flex:none}
+.hsg-mid{flex:1;min-width:0}
+.hsg-mid b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hsg-prog{display:block;height:6px;margin-top:6px;border-radius:3px;background:rgba(255,255,255,.2);overflow:hidden}
+.hsg-prog i{display:block;height:100%;width:0;background:#4ade80}
+.hsg-tm{flex:none;font-variant-numeric:tabular-nums;font-size:14px;font-weight:600;white-space:nowrap}
+.hsg-bar audio{display:none}
+.hsg-bar.free audio{display:block;flex:1;min-width:200px;height:36px}
+.hsg-bar.free .hsg-prog,.hsg-bar.free .hsg-tm{display:none}
+body.hsg-on{padding-bottom:72px}
 body.shot-hide #list-student,body.shot-hide #q-panel{visibility:hidden}
 @media print{body.sh-on>*{display:none!important}body.sh-on::before{content:"Bài thi không được phép in hoặc lưu thành PDF.";display:block;padding:40px;font-size:20px}}
 </style>
@@ -223,6 +237,7 @@ body.shot-hide #list-student,body.shot-hide #q-panel{visibility:hidden}
     <div class="brand"><h1 id="s-exam-name">Đang tải đề thi...</h1><p>Nhập đủ họ và tên và lớp để bắt đầu làm bài.</p></div>
     <div id="s-schedule" class="sch-state hide"></div>
     <div id="s-attempt" class="sch-state hide" role="status"></div>
+    <div id="s-hsg-note" class="sch-state wait hide"><div id="s-hsg-msg"></div><div id="s-hsg-st" style="margin-top:6px;font-weight:600"></div><button class="btn sec" type="button" id="btn-hsg-beep" style="margin-top:8px;width:auto;padding:7px 14px">🔊 Thử âm thanh</button></div>
     <div id="s-calc-note" class="sch-state hide"><b>Được dùng máy tính cầm tay</b> (máy tính bỏ túi hoặc máy tính khoa học loại thông thường) để tính toán. <b>Không được dùng điện thoại</b>, máy tính bảng, đồng hồ thông minh hay bất kỳ thiết bị kết nối mạng nào khác. Em cúi nhìn máy tính trong thời gian ngắn thì không bị tính vi phạm, nhưng không rời khỏi khung camera quá lâu.</div>
     <div id="s-pg-note" class="sch-state wait hide">Bài thi có giám sát: em cần cho phép camera và làm bài ở chế độ toàn màn hình. Rời màn hình, chuyển tab hoặc ra khỏi khung camera sẽ bị ghi nhận và có thể bị tự động nộp bài. Trên màn hình luôn có hình mờ ghi tên và lớp của em: mọi ảnh chụp hoặc quay màn hình (kể cả chụp bằng điện thoại khác) đều truy ra được người làm bài.</div>
     <input type="text" id="s-name" placeholder="Họ và tên có dấu, ví dụ: Phạm Văn Tiến" autocomplete="off" autocapitalize="words" spellcheck="false" required>
@@ -261,6 +276,7 @@ body.shot-hide #list-student,body.shot-hide #q-panel{visibility:hidden}
         <li>Tải từng file Word lên. Mỗi đề được gán một tên file (<code>de1.json</code>, <code>de2.json</code>...), có thể đổi trong phần cài đặt đề.</li>
         <li>Bấm <b>Xuất</b> ở từng đề, hoặc <b>Xuất tất cả</b> để có một file <code>exams.json</code>, rồi tải lên cùng một Repository GitHub.</li>
         <li>Bấm <b>Sao chép liên kết</b> để lấy link riêng của đề, dạng <code>.../?de=de1</code>, gửi cho học sinh. Trang chủ tự liệt kê các đề có trong <code>exams.json</code>.</li>
+        <li><b>Đề HSG Tiếng Anh:</b> trong phần cài đặt chọn thang điểm "HSG Tiếng Anh tỉnh Thanh Hóa", đặt số câu Phần I, chọn file nghe (.mp3) rồi tải chính file đó lên cùng Repository GitHub với <code>index.html</code>.</li>
       </ol>
     </section>
 
@@ -279,7 +295,34 @@ body.shot-hide #list-student,body.shot-hide #q-panel{visibility:hidden}
             <option value="english" selected>Môn Tiếng Anh</option>
             <option value="other">Các môn chung (Lý, Hóa, Sinh, Sử, Địa...)</option>
             <option value="math">Môn Toán</option>
+            <option value="hsg">HSG Tiếng Anh tỉnh Thanh Hóa (có phần Nghe)</option>
           </select>
+        </div>
+      </div>
+      <div class="sect hide" id="hsg-box">
+        <h3>Đề HSG Tiếng Anh tỉnh Thanh Hóa</h3>
+        <p class="note" style="margin:0 0 14px"><b>Cấu trúc theo hướng dẫn (thứ tự cố định I → II → III):</b><br>• <b>Phần I – Listening:</b> câu 1–15 (15 câu): luôn đứng đầu, giữ nguyên thứ tự câu, chỉ đảo đáp án A–D; file nghe tự động phát khi học sinh bấm "Bắt đầu làm bài".<br>• <b>Phần II – Lexico-Grammar:</b> câu 16–52 (37 câu): 16–25 câu độc lập; 26–31 và 32–37 điền thông tin vào quảng cáo/tờ rơi; 38–42 điền khuyết (ngữ pháp – ngữ cảnh); 43–52 cloze test.<br>• <b>Phần III – Reading:</b> câu 53–70 (18 câu): bài 1 gồm 8 câu, bài 2 gồm 10 câu.<br>Phần Viết (30 điểm) chấm riêng, không nằm trong hệ thống này. Ở Phần II và III, thứ tự câu trong mỗi bài/đoạn văn luôn được giữ nguyên; mục Xáo trộn bên dưới chỉ đảo đáp án A–D (và đảo thứ tự các nhóm nếu tích "Đảo vị trí nhóm", chỉ trong nội bộ từng phần). Các câu được chia phần theo số thứ tự trong đề (15 + 37 + 18 = 70 câu) nên file Word cần xếp đúng thứ tự phần và đánh số liên tục 1, 2, 3... 70. Điểm: mặc định mỗi câu 1 điểm (tổng 70 = phần trắc nghiệm trong thang 100); muốn quy đổi sang thang 20 thì nhập tổng điểm 14. Phần nào để điểm bằng 0 thì tự chia đều theo số câu.</p>
+        <div class="fgrid">
+          <div class="fld"><label for="hsg-lis">Số câu Phần I – Listening</label><input type="number" id="hsg-lis" min="1" step="1" placeholder="15"></div>
+          <div class="fld"><label for="hsg-p2">Số câu Phần II – Lexico-Grammar (Phần III là các câu còn lại)</label><input type="number" id="hsg-p2" min="0" step="1" placeholder="37"></div>
+          <div class="fld"><label for="hsg-max">Tổng điểm của đề (70 = mỗi câu 1 điểm; 14 = quy đổi thang 20)</label><input type="number" id="hsg-max" min="1" step="0.5" placeholder="70"></div>
+          <div class="fld"><label for="hsg-lispts">Điểm Phần I (0 = tự chia)</label><input type="number" id="hsg-lispts" min="0" step="0.25" placeholder="0"></div>
+          <div class="fld"><label for="hsg-p2pts">Điểm Phần II (0 = tự chia)</label><input type="number" id="hsg-p2pts" min="0" step="0.25" placeholder="0"></div>
+          <div class="fld"><label for="hsg-p3pts">Điểm Phần III (0 = tự chia)</label><input type="number" id="hsg-p3pts" min="0" step="0.25" placeholder="0"></div>
+        </div>
+        <div class="fld" style="margin-top:14px">
+          <label for="hsg-audio-name">Tên file nghe (đã tải lên cùng Repository GitHub) hoặc đường dẫn https</label>
+          <div class="row" style="flex-wrap:wrap">
+            <input type="text" id="hsg-audio-name" style="flex:1 1 220px;min-width:0" placeholder="nghe-de1.mp3" autocomplete="off" autocapitalize="off" spellcheck="false">
+            <label class="btn sec" for="hsg-file">Chọn file từ máy</label>
+            <button class="btn sec" type="button" id="btn-hsg-test">Nghe thử file trên GitHub</button>
+          </div>
+          <input type="file" id="hsg-file" accept="audio/*,.mp3,.m4a,.wav,.ogg" hidden>
+        </div>
+        <audio id="hsg-test" class="hide" controls preload="none" style="width:100%;margin-top:10px"></audio>
+        <p class="note" id="hsg-audio-note"></p>
+        <div class="chks" style="margin-top:12px">
+          <label class="chk"><input type="checkbox" id="chk-hsg-free"><span>Cho học sinh tự điều khiển file nghe (tạm dừng, tua, nghe lại). Mặc định tắt: file chỉ phát một lần, học sinh không tạm dừng hay tua được.</span></label>
         </div>
       </div>
       <div class="sect fld">
@@ -405,6 +448,19 @@ body.shot-hide #list-student,body.shot-hide #q-panel{visibility:hidden}
   </div>
 </div>
 <div id="pg-cam-box" class="hide"><video id="pg-cam" muted playsinline autoplay></video><div id="pg-st">Camera đang bật</div></div>
+<div id="hsg-bar" class="hsg-bar hide" role="status">
+  <span class="hsg-ic" aria-hidden="true">🎧</span>
+  <div class="hsg-mid"><b id="hsg-st">Phần I – Listening</b><span class="hsg-prog"><i id="hsg-pi"></i></span></div>
+  <span id="hsg-tm" class="hsg-tm">--:--</span>
+  <audio id="hsg-audio" preload="auto" playsinline></audio>
+</div>
+<div id="hsg-gate" class="overlay hide" style="z-index:150;background:rgba(20,35,47,.96)">
+  <div class="box">
+    <h2>Bài nghe chưa phát</h2>
+    <p id="hsg-gate-msg"></p>
+    <button class="btn gr" id="hsg-gate-btn" type="button">▶ Phát bài nghe</button>
+  </div>
+</div>
 <div id="toast" class="toast hide" role="status"></div>
 
 <script>
@@ -445,6 +501,7 @@ let examEndAt = Infinity, examRunning = false;
 const PG = { on: 0, mute: 0, busy: 0, viol: [], stream: null, det: null, tm: null, last: 0, none: 0, many: 0, lostF: 0, manyF: 0 };
 const LK = 'exams_v2';
 const L4 = 'ABCD';
+const HS = { a: null, src: '', bad: 0, ready: 0, go: 0, on: 0, done: 0, free: 0, saveT: 0 };
 
 let serverOffset = 0, gateTimer = null;
 const nowMs = () => Date.now() + serverOffset;
@@ -588,7 +645,7 @@ async function populateStudentHub() {
     box.innerHTML = list.map((x, i) => {
         const fk = normFileKey(x.fileKey, i);
         const qCount = (x.items || []).filter(k => k.k === 'q').length;
-        return `<button type="button" class="hub-item" onclick="openStudentExamByKey('${esc(fk)}','${esc(x.id)}')"><b>${esc(x.name)}</b><span>${qCount} câu · ${x.time ? x.time + ' phút' : 'Tự do'}${attemptLimit(x) ? ' · Thi tối đa ' + attemptLimit(x) + ' lần' : ''}${x.pwHash ? ' · 🔒 Có mật khẩu' : ''}</span></button>`;
+        return `<button type="button" class="hub-item" onclick="openStudentExamByKey('${esc(fk)}','${esc(x.id)}')"><b>${esc(x.name)}</b><span>${qCount} câu · ${x.time ? x.time + ' phút' : 'Tự do'}${attemptLimit(x) ? ' · Thi tối đa ' + attemptLimit(x) + ' lần' : ''}${x.scale === 'hsg' && x.hsgAudio ? ' · 🎧 Có phần nghe' : ''}${x.pwHash ? ' · 🔒 Có mật khẩu' : ''}</span></button>`;
     }).join('');
 }
 
@@ -629,14 +686,14 @@ function showLib() {
     ensureFileKeys(lib);
     $('lt').textContent = `Danh sách đề thi (${lib.length})`;
     $('libl').innerHTML = lib.length ? lib.map((x, i) => {
-        const tScale = x.scale === 'math' ? 'Toán' : (x.scale === 'english' ? 'Tiếng Anh' : 'Môn chung');
+        const tScale = x.scale === 'math' ? 'Toán' : (x.scale === 'hsg' ? 'HSG Tiếng Anh' : (x.scale === 'english' ? 'Tiếng Anh' : 'Môn chung'));
         const fk = normFileKey(x.fileKey, i);
         return `
         <div class="lr">
             <div class="lr-info"><span class="no">${i+1}</span>
             <div>
                 <b>${esc(x.name)}</b> <span class="tg">${esc(fk)}.json</span>
-                <div class="note">${x.items.filter(k=>k.k==='q').length} câu • Cài đặt: ${x.time||0} phút - Thang điểm: ${tScale} • Số lần thi: ${attemptLimit(x) || 'không giới hạn'} • Link thi: <code>?de=${esc(fk)}</code>${x.pwHash ? ' • 🔒 Có mật khẩu' : ''}${x.webhook ? '' : '<br><span class="warn-t">Chưa có liên kết Google Sheet: điểm sẽ không được lưu.</span>'}${(x.openAt||x.closeAt) ? `<br>${x.openAt ? 'Mở: ' + fmtDT(x.openAt) : 'Mở: ngay'} — ${x.closeAt ? 'Đóng: ' + fmtDT(x.closeAt) : 'không giới hạn'}` : ''}</div>
+                <div class="note">${x.items.filter(k=>k.k==='q').length} câu • Cài đặt: ${x.time||0} phút - Thang điểm: ${tScale} • Số lần thi: ${attemptLimit(x) || 'không giới hạn'} • Link thi: <code>?de=${esc(fk)}</code>${x.pwHash ? ' • 🔒 Có mật khẩu' : ''}${x.webhook ? '' : '<br><span class="warn-t">Chưa có liên kết Google Sheet: điểm sẽ không được lưu.</span>'}${x.scale === 'hsg' ? (x.hsgAudio ? '<br>🎧 File nghe: <code>' + esc(x.hsgAudio) + '</code> • Phần I: ' + hsgLisN(x) + ' câu • Phần II: ' + hsgP2N(x) + ' câu • Tổng ' + hsgMax(x) + ' điểm' : '<br><span class="warn-t">Chưa có file nghe cho Phần I – Listening.</span>') : ''}${(x.openAt||x.closeAt) ? `<br>${x.openAt ? 'Mở: ' + fmtDT(x.openAt) : 'Mở: ngay'} — ${x.closeAt ? 'Đóng: ' + fmtDT(x.closeAt) : 'không giới hạn'}` : ''}</div>
             </div></div>
             <div class="lr-act">
                 <button class="btn sec" onclick="openExam('${x.id}')">Quản lý</button>
@@ -673,6 +730,10 @@ window.openExam = (id) => {
     $('exam-scale').value = exam.scale || 'english';
     $('exam-webhook').value = exam.webhook || '';
     $('max-attempts').value = attemptLimit(exam);
+    $('hsg-lis').value = hsgLisN(exam); $('hsg-p2').value = hsgP2N(exam); $('hsg-max').value = hsgMax(exam);
+    $('hsg-lispts').value = +exam.hsgLisPts || 0; $('hsg-p2pts').value = +exam.hsgP2Pts || 0; $('hsg-p3pts').value = +exam.hsgP3Pts || 0;
+    $('hsg-audio-name').value = exam.hsgAudio || ''; $('chk-hsg-free').checked = !!exam.hsgFree;
+    hsgTestReset(); hsgToggleBox();
     $('chk-shuf-grp').checked = !!exam.shufGrp;
     $('chk-shuf-q').checked = exam.shufQ !== false; 
     $('chk-shuf-opt').checked = exam.shufOpt !== false;
@@ -719,6 +780,17 @@ $('btn-save-settings').onclick = () => {
         exam.time = parseInt($('time-limit').value) || 0;
         exam.scale = $('exam-scale').value;
         exam.webhook = $('exam-webhook').value.trim();
+        exam.hsgAudio = hsgCleanName($('hsg-audio-name').value);
+        exam.hsgLis = Math.max(1, parseInt($('hsg-lis').value, 10) || 15);
+        exam.hsgMax = Math.max(1, parseFloat($('hsg-max').value) || 70);
+        exam.hsgLisPts = Math.min(exam.hsgMax, Math.max(0, parseFloat($('hsg-lispts').value) || 0));
+        exam.hsgP2 = Math.max(0, isFinite(parseInt($('hsg-p2').value, 10)) ? parseInt($('hsg-p2').value, 10) : 37);
+        exam.hsgP2Pts = Math.min(exam.hsgMax, Math.max(0, parseFloat($('hsg-p2pts').value) || 0));
+        exam.hsgP3Pts = Math.min(exam.hsgMax, Math.max(0, parseFloat($('hsg-p3pts').value) || 0));
+        exam.hsgFree = $('chk-hsg-free').checked;
+        $('hsg-audio-name').value = exam.hsgAudio; $('hsg-lis').value = exam.hsgLis; $('hsg-max').value = exam.hsgMax; $('hsg-lispts').value = exam.hsgLisPts;
+        $('hsg-p2').value = exam.hsgP2; $('hsg-p2pts').value = exam.hsgP2Pts; $('hsg-p3pts').value = exam.hsgP3Pts;
+        hsgAudioNote();
         exam.maxAttempts = normAttempts($('max-attempts').value);
         $('max-attempts').value = exam.maxAttempts;
         exam.shufGrp = $('chk-shuf-grp').checked;
@@ -733,7 +805,7 @@ $('btn-save-settings').onclick = () => {
         updatePwNote();
         scheduleAutoResults(); resIdleMsg();
         saveLib();
-        alert(`Đã lưu cài đặt! Nhớ bấm "Xuất ${exam.fileKey}.json" (hoặc "Xuất tất cả exams.json") và tải lên GitHub.`);
+        alert(`Đã lưu cài đặt! Nhớ bấm "Xuất ${exam.fileKey}.json" (hoặc "Xuất tất cả exams.json") và tải lên GitHub.` + (exam.scale === 'hsg' ? hsgSaveNote() : ''));
     }
 };
 
@@ -867,13 +939,21 @@ function normExam(x, fallbackId, fallbackFileKey) {
         eq: Array.isArray(x.eq) ? x.eq : [],
         img: Array.isArray(x.img) ? x.img : [],
         time: parseInt(x.time) || 0,
-        scale: (x.scale === 'math' || x.scale === 'english' || x.scale === 'other') ? x.scale : 'english',
+        scale: (x.scale === 'math' || x.scale === 'english' || x.scale === 'other' || x.scale === 'hsg') ? x.scale : 'english',
         webhook: x.webhook || '',
         ...(/^[0-9a-f]{64}$/.test(String(x.pwHash || '')) ? { pwHash: String(x.pwHash), pwSalt: String(x.pwSalt || '').slice(0, 64) } : {}),
         openAt: +x.openAt || 0,
         closeAt: +x.closeAt || 0,
         shufGrp: !!x.shufGrp, shufQ: x.shufQ !== false, shufOpt: x.shufOpt !== false, proctor: !!x.proctor, maxViol: x.maxViol == null ? 3 : Math.max(0, parseInt(x.maxViol) || 0), calc: !!x.calc,
-        maxAttempts: normAttempts(x.maxAttempts)
+        maxAttempts: normAttempts(x.maxAttempts),
+        hsgAudio: String(x.hsgAudio || '').trim().slice(0, 300),
+        hsgLis: Math.max(1, parseInt(x.hsgLis, 10) || 15),
+        hsgMax: Math.max(1, parseFloat(x.hsgMax) || 70),
+        hsgLisPts: Math.max(0, parseFloat(x.hsgLisPts) || 0),
+        hsgP2: isFinite(parseInt(x.hsgP2, 10)) && parseInt(x.hsgP2, 10) >= 0 ? parseInt(x.hsgP2, 10) : 37,
+        hsgP2Pts: Math.max(0, parseFloat(x.hsgP2Pts) || 0),
+        hsgP3Pts: Math.max(0, parseFloat(x.hsgP3Pts) || 0),
+        hsgFree: !!x.hsgFree
     };
 }
 
@@ -1209,7 +1289,7 @@ function renderResults(skipped, merged) {
     }
     const sorted = rows.slice().sort((a, b) => b.score - a.score || a.name.localeCompare(b.name, 'vi'));
     const n = sorted.length, total = sorted.reduce((t, r) => t + r.score, 0);
-    const cnt = BANDS.map(b => sorted.filter(r => b.hit(r.score)).length);
+    const bd = bandsNow(), cnt = bd.map(b => sorted.filter(r => b.hit(r.score)).length);
     const pct = c => (Math.round(c / n * 1000) / 10) + '%';
     const f = v => String(Math.round(v * 100) / 100);
     const hv = sorted.some(r => r.viol != null), vs = hv ? violStats(sorted) : null;
@@ -1218,7 +1298,7 @@ function renderResults(skipped, merged) {
         if (r.score !== prev) { rk = i + 1; prev = r.score; }
         return `<tr><td class="num">${rk}</td><td>${esc(r.name)}</td><td>${esc(r.cls)}</td><td class="num"><b>${f(r.score)}</b></td>${hv ? `<td class="num">${vBadge(r)}</td><td>${violErrCell(r)}</td>` : ''}</tr>`;
     }).join('');
-    const bands = BANDS.map((b, i) => `<tr><td>${b.lb}</td><td class="num">${cnt[i]}</td><td class="num">${pct(cnt[i])}</td><td><span class="res-bar"><i style="width:${n ? cnt[i] / n * 100 : 0}%;background:${b.col}"></i></span></td></tr>`).join('');
+    const bands = bd.map((b, i) => `<tr><td>${b.lb}</td><td class="num">${cnt[i]}</td><td class="num">${pct(cnt[i])}</td><td><span class="res-bar"><i style="width:${n ? cnt[i] / n * 100 : 0}%;background:${b.col}"></i></span></td></tr>`).join('');
     out.innerHTML = `
         <div class="res-stats"><span>Số bài đã nộp: <b>${n}</b></span><span>Điểm trung bình: <b>${f(total / n)}</b></span><span>Cao nhất: <b>${f(sorted[0].score)}</b></span><span>Thấp nhất: <b>${f(sorted[n - 1].score)}</b></span>${hv ? `<span>Có vi phạm: <b>${vs.bad.length}/${vs.n}</b></span>` : ''}</div>
         <h3 class="res-h">Thống kê theo khoảng điểm</h3>
@@ -1366,7 +1446,7 @@ function rankData() {
         avg: Math.round(total / n * 100) / 100,
         max: sorted[0].score,
         min: sorted[n - 1].score,
-        bands: BANDS.map(b => { const c = sorted.filter(r => b.hit(r.score)).length; return { lb: b.lb, c, p: c / n }; })
+        bands: bandsNow().map(b => { const c = sorted.filter(r => b.hit(r.score)).length; return { lb: b.lb, c, p: c / n }; })
     };
 }
 
@@ -1779,10 +1859,11 @@ function parse(T,F){
     }
 
     const labels = ['A','B','C','D'];
-    const scan = (useMark, ci) => {
+    const scan = (useMark, ci, loose) => {
       const P=[]; let p=0;
       for(const L of labels){
-        const x = new RegExp('(^|\\s)'+L+'\\s*[.)]\\s*',ci?'i':'').exec(seg.slice(p));
+        let x = null;
+        try { x = new RegExp((loose ? '(^|\\s|(?<=[a-z0-9\\)\\]’”"\'!?;,]))' : '(^|\\s)')+L+'\\s*[.)]\\s*',ci?'i':'').exec(seg.slice(p)); } catch(e) { x = null; }
         if(!x) return null;
         let adv = x[0].length, key = null;
         if(useMark){
@@ -1798,6 +1879,7 @@ function parse(T,F){
     let P = scan(true,false), isTF = !!P && P.every(q=>q.key);
     if(!isTF) P = scan(false,false);
     if(!P){ P = scan(true,true); isTF = !!P && P.every(q=>q.key); if(!isTF) P = scan(false,true); }
+    if(!P) P = scan(false,false,true);   // dự phòng: các đáp án A, B, C, D dính liền nhau không có dấu cách
     if(!P){ parseSkipped++; return; }
     let endD = s;
 
@@ -1846,10 +1928,10 @@ $('file').onchange = async e => {
     const ex={
         id:'e'+Date.now(), fileKey:'de'+(nextIdx+1), name:f.name.replace(/\.docx$/i,''), at:Date.now(), 
         items, eq, img:IM, time:0, scale:'english', webhook:'', openAt:0, closeAt:0,
-        shufGrp: false, shufQ: true, shufOpt: true, maxAttempts: 1
+        shufGrp: false, shufQ: true, shufOpt: true, maxAttempts: 1, hsgAudio: '', hsgLis: 15, hsgP2: 37, hsgMax: 70, hsgLisPts: 0, hsgP2Pts: 0, hsgP3Pts: 0, hsgFree: false
     };
     const old=lib.find(y=>y.name===ex.name);
-    if(old){ ex.id=old.id; ex.fileKey=old.fileKey||ex.fileKey; ex.time=old.time||0; ex.openAt=old.openAt||0; ex.closeAt=old.closeAt||0; ex.scale=old.scale||'english'; ex.webhook=old.webhook||''; ex.shufGrp=!!old.shufGrp; ex.shufQ=old.shufQ!==false; ex.shufOpt=old.shufOpt!==false; ex.proctor=!!old.proctor; ex.maxViol=old.maxViol; ex.calc=!!old.calc; ex.maxAttempts=normAttempts(old.maxAttempts); if(old.pwHash){ ex.pwHash=old.pwHash; ex.pwSalt=old.pwSalt; if(old.pwPlain) ex.pwPlain=old.pwPlain; } }
+    if(old){ ex.id=old.id; ex.fileKey=old.fileKey||ex.fileKey; ex.time=old.time||0; ex.openAt=old.openAt||0; ex.closeAt=old.closeAt||0; ex.scale=old.scale||'english'; ex.webhook=old.webhook||''; ex.shufGrp=!!old.shufGrp; ex.shufQ=old.shufQ!==false; ex.shufOpt=old.shufOpt!==false; ex.proctor=!!old.proctor; ex.maxViol=old.maxViol; ex.calc=!!old.calc; ex.maxAttempts=normAttempts(old.maxAttempts); ex.hsgAudio=old.hsgAudio||''; ex.hsgLis=old.hsgLis||15; ex.hsgMax=old.hsgMax||70; ex.hsgLisPts=old.hsgLisPts||0; ex.hsgP2=old.hsgP2==null?37:old.hsgP2; ex.hsgP2Pts=old.hsgP2Pts||0; ex.hsgP3Pts=old.hsgP3Pts||0; ex.hsgFree=!!old.hsgFree; if(old.pwHash){ ex.pwHash=old.pwHash; ex.pwSalt=old.pwSalt; if(old.pwPlain) ex.pwPlain=old.pwPlain; } }
     lib=lib.filter(y=>y.name!==ex.name); lib.push(ex); saveLib();
     openExam(ex.id);
     
@@ -1930,9 +2012,9 @@ function renum(runs, map, isH) {
 }
 
 var QL = 'Câu';
-function renderBlocks(list, isEn, qHtml) {
+function renderBlocks(list, isEn, qHtml, start0) {
     let n = 0;
-    QL = isEn ? 'Question' : 'Câu';
+    QL = isEn ? 'Question' : 'Câu'; n = start0 || 0;
     return splitBlocks(list, isEn).map(b => {
         let map = null;
         if (isEn) { map = {}; let k = n; b.items.forEach(({ it }) => { if (it.k === 'q') { k++; map[it.on ?? it.no ?? k] = k; } }); }
@@ -1972,43 +2054,57 @@ function teacherQHtml(it, i, n) {
 }
 
 function renderTeacherPreview() {
-    const en = $('exam-scale').value === 'english';$('q-note').textContent = en ? '(Tiếng Anh: câu hỏi trong mỗi nhóm in đậm luôn giữ nguyên thứ tự)' : '';
+    const sc = $('exam-scale').value, en = isEnS(sc), hs = sc === 'hsg';$('q-note').textContent = en ? (hs ? '(Đề HSG: Phần I luôn đứng đầu, các câu giữ nguyên thứ tự)' : '(Tiếng Anh: câu hỏi trong mỗi nhóm in đậm luôn giữ nguyên thứ tự)') : '';
     $('chk-shuf-q').disabled = en;
-    $('list-teacher').innerHTML = '<div class="note" style="margin-bottom:20px;text-align:center">Đây là chế độ xem trước cấu trúc đề (Không tương tác được). Học sinh sẽ thấy giao diện đảo đề ngẫu nhiên.</div>' + renderBlocks(cur, en, teacherQHtml);
+    $('list-teacher').innerHTML = '<div class="note" style="margin-bottom:20px;text-align:center">Đây là chế độ xem trước cấu trúc đề (Không tương tác được). Học sinh sẽ thấy giao diện đảo đề ngẫu nhiên.</div>' + (hs ? hsgPreviewHtml() : renderBlocks(cur, en, teacherQHtml));
     triggerMathJax();
 }
-$('exam-scale').onchange = renderTeacherPreview;
+$('exam-scale').onchange = () => { hsgToggleBox(); renderTeacherPreview(); };
 
 const shuf = a => { for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
 function shuffleExamItems(items, examConf) {
     const clone = JSON.parse(JSON.stringify(items));
     let oc = 0; clone.forEach(it => { if (it.k === 'q') { oc++; it.on = it.no || oc; } });
-    const isEn = examConf.scale === 'english';
-    const blocks = splitBlocks(clone, isEn);
+    const isEn = isEnS(examConf.scale);
 
-    blocks.forEach(b => {
-        const qs = b.items.map(x => x.it).filter(x => x.k === 'q');
-        if (examConf.shufOpt !== false) {
-            qs.forEach(q => {
-                if (q.qtype !== 'sa') {
-                    const keep = q.opts.some(o => /tất cả|(^|\s)cả\s|all of|none of/i.test(o.runs.map(r=>r.t).join('')));
-                    if (!keep) shuf(q.opts);
-                }
-            });
-        }
-        b.out = b.items.map(x => x.it);
-        if (!isEn && examConf.shufQ !== false && qs.length > 1 && !qs.some(q => q.g === 1)) {
-            const sq = shuf(qs.slice()); let k = 0;
-            b.out = b.out.map(x => x.k === 'q' ? sq[k++] : x);
-        }
-    });
+    // Đảo đáp án, và (tùy chọn) đảo vị trí nhóm, trong một đoạn liên tục của đề
+    const shufSeg = list => {
+        const blocks = splitBlocks(list, isEn);
+        blocks.forEach(b => {
+            const qs = b.items.map(x => x.it).filter(x => x.k === 'q');
+            if (examConf.shufOpt !== false) {
+                qs.forEach(q => {
+                    if (q.qtype !== 'sa') {
+                        const keep = q.opts.some(o => /tất cả|(^|\s)cả\s|all of|none of/i.test(o.runs.map(r=>r.t).join('')));
+                        if (!keep) shuf(q.opts);
+                    }
+                });
+            }
+            b.out = b.items.map(x => x.it);
+            if (!isEn && examConf.shufQ !== false && qs.length > 1 && !qs.some(q => q.g === 1)) {
+                const sq = shuf(qs.slice()); let k = 0;
+                b.out = b.out.map(x => x.k === 'q' ? sq[k++] : x);
+            }
+        });
 
-    if (examConf.shufGrp) {
-        const idx = blocks.map((b, i) => b.hasQ ? i : -1).filter(i => i >= 0);
-        const sh = shuf(idx.map(i => blocks[i]));
-        idx.forEach((i, k) => blocks[i] = sh[k]);
+        if (examConf.shufGrp) {
+            const idx = blocks.map((b, i) => b.hasQ ? i : -1).filter(i => i >= 0);
+            const sh = shuf(idx.map(i => blocks[i]));
+            idx.forEach((i, k) => blocks[i] = sh[k]);
+        }
+        return blocks.flatMap(b => b.out);
+    };
+
+    if (examConf.scale === 'hsg') {
+        // Thứ tự cố định: Phần I (Listening) -> Phần II (Lexico-Grammar) -> Phần III (Reading)
+        const sp1 = hsgSplit(clone, hsgLisN(examConf)), sp2 = hsgSplit(sp1.rest, hsgP2N(examConf));
+        const tag = (list, p) => list.forEach(it => { if (it.k === 'q') { it.part = p; if (p === 1) it.lis = 1; } });
+        tag(sp1.lis, 1); tag(sp2.lis, 2); tag(sp2.rest, 3);
+        // Phần I: chỉ đảo đáp án A-D, giữ nguyên thứ tự câu và thứ tự nhóm
+        if (examConf.shufOpt !== false) sp1.lis.forEach(it => { if (it.k === 'q') hsgShufOpts(it); });
+        return sp1.lis.concat(shufSeg(sp2.lis), shufSeg(sp2.rest));
     }
-    return blocks.flatMap(b => b.out);
+    return shufSeg(clone);
 }
 
 async function fetchExamJsonFile(filename) {
@@ -2239,6 +2335,7 @@ async function initStudentFlow(id, deParam) {
         if(sv.res) { $('loading').classList.remove('hide'); showResult(sv.res, false); }
         return;
     }
+    hsgInit();
     if(sv && sv.cur && sv.studentData) { startStudentExam(sv); return; }
 
     renderAttemptInfo();
@@ -2270,6 +2367,7 @@ async function initStudentFlow(id, deParam) {
             $('s-pw').focus(); $('s-pw').select();
             return;
         }
+        hsgUnlock();
         const nm = nv.name, cl = cv.cls;
         const lim = attemptLimit(exam), key = attId(nm, cl), btn = $('btn-start-exam'), btnTxt = btn.textContent;
         startBusy = true;
@@ -2293,7 +2391,7 @@ async function initStudentFlow(id, deParam) {
         } finally {
             startBusy = false;
             btn.textContent = btnTxt;
-            btn.disabled = gateState() !== 'open';
+            btn.disabled = gateState() !== 'open' || !!HS.bad;
         }
     };
 }
@@ -2322,7 +2420,7 @@ function updateGate() {
     if(o) html += `Mở đề: <b>${fmtDT(o)}</b><br>`;
     if(c) html += `Đóng đề: <b>${fmtDT(c)}</b>`;
     box.className = 'sch-state ' + st;
-    btn.disabled = st !== 'open';
+    btn.disabled = st !== 'open' || !!HS.bad;
     
     if(st === 'wait') {
         html += `<span class="sch-count">⏳ Còn ${fmtCountdown(Math.ceil((o - n) / 1000))}</span>Chưa đến giờ làm bài. Em có thể nhập sẵn họ tên${exam.pwHash ? ', lớp và mật khẩu' : ' và lớp'}, nút bắt đầu sẽ tự mở khi đến giờ.`;
@@ -2330,7 +2428,7 @@ function updateGate() {
         if(gateTimer) { clearInterval(gateTimer); gateTimer = null; }
         html += `<br><b>Đề thi đã đóng.</b> Em không thể làm bài nữa. Vui lòng liên hệ giáo viên nếu cần.`;
         $('s-name').style.display = 'none';$('s-class').style.display = 'none'; btn.style.display = 'none'; setPwField(false);
-        $('s-attempt').classList.add('hide');
+        $('s-attempt').classList.add('hide'); $('s-hsg-note').classList.add('hide');
     } else if(c) {
         html += `<br>Đề đang mở. Còn <b>${fmtCountdown(Math.ceil((c - n) / 1000))}</b> đến giờ đóng đề.`;
     } else if(o) {
@@ -2376,6 +2474,7 @@ function startStudentExam(sv) {
     examEndAt = endAt;
     examRunning = true;
     if(exam.proctor) pgBegin(sv);
+    hsgBegin(sv);
     saveProg();
     runTimer();
 }
@@ -2388,13 +2487,14 @@ function updateTimerUI() {
 }
 
 function renderStudentExam() {
-    $('list-student').innerHTML = renderBlocks(cur, exam.scale === 'english', generateStudentQuestionHTML);
+    $('list-student').innerHTML = renderBlocks(cur, isEnS(exam.scale), generateStudentQuestionHTML);
     
     let html = '';
-    let qCount = 0;
+    let qCount = 0, lastPart = 0;
     cur.forEach((q, i) => {
         if (q.k === 'q') {
             qCount++;
+            if (exam.scale === 'hsg' && q.part && q.part !== lastPart) { lastPart = q.part; html += '<div class="q-part">' + hsgPartName(q.part) + '</div>'; }
             html += `<div class="q-btn" id="qbtn-${i}" onclick="document.getElementById('q-${i}').scrollIntoView({behavior:'smooth'})">${qCount}</div>`;
         }
     });
@@ -2564,7 +2664,7 @@ function isSAOk(q) {
 
 const progKey = () => 'prog_' + (exam && exam.id);
 function saveProg(extra) {
-    try { sessionStorage.setItem(progKey(), JSON.stringify(Object.assign({ studentData, cur, endAt: isFinite(examEndAt) ? examEndAt : 0, viol: PG.viol }, extra || {}))); } catch(e) {}
+    try { sessionStorage.setItem(progKey(), JSON.stringify(Object.assign({ studentData, cur, endAt: isFinite(examEndAt) ? examEndAt : 0, viol: PG.viol, audioPos: HS.a && HS.on ? Math.floor(HS.a.currentTime || 0) : 0, audioDone: !!HS.done }, extra || {}))); } catch(e) {}
 }
 function loadProg() { try { return JSON.parse(sessionStorage.getItem(progKey()) || 'null'); } catch(e) { return null; } }
 window.addEventListener('beforeunload', e => { if(examRunning && !submitted) { e.preventDefault(); e.returnValue = ''; } });
@@ -2590,11 +2690,11 @@ function showResult(res, canReview) {
     const showScore = () => {
         box.innerHTML = head + `
             <div class="score-result">
-                <div class="score-big">${res.score}<small>/10 điểm</small></div>
+                <div class="score-big">${res.score}<small>/${res.max || 10} điểm</small></div>
                 <div class="score-list">
-                    • Trắc nghiệm (0.25đ/câu): Đúng ${res.correctMC}/${res.totalMC} câu<br>
-                    • Đúng/Sai (Điểm lũy tiến): Đã làm ${res.tfQuestions} câu<br>
-                    • Trả lời ngắn (${res.isMath?'0.5đ':'0.25đ'}/câu): Đúng ${res.correctSA}/${res.totalSA} câu
+                    ${res.hsg ? `• Phần I – Nghe: Đúng ${res.hsg.lisOk}/${res.hsg.lisTot} câu<br>` : `• Trắc nghiệm (0.25đ/câu): Đúng ${res.correctMC}/${res.totalMC} câu<br>`}
+                    ${res.hsg ? `• Phần II – Lexico-Grammar: Đúng ${res.hsg.p2Ok}/${res.hsg.p2Tot} câu<br>• Phần III – Reading: Đúng ${res.hsg.p3Ok}/${res.hsg.p3Tot} câu` : `• Đúng/Sai (Điểm lũy tiến): Đã làm ${res.tfQuestions} câu<br>`}
+                    ${res.hsg ? '' : `• Trả lời ngắn (${res.isMath?'0.5đ':'0.25đ'}/câu): Đúng ${res.correctSA}/${res.totalSA} câu`}
                 </div>
             </div>` + (canReview ? `<button class="btn" style="margin-top:16px" onclick="reviewExam()">Xem lại bài làm</button>` : '') + retry;
     };
@@ -2658,6 +2758,8 @@ async function processSubmission() {
         }
     });
 
+    let hsgRes = null;
+    if (exam.scale === 'hsg') { hsgRes = hsgCalc(cur); score = hsgRes.score; }
     score = Math.round(score * 100) / 100;
 
     const payload = {
@@ -2667,12 +2769,12 @@ async function processSubmission() {
         studentClass: studentData.class,
         timeTaken: Math.floor((Date.now() - studentData.startTime) / 1000), 
         score,
-        scoreStr: `${score}/10 điểm`,
+        scoreStr: `${score}/${hsgRes ? hsgRes.max : 10} điểm`,
         details: JSON.stringify({ 
             score, 
             mc: `${correctMC}/${totalMC}`, 
             attempt: localAttempts(attId(studentData.name, studentData.class)) || 1, tf_qs: tfQuestions, violations: PG.viol.length, viol_log: PG.viol.map(v => new Date(v.t).toLocaleTimeString('vi-VN') + ' ' + v.r).join(' | '), 
-            sa: `${correctSA}/${totalSA}` 
+            sa: `${correctSA}/${totalSA}`, ...(hsgRes ? { max: hsgRes.max, lis: hsgRes.lisOk + '/' + hsgRes.lisTot, p2: hsgRes.p2Ok + '/' + hsgRes.p2Tot, p3: hsgRes.p3Ok + '/' + hsgRes.p3Tot } : {}) 
         })
     };
 
@@ -2689,8 +2791,8 @@ async function processSubmission() {
         
         if (rotLocked) exitLandscape();
         examRunning = false;
-        pgStop(); $('list-student').style.pointerEvents = 'none';$('list-student').setAttribute('inert', '');
-        const res = { score, correctMC, totalMC, tfQuestions, correctSA, totalSA, isMath, revealAt: revealAtMs(), ak: attId(studentData.name, studentData.class) };
+        pgStop(); hsgStop(); $('list-student').style.pointerEvents = 'none';$('list-student').setAttribute('inert', '');
+        const res = { score, correctMC, totalMC, tfQuestions, correctSA, totalSA, isMath, max: hsgRes ? hsgRes.max : 10, hsg: hsgRes, revealAt: revealAtMs(), ak: attId(studentData.name, studentData.class) };
         try { sessionStorage.setItem(progKey(), JSON.stringify({ done: true, res })); } catch(e) {}
         showResult(res, true);
     } catch(err) {
@@ -2873,6 +2975,7 @@ window.addEventListener('blur', () => pgViol('Rời khỏi cửa sổ làm bài'
   if (pgFsOk() && !pgIsFs()) pgViol('Thoát chế độ toàn màn hình');
 }));
 $('pg-btn').onclick = async () => {
+  hsgKick();
   PG.mute = 1;
   await pgFsReq(); await pgCam();
   PG.mute = 0; PG.last = Date.now();
@@ -2986,6 +3089,319 @@ function shShot(reason) {
   if (ev === 'keydown' && (e.ctrlKey || e.metaKey) && !e.altKey && c === 'KeyP') { e.preventDefault(); shShot('Cố in hoặc lưu PDF bài thi'); }
 }, true));
 window.addEventListener('beforeprint', () => { if (SH.on) shShot('Cố in hoặc lưu PDF bài thi'); });
+
+// ===================== ĐỀ HSG TIẾNG ANH TỈNH THANH HÓA: PHẦN I – LISTENING =====================
+// Cấu trúc: Phần I (Listening, mặc định 15 câu đầu của đề) luôn đứng đầu, giữ nguyên thứ tự câu, chỉ đảo đáp án A-D.
+// File nghe là một file .mp3 riêng tải lên cùng Repository GitHub (không nhúng vào .json để trang chủ không bị nặng),
+// tự động phát khi học sinh bấm "Bắt đầu làm bài".
+function isEnS(s) { return s === 'english' || s === 'hsg'; }
+function hsgMax(ex) { const v = parseFloat(ex && ex.hsgMax); return isFinite(v) && v > 0 ? v : 70; }
+function hsgLisN(ex) { const v = parseInt(ex && ex.hsgLis, 10); return isFinite(v) && v > 0 ? v : 15; }
+function hsgP2N(ex) { const v = parseInt(ex && ex.hsgP2, 10); return isFinite(v) && v >= 0 ? v : 37; }
+function hsgPartName(i) { return ['', 'Phần I – Listening', 'Phần II – Lexico-Grammar', 'Phần III – Reading'][i] || ''; }
+// Số câu từng phần [Phần I, Phần II, Phần III] theo đề gốc; Phần III là toàn bộ các câu còn lại
+function hsgCounts(items, ex) {
+    const tot = items.filter(x => x.k === 'q').length;
+    const c1 = Math.min(hsgLisN(ex), tot), c2 = Math.min(hsgP2N(ex), tot - c1);
+    return [c1, c2, tot - c1 - c2];
+}
+// Điểm từng phần: phần nào giáo viên đã đặt điểm thì giữ nguyên; các phần chưa đặt chia đều số điểm còn lại theo số câu
+function hsgPts(ex, cnt) {
+    const T = hsgMax(ex), g = [+ex.hsgLisPts, +ex.hsgP2Pts, +ex.hsgP3Pts].map(v => v > 0 ? v : 0);
+    const fixed = [0, 1, 2].filter(i => g[i] > 0 && cnt[i] > 0);
+    let sum = fixed.reduce((a, i) => a + g[i], 0);
+    const k = sum > T ? T / sum : 1, pts = [0, 0, 0];
+    fixed.forEach(i => { pts[i] = g[i] * k; });
+    sum *= k;
+    const free = [0, 1, 2].filter(i => !fixed.includes(i) && cnt[i] > 0), nf = free.reduce((a, i) => a + cnt[i], 0);
+    free.forEach(i => { pts[i] = (T - sum) * cnt[i] / nf; });
+    return { pts, total: free.length ? T : sum };
+}
+function scoreMax() { return exam && exam.scale === 'hsg' ? (hsgPts(exam, hsgCounts(exam.items || [], exam)).total || hsgMax(exam)) : 10; }
+
+// Các khoảng điểm trong thống kê kết quả, quy đổi theo tổng điểm của đề (đề 10 điểm giữ nguyên)
+function bandsNow() {
+    const k = scoreMax() / 10, f = v => String(Math.round(v * k * 100) / 100);
+    return BANDS.map((b, i) => ({
+        col: b.col,
+        hit: v => b.hit(v / k),
+        lb: k === 1 ? b.lb : ['Dưới ' + f(5), 'Từ ' + f(5) + ' đến dưới ' + f(8), 'Từ ' + f(8) + ' đến dưới ' + f(10), f(10) + ' điểm'][i]
+    }));
+}
+
+// Chuẩn hóa tên file nghe: bỏ dấu, thay ký tự lạ bằng "-" (file trên GitHub nên đặt tên không dấu, không dấu cách)
+function hsgCleanName(n) {
+    n = String(n || '').trim();
+    if (!n || /^https?:\/\//i.test(n)) return n;
+    return n.replace(/\\/g, '/').split('/')
+        .map(s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').replace(/[^A-Za-z0-9._-]+/g, '-').replace(/-+\./g, '.').replace(/^[-.]+|-+$/g, ''))
+        .filter(Boolean).join('/');
+}
+function hsgSrc(n) {
+    n = String(n || '').trim();
+    if (!n) return '';
+    if (/^https?:\/\//i.test(n)) return n;
+    return n.replace(/\\/g, '/').replace(/^\.?\/+/, '').split('/').map(encodeURIComponent).join('/');
+}
+
+// Tách đề: Phần I = các mục từ đầu đề đến hết câu hỏi thứ n; phần còn lại (kể cả tiêu đề PART II...) là các phần sau
+function hsgSplit(items, n) {
+    if (!(n > 0)) return { lis: [], rest: items.slice(), n: 0 };
+    let c = 0, cut = items.length;
+    for (let i = 0; i < items.length; i++) {
+        if (items[i].k === 'q' && ++c === n) { cut = i + 1; break; }
+    }
+    return { lis: items.slice(0, cut), rest: items.slice(cut), n: c };
+}
+
+// Đảo đáp án A-D của một câu (giữ nguyên nếu có đáp án kiểu "tất cả các đáp án trên")
+function hsgShufOpts(q) {
+    if (q.qtype === 'sa' || !q.opts) return;
+    const keep = q.opts.some(o => /tất cả|(^|\s)cả\s|all of|none of/i.test(o.runs.map(r => r.t).join('')));
+    if (!keep) shuf(q.opts);
+}
+
+// Chấm điểm đề HSG: mỗi câu cùng phần có điểm bằng nhau; tổng điểm và điểm Phần I do giáo viên đặt
+function hsgCalc(items) {
+    const qs = items.filter(q => q.k === 'q'), part = q => q.part || (q.lis ? 1 : 3);
+    const cnt = [1, 2, 3].map(p => qs.filter(q => part(q) === p).length);
+    const P = hsgPts(exam, cnt), w = cnt.map((c, i) => c ? P.pts[i] / c : 0), ok = [0, 0, 0];
+    let score = 0;
+    qs.forEach(q => {
+        let fr = 0;
+        if (q.qtype === 'mc') {
+            fr = q.studentAns !== undefined && q.opts[q.studentAns] && q.opts[q.studentAns].ok ? 1 : 0;
+        } else if (q.qtype === 'sa') {
+            fr = isSAOk(q) ? 1 : 0;
+        } else if (q.qtype === 'tf') {
+            let m = 0;
+            for (let j = 0; j < 4; j++) if (q.opts[j].tfKey && q.studentAns && q.studentAns[j] === q.opts[j].tfKey) m++;
+            fr = m / 4;
+        }
+        const i = part(q) - 1;
+        score += fr * w[i];
+        if (fr === 1) ok[i]++;
+    });
+    return {
+        score: Math.round(score * 100) / 100, max: Math.round(P.total * 100) / 100,
+        lisOk: ok[0], lisTot: cnt[0], p2Ok: ok[1], p2Tot: cnt[1], p3Ok: ok[2], p3Tot: cnt[2],
+        restOk: ok[1] + ok[2], restTot: cnt[1] + cnt[2]
+    };
+}
+
+// ----- Giáo viên: xem trước, cài đặt, nghe thử -----
+function hsgPreviewHtml() {
+    const ex = { hsgLis: $('hsg-lis').value, hsgP2: $('hsg-p2').value, hsgMax: $('hsg-max').value, hsgLisPts: $('hsg-lispts').value, hsgP2Pts: $('hsg-p2pts').value, hsgP3Pts: $('hsg-p3pts').value };
+    const nL = hsgLisN(ex), tot = cur.filter(x => x.k === 'q').length, cnt = hsgCounts(cur, ex), P = hsgPts(ex, cnt);
+    const sp1 = hsgSplit(cur, nL), sp2 = hsgSplit(sp1.rest, hsgP2N(ex));
+    const f = v => String(Math.round(v * 100) / 100);
+    const ban = (i, cls, txt) => '<div class="sch-state ' + cls + '"><b>' + hsgPartName(i) + ' (' + cnt[i - 1] + ' câu, ' + f(P.pts[i - 1]) + ' điểm)</b>' + txt + '</div>';
+    const STD = [15, 37, 18], dif = cnt.some((c, i) => c !== STD[i]);
+    let h = '<div class="note" style="margin-bottom:12px;text-align:center">Tổng ' + tot + ' câu · ' + f(P.total) + ' điểm' +
+        (dif ? '<br><span class="warn-t">Khác hướng dẫn (Phần I 15 câu, Phần II 37 câu, Phần III 18 câu = 70 câu). Nếu đề của Thầy đúng cấu trúc hướng dẫn, hãy kiểm tra lại file Word (thiếu/thừa câu hoặc đánh số chưa liên tục).</span>' : '') + '</div>' +
+        ban(1, 'open', ': luôn đứng đầu, giữ nguyên thứ tự câu, chỉ đảo đáp án A–D. File nghe tự động phát khi học sinh bấm "Bắt đầu làm bài".' +
+            (tot < nL ? '<br><span class="warn-t">Đề chỉ có ' + tot + ' câu, ít hơn số câu Phần I đã đặt (' + nL + ').</span>' : '')) +
+        renderBlocks(sp1.lis, true, teacherQHtml, 0);
+    if (cnt[1]) h += ban(2, 'wait', ': thứ tự câu trong mỗi bài được giữ nguyên, đảo đáp án A–D' + (exam && exam.shufGrp ? ', có thể đảo thứ tự các nhóm trong phần này.' : '.')) +
+        renderBlocks(sp2.lis, true, teacherQHtml, cnt[0]);
+    if (cnt[2]) h += ban(3, 'wait', ': thứ tự câu trong mỗi bài được giữ nguyên, đảo đáp án A–D' + (exam && exam.shufGrp ? ', có thể đảo thứ tự các nhóm trong phần này.' : '.')) +
+        renderBlocks(sp2.rest, true, teacherQHtml, cnt[0] + cnt[1]);
+    return h;
+}
+
+function hsgToggleBox() {
+    $('hsg-box').classList.toggle('hide', $('exam-scale').value !== 'hsg');
+    hsgAudioNote();
+}
+
+function hsgAudioNote() {
+    const n = $('hsg-audio-name').value.trim(), el = $('hsg-audio-note');
+    if (!n) el.textContent = 'Chưa có file nghe: đề sẽ không có tiếng. Bấm "Chọn file từ máy" để chọn file .mp3 của Phần I.';
+    else if (/^https?:\/\//i.test(n)) el.textContent = 'Học sinh sẽ tải file nghe trực tiếp từ liên kết này (liên kết phải mở công khai và phát trực tiếp được).';
+    else el.textContent = 'Hãy tải file "' + n + '" lên cùng Repository GitHub với index.html (đúng tên, phân biệt chữ hoa/chữ thường), rồi bấm "Nghe thử file trên GitHub" để kiểm tra. Nên dùng file dưới 25 MB để tải lên bằng trình duyệt.';
+}
+
+function hsgTestReset() {
+    const t = $('hsg-test');
+    try { t.pause(); } catch (e) {}
+    if (t.dataset.url) { try { URL.revokeObjectURL(t.dataset.url); } catch (e) {} t.dataset.url = ''; }
+    t.removeAttribute('src');
+    try { t.load(); } catch (e) {}
+    t.classList.add('hide');
+}
+
+function hsgSaveNote() {
+    const cnt = hsgCounts(exam.items, exam), tot = cnt[0] + cnt[1] + cnt[2];
+    let t = '\n\nĐề HSG: ' + (exam.hsgAudio ? 'nhớ tải file nghe "' + exam.hsgAudio + '" lên cùng Repository GitHub.' : 'chưa có file nghe nên đề sẽ không có tiếng.');
+    t += '\nCấu trúc: Phần I ' + cnt[0] + ' câu, Phần II ' + cnt[1] + ' câu, Phần III ' + cnt[2] + ' câu (tổng ' + tot + ' câu).';
+    if (tot < exam.hsgLis) t += '\nLưu ý: đề chỉ có ' + tot + ' câu, ít hơn số câu Phần I (' + exam.hsgLis + ').';
+    else if ((cnt[1] === 0 && exam.hsgP2 > 0) || cnt[2] === 0) t += '\nLưu ý: có phần chưa có câu hỏi nào, hãy kiểm tra lại số câu từng phần.';
+    return t;
+}
+
+$('hsg-audio-name').addEventListener('input', hsgAudioNote);
+['hsg-lis', 'hsg-p2', 'hsg-max', 'hsg-lispts', 'hsg-p2pts', 'hsg-p3pts'].forEach(id => $(id).addEventListener('input', () => { if (exam && $('exam-scale').value === 'hsg') renderTeacherPreview(); }));
+$('hsg-file').onchange = e => {
+    const f = e.target.files[0]; e.target.value = '';
+    if (!f) return;
+    const clean = hsgCleanName(f.name), t = $('hsg-test');
+    hsgTestReset();
+    $('hsg-audio-name').value = clean;
+    const u = URL.createObjectURL(f);
+    t.dataset.url = u; t.src = u; t.classList.remove('hide');
+    if (clean !== f.name) showToast('Tên file đã chuẩn hóa thành "' + clean + '". Hãy đổi tên file trên máy thành đúng tên này rồi tải lên GitHub.', 9000);
+    hsgAudioNote();
+};
+$('btn-hsg-test').onclick = () => {
+    const src = hsgSrc(hsgCleanName($('hsg-audio-name').value)), t = $('hsg-test');
+    if (!src) return showToast('Chưa nhập tên file nghe.');
+    hsgTestReset();
+    t.src = src; t.classList.remove('hide');
+    const p = t.play(); if (p && p.catch) p.catch(() => {});
+};
+$('hsg-test').onerror = () => {
+    const t = $('hsg-test');
+    if (!t.getAttribute('src')) return;
+    showToast(t.dataset.url ? 'Không phát được file đã chọn. Hãy dùng file .mp3, .m4a, .wav hoặc .ogg.' : 'Không tải được file nghe trên GitHub. Hãy kiểm tra đã tải file lên chưa và tên file có đúng chữ hoa/chữ thường không.', 8000);
+};
+
+// ----- Học sinh: file nghe tự phát -----
+function hsgGate(on, msg) {
+    $('hsg-gate').classList.toggle('hide', !on);
+    if (on && msg) $('hsg-gate-msg').textContent = msg;
+}
+
+// Phát (hoặc phát lại) file nghe; nếu trình duyệt chặn tự phát thì hiện nút để học sinh bấm
+function hsgKick() {
+    const a = HS.a;
+    if (!a || !HS.on || HS.done || submitted) return Promise.resolve();
+    a.muted = false;
+    let p;
+    try { p = a.play(); } catch (e) { p = Promise.reject(e); }
+    return Promise.resolve(p).then(() => hsgGate(false)).catch(() => {
+        if (HS.on && !HS.done && !submitted) hsgGate(true, 'Trình duyệt chưa cho phát âm thanh tự động. Bấm nút bên dưới để phát bài nghe (đồng hồ làm bài vẫn đang chạy).');
+    });
+}
+
+// Gọi ngay trong lúc học sinh bấm "Bắt đầu làm bài" để trình duyệt (nhất là Safari/iPhone) cho phép phát tiếng sau đó
+function hsgUnlock() {
+    const a = HS.a;
+    if (!a || !exam || exam.scale !== 'hsg' || !HS.src || HS.on) return;
+    try {
+        a.muted = true;
+        Promise.resolve(a.play()).then(() => {
+            if (!HS.go) { a.pause(); try { a.currentTime = 0; } catch (e) {} }
+            a.muted = false;
+        }).catch(() => { a.muted = false; });
+    } catch (e) { a.muted = false; }
+}
+
+function hsgInit() {
+    const a = HS.a;
+    hsgStop();
+    HS.bad = 0; HS.ready = 0; HS.done = 0; HS.go = 0; HS.src = '';
+    const on = exam.scale === 'hsg', src = on ? hsgSrc(exam.hsgAudio) : '';
+    $('s-hsg-note').classList.toggle('hide', !src);
+    if (!src || !a) return;
+    HS.free = !!exam.hsgFree;
+    $('s-hsg-msg').innerHTML = HS.free
+        ? '<b>Bài thi có phần nghe (Phần I – Listening).</b> File nghe sẽ <b>tự động phát</b> khi em bấm "Bắt đầu làm bài". Em có thể tạm dừng hoặc nghe lại bằng thanh điều khiển ở cuối màn hình. Em chuẩn bị tai nghe và kiểm tra âm lượng trước khi vào thi.'
+        : '<b>Bài thi có phần nghe (Phần I – Listening).</b> File nghe sẽ <b>tự động phát</b> ngay khi em bấm "Bắt đầu làm bài" và <b>chỉ phát một lần</b>, em không tạm dừng hoặc tua được. Em chuẩn bị tai nghe, bật âm lượng và bấm "Thử âm thanh" trước khi vào thi.';
+    $('s-hsg-st').textContent = '⏳ Đang tải file nghe...';
+    HS.src = src;
+    if (gateState() === 'closed') return;
+    a.preload = 'auto'; a.src = src;
+    try { a.load(); } catch (e) {}
+    setTimeout(() => { if (HS.src === src && !HS.ready && !HS.bad && !HS.on) $('s-hsg-st').textContent = 'File nghe sẽ tự phát khi em bấm "Bắt đầu làm bài".'; }, 5000);
+}
+
+function hsgBegin(sv) {
+    const a = HS.a;
+    if (!a || !exam || exam.scale !== 'hsg' || !HS.src) return;
+    HS.on = 1; HS.go = 1; HS.free = !!exam.hsgFree;
+    HS.done = !!(sv && sv.audioDone);
+    const bar = $('hsg-bar');
+    bar.classList.remove('hide');
+    bar.classList.toggle('free', HS.free);
+    bar.classList.toggle('pc', !!exam.proctor);
+    a.controls = HS.free;
+    document.body.classList.add('hsg-on');
+    $('hsg-st').textContent = HS.done ? 'Bài nghe đã kết thúc' : 'Đang chuẩn bị phát bài nghe...';
+    if (HS.done) { $('hsg-pi').style.width = '100%'; return; }
+    const pos = sv && sv.audioPos > 3 ? sv.audioPos - 2 : 0;
+    if (pos) {
+        const seek = () => { try { a.currentTime = pos; } catch (e) {} };
+        if (a.readyState >= 1) seek(); else a.addEventListener('loadedmetadata', seek, { once: true });
+    } else if (a.currentTime > 0 && a.readyState >= 1) {
+        try { a.currentTime = 0; } catch (e) {}
+    }
+    hsgKick();
+}
+
+function hsgStop() {
+    HS.on = 0; HS.go = 0;
+    const a = HS.a;
+    if (a) { try { a.pause(); } catch (e) {} a.controls = false; }
+    hsgGate(false);
+    $('hsg-bar').classList.add('hide');
+    document.body.classList.remove('hsg-on');
+}
+
+(function hsgBind() {
+    const a = $('hsg-audio'); HS.a = a;
+    const fmt = s => isFinite(s) ? p2(Math.floor(s / 60)) + ':' + p2(Math.floor(s % 60)) : '--:--';
+    a.addEventListener('loadedmetadata', () => {
+        if (!HS.src) return;
+        HS.ready = 1; HS.bad = 0;
+        if (!HS.on) $('s-hsg-st').textContent = '✔ File nghe đã sẵn sàng (' + fmt(a.duration) + ').';
+    });
+    a.addEventListener('error', () => {
+        if (!HS.src || !a.getAttribute('src')) return;
+        if (HS.on) {
+            $('hsg-st').textContent = 'Lỗi phát file nghe';
+            hsgGate(true, 'Không phát được file nghe. Bấm nút bên dưới để thử lại; nếu vẫn lỗi, em báo giáo viên.');
+            return;
+        }
+        HS.bad = 1;
+        $('s-hsg-st').textContent = '✖ Không tải được file nghe. Em tải lại trang; nếu vẫn lỗi, em báo giáo viên.';
+        if (exam && !$('student-login').classList.contains('hide')) updateGate();
+    });
+    a.addEventListener('playing', () => {
+        if (!HS.on) return;
+        $('hsg-st').textContent = 'Đang phát bài nghe – Phần I';
+        hsgGate(false);
+    });
+    a.addEventListener('timeupdate', () => {
+        if (!HS.on) return;
+        const d = a.duration, t = a.currentTime;
+        if (isFinite(d) && d > 0) $('hsg-pi').style.width = Math.min(100, t / d * 100) + '%';
+        $('hsg-tm').textContent = fmt(t) + ' / ' + fmt(d);
+        const n = Date.now();
+        if (n - HS.saveT > 5000) { HS.saveT = n; saveProg(); }
+    });
+    a.addEventListener('pause', () => { if (HS.on && !HS.free && !HS.done && !a.ended && !submitted) hsgKick(); });
+    a.addEventListener('ended', () => {
+        if (!HS.on) return;
+        HS.done = 1;
+        $('hsg-st').textContent = 'Bài nghe đã kết thúc';
+        $('hsg-pi').style.width = '100%';
+        hsgGate(false);
+        saveProg();
+        if (!HS.free) setTimeout(() => {
+            if (HS.on && HS.done) { $('hsg-bar').classList.add('hide'); document.body.classList.remove('hsg-on'); }
+        }, 10000);
+    });
+    $('hsg-gate-btn').onclick = () => hsgKick();
+    $('btn-hsg-beep').onclick = () => {
+        try {
+            const C = window.AudioContext || window.webkitAudioContext, c = new C(), o = c.createOscillator(), g = c.createGain();
+            o.frequency.value = 660; g.gain.value = 0.15;
+            o.connect(g); g.connect(c.destination); o.start();
+            setTimeout(() => { try { o.stop(); c.close(); } catch (e) {} }, 600);
+        } catch (e) { showToast('Trình duyệt này không thử được âm thanh.'); }
+    };
+})();
+
 
 // Tiêu đề khung đăng nhập: luôn 1 dòng, cỡ chữ tự chỉnh cho vừa khít hai mép khung
 (function(){
