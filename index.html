@@ -204,6 +204,8 @@ body.pg-lock img{-webkit-user-drag:none}
 .part-t{position:sticky;top:var(--hs,var(--hh));z-index:6;box-sizing:border-box;min-height:44px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:2px 12px;padding:6px 16px;margin-bottom:14px;background:var(--pri);color:#fff;border-radius:8px;box-shadow:0 3px 10px rgba(11,107,138,.35);font-size:15px}
 .part-t b{text-transform:uppercase;letter-spacing:.02em}
 .part-t span{font-size:13px;opacity:.92}
+.grp:not(.two) .gd,.grp:not(.two) .gr,.part-d{max-width:960px;margin-left:auto;margin-right:auto}
+.part-d{margin-bottom:16px;font-size:16.5px;font-weight:700;color:var(--pri);line-height:1.6;white-space:pre-line}
 .has-parts{--ph:44px}
 .has-parts .gl{top:calc(var(--hs,var(--hh)) + var(--ph) + 12px);max-height:calc(100vh - var(--hs,var(--hh)) - var(--ph) - 28px)}
 .has-parts .q,.has-parts .grp{scroll-margin-top:calc(var(--hs,var(--hh)) + var(--ph) + 12px)}
@@ -1925,9 +1927,24 @@ function parse(T,F){
       return P;
     };
     
-    let P = scan(true,false), isTF = !!P && P.every(q=>q.key);
+    // Các ý a), b), c), d) viết thường: dạng Đúng/Sai. Mặc định ý nào được gạch chân là Đúng, ý để nguyên là Sai
+    // (nếu có ghi rõ "Đúng/Sai/Đ/S" ngay sau chữ a), b)... thì ưu tiên theo chữ ghi rõ đó).
+    const scanLow = () => {
+      const R=[]; let p=0;
+      for(const L of ['a','b','c','d']){
+        const x = new RegExp('(^|\\s)'+L+'\\s*\\)\\s*').exec(seg.slice(p));
+        if(!x) return null;
+        R.push({ s1: p+x.index+x[1].length, s2: p+x.index+x[0].length, key: null });
+        p += x.index+x[0].length;
+      }
+      return R;
+    };
+    let P = scan(true,false), isTF = !!P && P.every(q=>q.key), tfUl = false;
     if(!isTF) P = scan(false,false);
-    if(!P){ P = scan(true,true); isTF = !!P && P.every(q=>q.key); if(!isTF) P = scan(false,true); }
+    if(!P){
+      P = scan(true,true); isTF = !!P && P.every(q=>q.key);
+      if(!isTF){ const lw = scanLow(); if(lw){ P = lw; isTF = true; tfUl = true; } else P = scan(false,true); }
+    }
     if(!P) P = scan(false,false,true);   // dự phòng: các đáp án A, B, C, D dính liền nhau không có dấu cách
     if(!P){ parseSkipped++; return; }
     let endD = s;
@@ -1940,6 +1957,8 @@ function parse(T,F){
       return{runs:mk(T,F,a,end),r:ratio(T,F,s+q.s1,end), tfKey: q.key};
     });
     
+    // Đúng/Sai theo gạch chân: bỏ gạch chân khỏi nội dung hiển thị để học sinh không nhìn thấy đáp án
+    if(tfUl) o.forEach(x=>{ x.tfKey = x.r>0 ? 'D' : 'S'; x.runs = x.runs.map(r=>({t:r.t,f:r.f&~1})); });
     const rt=o.map(x=>x.r),mx=Math.max(...rt);
     let ok=-1;
     if(!isTF) {
@@ -1950,6 +1969,7 @@ function parse(T,F){
 
     out.push({
       k:'q', no:+m[1], qtype: isTF ? 'tf' : 'mc',
+      ...(tfUl ? { tfu: 1 } : {}),
       stem:mk(T,F,s,s+P[0].s1),
       opts:o.map((x,i)=>({ 
           runs: (!isTF && ok===i) ? x.runs.map(r=>({t:r.t,f:r.f&~1})) : x.runs, 
@@ -1986,6 +2006,10 @@ $('file').onchange = async e => {
     
     const miss=qs.filter(q=> q.qtype==='mc' && !q.opts.some(o=>o.ok)).length;
     let msg = miss ? `Đã đọc ${qs.length} câu. Có ${miss} câu chưa gạch chân đáp án.` : `Đã tải thành công ${qs.length} câu.`;
+    const tfAll = qs.filter(q=>q.qtype==='tf' && q.tfu);
+    if(tfAll.length) msg += `\nĐúng/Sai: ${tfAll.length} câu, ý nào gạch chân là Đúng, ý để nguyên là Sai.`;
+    const tfNone = tfAll.filter(q=>q.opts.every(o=>o.tfKey==='S')).length;
+    if(tfNone) msg += `\nLưu ý: ${tfNone} câu Đúng/Sai chưa gạch chân ý nào (cả 4 ý sẽ tính là Sai), kiểm tra lại file Word.`;
     if(parseSkipped) msg += `\nCó ${parseSkipped} câu không tìm đủ 4 phương án A–D nên đã bị bỏ qua (kiểm tra lại file Word).`;
     const saEq = qs.filter(q=>q.qtype==='sa' && q.ansRuns.some(r=>r.t.includes('⟪'))).length;
     if(saEq) msg += `\nℹ ${saEq} câu trả lời ngắn có đáp án gõ bằng Equation: hệ thống tự quy đổi sang số, nên kiểm tra lại trong phần xem trước.`;
@@ -2066,16 +2090,19 @@ var QL = 'Câu';
 function renderBlocks(list, isEn, qHtml, start0) {
     let n = 0;
     QL = isEn ? 'Question' : 'Câu'; n = start0 || 0;
+    const titles = {};
     const out = splitBlocks(list, isEn).map(b => {
         const n0 = n;
         let map = null;
         if (isEn) { map = {}; let k = n; b.items.forEach(({ it }) => { if (it.k === 'q') { k++; map[it.on ?? it.no ?? k] = k; } }); }
         let D = '', L = '', R = '', lead = true;
         b.items.forEach(({ it, i }) => {
+            if (it.ptitle) { titles[it.part] = it; return; }                 // tiêu đề phần: hiện ở khung phần, không nằm trong nhóm câu
             if (it.k === 'q') { lead = false; n++; R += qHtml(it, i, n); return; }
             const h = `<div class="st" style="${it.k==='h'?'font-weight:bold;color:var(--pri)':''}">${rich(map ? renum(it.runs, map, it.k === 'h') : it.runs)}</div>`;
             if (lead && it.k === 'h') D += h; else { lead = false; L += h; }
         });
+        if (!D && !L && !R) return { part: b.part, n0, n1: n, html: '' };
         return { part: b.part, n0, n1: n, html: `<section class="grp${L && R ? ' two' : ''}${isEn ? ' en' : ''}">${D ? `<div class="gd">${D}</div>` : ''}${L ? `<aside class="gl">${L}</aside>` : ''}${R ? `<div class="gr">${R}</div>` : ''}</section>` };
     });
     if (!out.some(o => o.part >= 1)) return out.map(o => o.html).join('');
@@ -2087,11 +2114,46 @@ function renderBlocks(list, isEn, qHtml, start0) {
         const seg = out.slice(i, j).map(o => o.html).join('');
         if (p >= 1) {
             const a = out[i].n0 + 1, z = out[j - 1].n1;
-            h += '<div class="part" id="part-' + p + '"><div class="part-t"><b>' + hsgPartName(p) + '</b><span>' + (z >= a ? 'Câu ' + (z > a ? a + '–' + z : a) + ' · ' + (z - a + 1) + ' câu' : '') + '</span></div>' + seg + '</div>';
+            const T = titles[p], nm = T ? partLabel(T) : hsgPartName(p);
+            h += '<div class="part" id="part-' + p + '"><div class="part-t"><b>' + nm + '</b><span>' + (z >= a ? 'Câu ' + (z > a ? a + '–' + z : a) + ' · ' + (z - a + 1) + ' câu' : '') + '</span></div>' + (T ? '<div class="part-d">' + rich(T.runs) + '</div>' : '') + seg + '</div>';
         } else h += seg;
         i = j;
     }
     return h;
+}
+
+// ===== Tiêu đề phần cho mọi dạng đề: "PHẦN I.", "PHẦN II. Thí sinh trả lời từ câu 19 đến câu 22...", "PART A", ... =====
+// Mỗi phần được giữ đúng thứ tự I → II → III; việc đảo nhóm/đảo câu chỉ diễn ra bên trong từng phần,
+// tiêu đề phần luôn đứng đầu phần và được ghim cố định khi cuộn (xem renderBlocks).
+const PTITLE_RE = /^(?:(?:PHẦN|Phần)\s+(?:[IVX]{1,4}|[A-Z]|\d{1,2})|(?:PART|Part|SECTION|Section)\s+(?:[IVX]{1,4}|[A-Z]))(?![\p{L}\d])/u;
+function isPartTitleAny(it) {
+    if (!it || (it.k !== 'h' && it.k !== 'p')) return false;
+    const t = it.runs.map(r => r.t).join('').replace(/\s+/g, ' ').trim();
+    if (!t || t.length > 400 || !PTITLE_RE.test(t)) return false;
+    // dòng không in đậm (đoạn thường): chỉ coi là tiêu đề phần khi viết HOA từ khóa và có dấu ngăn ngay sau số/chữ của phần
+    return it.k === 'h' || (/^(?:PHẦN|PART|SECTION)\s+(?:[IVX]{1,4}|[A-Z]|\d{1,2})\s*[.:)–-]/u.test(t));
+}
+// Nhãn ngắn của phần, ví dụ "PHẦN II" (lấy từ đầu tiêu đề)
+function partLabel(it) {
+    const t = it.runs.map(r => r.t).join('').replace(/\s+/g, ' ').trim(), m = PTITLE_RE.exec(t);
+    return (m ? m[0] : t.slice(0, 20)).toUpperCase();
+}
+// Chia đề thành các phần theo tiêu đề; mapSeg xử lý (đảo...) các mục trong từng phần. Không có tiêu đề nào thì xử lý cả đề như một đoạn.
+function partsLayout(items, mapSeg) {
+    const ts = [];
+    items.forEach((x, i) => { if (isPartTitleAny(x)) ts.push(i); });
+    if (!ts.length) return mapSeg(items);
+    const segs = [];
+    if (ts[0] > 0) segs.push({ title: null, items: items.slice(0, ts[0]) });
+    ts.forEach((t, k) => segs.push({ title: items[t], items: items.slice(t + 1, k + 1 < ts.length ? ts[k + 1] : items.length) }));
+    let out = [], k = 0;
+    segs.forEach(sg => {
+        const body = mapSeg(sg.items);
+        if (sg.title) { k++; sg.title.ptitle = 1; sg.title.part = k; body.forEach(it => { it.part = k; }); out.push(sg.title); }
+        else body.forEach(it => { it.part = 0; });
+        out = out.concat(body);
+    });
+    return out;
 }
 
 function fmtLines(runs) {
@@ -2122,7 +2184,7 @@ function teacherQHtml(it, i, n) {
 function renderTeacherPreview() {
     const sc = $('exam-scale').value, en = isEnS(sc), hs = sc === 'hsg';$('q-note').textContent = en ? (hs ? '(Đề HSG: Phần I luôn đứng đầu, các câu giữ nguyên thứ tự)' : '(Tiếng Anh: câu hỏi trong mỗi nhóm in đậm luôn giữ nguyên thứ tự)') : '';
     $('chk-shuf-q').disabled = en;
-    $('list-teacher').innerHTML = '<div class="note" style="margin-bottom:20px;text-align:center">Đây là chế độ xem trước cấu trúc đề (Không tương tác được). Học sinh sẽ thấy giao diện đảo đề ngẫu nhiên.</div>' + (hs ? hsgPreviewHtml() : renderBlocks(cur, en, teacherQHtml));
+    $('list-teacher').innerHTML = '<div class="note" style="margin-bottom:20px;text-align:center">Đây là chế độ xem trước cấu trúc đề (Không tương tác được). Học sinh sẽ thấy giao diện đảo đề ngẫu nhiên.</div>' + (hs ? hsgPreviewHtml() : renderBlocks(partsLayout(JSON.parse(JSON.stringify(cur)), x => x), en, teacherQHtml));
     triggerMathJax();
 }
 $('exam-scale').onchange = () => { hsgToggleBox(); renderTeacherPreview(); };
@@ -2170,7 +2232,7 @@ function shuffleExamItems(items, examConf) {
         if (examConf.shufOpt !== false) sp1.lis.forEach(it => { if (it.k === 'q') hsgShufOpts(it); });
         return pp.pre.concat(sp1.lis, shufSeg(sp1.rest));
     }
-    return shufSeg(clone);
+    return partsLayout(clone, shufSeg);
 }
 
 async function fetchExamJsonFile(filename) {
@@ -2565,7 +2627,9 @@ window.addEventListener('resize', syncHdr); window.addEventListener('orientation
 window.hsgGoPart = p => { const e = document.getElementById('part-' + p); if (e) e.scrollIntoView({ behavior: 'smooth' }); };
 
 function renderStudentExam() {
-    $('list-student').classList.toggle('has-parts', exam.scale === 'hsg');
+    $('list-student').classList.toggle('has-parts', cur.some(x => x.part >= 1));
+    const PT = {}; cur.forEach(x => { if (x.ptitle) PT[x.part] = x; });
+    const pName = p => PT[p] ? partLabel(PT[p]) : hsgPartName(p);
     $('list-student').innerHTML = renderBlocks(cur, isEnS(exam.scale), generateStudentQuestionHTML);
     
     let html = '';
@@ -2573,7 +2637,7 @@ function renderStudentExam() {
     cur.forEach((q, i) => {
         if (q.k === 'q') {
             qCount++;
-            if (exam.scale === 'hsg' && q.part && q.part !== lastPart) { lastPart = q.part; html += '<div class="q-part" onclick="hsgGoPart(' + q.part + ')" title="Chuyển tới phần này">' + hsgPartName(q.part) + '</div>'; }
+            if (q.part && q.part !== lastPart) { lastPart = q.part; html += '<div class="q-part" onclick="hsgGoPart(' + q.part + ')" title="Chuyển tới phần này">' + pName(q.part) + '</div>'; }
             html += `<div class="q-btn" id="qbtn-${i}" onclick="document.getElementById('q-${i}').scrollIntoView({behavior:'smooth'})">${qCount}</div>`;
         }
     });
