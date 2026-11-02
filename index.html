@@ -197,8 +197,16 @@ body.pg-lock input,body.pg-lock textarea{-webkit-user-select:text;user-select:te
 body.pg-lock img{-webkit-user-drag:none}
 .hsg-bar{position:fixed;left:0;right:0;bottom:0;z-index:55;display:flex;align-items:center;gap:12px;padding:10px max(16px,env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));background:var(--tx);color:#fff;box-shadow:0 -4px 16px rgba(0,0,0,.25)}
 .hsg-bar.pc{padding-right:156px}
-.q-part{grid-column:1/-1;margin-top:8px;font-size:12px;font-weight:700;color:var(--mut)}
+.q-part{grid-column:1/-1;position:sticky;top:0;z-index:2;margin-top:6px;padding:5px 2px;background:var(--card);border-bottom:1px solid var(--bd);font-size:12px;font-weight:700;color:var(--pri);cursor:pointer}
 .q-part:first-child{margin-top:0}
+/* Đề HSG: tiêu đề từng phần đặt ở đầu phần và ghim cố định dưới thanh tiêu đề khi cuộn */
+.part{margin-bottom:26px;scroll-margin-top:var(--hs,var(--hh))}
+.part-t{position:sticky;top:var(--hs,var(--hh));z-index:6;box-sizing:border-box;min-height:44px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:2px 12px;padding:6px 16px;margin-bottom:14px;background:var(--pri);color:#fff;border-radius:8px;box-shadow:0 3px 10px rgba(11,107,138,.35);font-size:15px}
+.part-t b{text-transform:uppercase;letter-spacing:.02em}
+.part-t span{font-size:13px;opacity:.92}
+.has-parts{--ph:44px}
+.has-parts .gl{top:calc(var(--hs,var(--hh)) + var(--ph) + 12px);max-height:calc(100vh - var(--hs,var(--hh)) - var(--ph) - 28px)}
+.has-parts .q,.has-parts .grp{scroll-margin-top:calc(var(--hs,var(--hh)) + var(--ph) + 12px)}
 .hsg-ic{font-size:22px;line-height:1;flex:none}
 .hsg-mid{flex:1;min-width:0}
 .hsg-mid b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -2025,8 +2033,10 @@ const rich=runs=>runs.map(r=>{
 function splitBlocks(list, isEn) {
     const bl = []; let c = null;
     list.forEach((it, i) => {
-        const start = !c || (c.hasQ && (isEn ? it.k === 'h' : it.k !== 'q'));
-        if (start) { c = { items: [], hasQ: false }; bl.push(c); }
+        const cross = c && c.part !== undefined && it.part !== undefined && it.part !== c.part;   // sang phần khác (đề HSG)
+        const start = !c || cross || (c.hasQ && (isEn ? it.k === 'h' : it.k !== 'q'));
+        if (start) { c = { items: [], hasQ: false, part: undefined }; bl.push(c); }
+        if (c.part === undefined && it.part !== undefined) c.part = it.part;
         c.items.push({ it, i });
         if (it.k === 'q') c.hasQ = true;
     });
@@ -2061,7 +2071,8 @@ var QL = 'Câu';
 function renderBlocks(list, isEn, qHtml, start0) {
     let n = 0;
     QL = isEn ? 'Question' : 'Câu'; n = start0 || 0;
-    return splitBlocks(list, isEn).map(b => {
+    const out = splitBlocks(list, isEn).map(b => {
+        const n0 = n;
         let map = null;
         if (isEn) { map = {}; let k = n; b.items.forEach(({ it }) => { if (it.k === 'q') { k++; map[it.on ?? it.no ?? k] = k; } }); }
         let D = '', L = '', R = '', lead = true;
@@ -2070,8 +2081,22 @@ function renderBlocks(list, isEn, qHtml, start0) {
             const h = `<div class="st" style="${it.k==='h'?'font-weight:bold;color:var(--pri)':''}">${rich(map ? renum(it.runs, map, it.k === 'h') : it.runs)}</div>`;
             if (lead && it.k === 'h') D += h; else { lead = false; L += h; }
         });
-        return `<section class="grp${L && R ? ' two' : ''}${isEn ? ' en' : ''}">${D ? `<div class="gd">${D}</div>` : ''}${L ? `<aside class="gl">${L}</aside>` : ''}${R ? `<div class="gr">${R}</div>` : ''}</section>`;
-    }).join('');
+        return { part: b.part, n0, n1: n, html: `<section class="grp${L && R ? ' two' : ''}${isEn ? ' en' : ''}">${D ? `<div class="gd">${D}</div>` : ''}${L ? `<aside class="gl">${L}</aside>` : ''}${R ? `<div class="gr">${R}</div>` : ''}</section>` };
+    });
+    if (!out.some(o => o.part >= 1)) return out.map(o => o.html).join('');
+    // Đề HSG: mỗi phần nằm trong một khung riêng, tiêu đề phần đứng đầu khung và được ghim cố định khi cuộn
+    let h = '', i = 0;
+    while (i < out.length) {
+        const p = out[i].part; let j = i;
+        while (j < out.length && out[j].part === p) j++;
+        const seg = out.slice(i, j).map(o => o.html).join('');
+        if (p >= 1) {
+            const a = out[i].n0 + 1, z = out[j - 1].n1;
+            h += '<div class="part" id="part-' + p + '"><div class="part-t"><b>' + hsgPartName(p) + '</b><span>' + (z >= a ? 'Câu ' + (z > a ? a + '–' + z : a) + ' · ' + (z - a + 1) + ' câu' : '') + '</span></div>' + seg + '</div>';
+        } else h += seg;
+        i = j;
+    }
+    return h;
 }
 
 function fmtLines(runs) {
@@ -2143,12 +2168,12 @@ function shuffleExamItems(items, examConf) {
 
     if (examConf.scale === 'hsg') {
         // Thứ tự cố định: Phần I (Listening) -> Phần II (Lexico-Grammar) -> Phần III (Reading)
-        const sp1 = hsgSplit(clone, hsgLisN(examConf)), sp2 = hsgSplit(sp1.rest, hsgP2N(examConf));
-        const tag = (list, p) => list.forEach(it => { if (it.k === 'q') { it.part = p; if (p === 1) it.lis = 1; } });
-        tag(sp1.lis, 1); tag(sp2.lis, 2); tag(sp2.rest, 3);
+        const pp = hsgPrep(clone), sp1 = hsgSplit(pp.body, hsgLisN(examConf)), sp2 = hsgSplit(sp1.rest, hsgP2N(examConf));
+        const tag = (list, p) => list.forEach(it => { it.part = p; if (it.k === 'q' && p === 1) it.lis = 1; });
+        tag(pp.pre, 0); tag(sp1.lis, 1); tag(sp2.lis, 2); tag(sp2.rest, 3);
         // Phần I: chỉ đảo đáp án A-D, giữ nguyên thứ tự câu và thứ tự nhóm
         if (examConf.shufOpt !== false) sp1.lis.forEach(it => { if (it.k === 'q') hsgShufOpts(it); });
-        return sp1.lis.concat(shufSeg(sp2.lis), shufSeg(sp2.rest));
+        return pp.pre.concat(sp1.lis, shufSeg(sp2.lis), shufSeg(sp2.rest));
     }
     return shufSeg(clone);
 }
@@ -2532,7 +2557,15 @@ function updateTimerUI() {
     if(timeLeft <= 60) $('timer-display').classList.add('danger');
 }
 
+// Đo chiều cao thanh tiêu đề bài thi để tiêu đề phần được ghim ngay dưới thanh (kể cả khi thanh tự xuống dòng trên điện thoại)
+function syncHdr() {
+    try { const h = document.querySelector('.student-hdr'); if (h && h.offsetHeight > 20) document.documentElement.style.setProperty('--hs', h.offsetHeight + 'px'); } catch (e) {}
+}
+window.addEventListener('resize', syncHdr); window.addEventListener('orientationchange', syncHdr);
+window.hsgGoPart = p => { const e = document.getElementById('part-' + p); if (e) e.scrollIntoView({ behavior: 'smooth' }); };
+
 function renderStudentExam() {
+    $('list-student').classList.toggle('has-parts', exam.scale === 'hsg');
     $('list-student').innerHTML = renderBlocks(cur, isEnS(exam.scale), generateStudentQuestionHTML);
     
     let html = '';
@@ -2540,11 +2573,12 @@ function renderStudentExam() {
     cur.forEach((q, i) => {
         if (q.k === 'q') {
             qCount++;
-            if (exam.scale === 'hsg' && q.part && q.part !== lastPart) { lastPart = q.part; html += '<div class="q-part">' + hsgPartName(q.part) + '</div>'; }
+            if (exam.scale === 'hsg' && q.part && q.part !== lastPart) { lastPart = q.part; html += '<div class="q-part" onclick="hsgGoPart(' + q.part + ')" title="Chuyển tới phần này">' + hsgPartName(q.part) + '</div>'; }
             html += `<div class="q-btn" id="qbtn-${i}" onclick="document.getElementById('q-${i}').scrollIntoView({behavior:'smooth'})">${qCount}</div>`;
         }
     });
     $('q-grid').innerHTML = html;
+    syncHdr();
     triggerMathJax();
 }
 
@@ -3200,6 +3234,30 @@ function hsgSplit(items, n) {
     return { lis: items.slice(0, cut), rest: items.slice(cut), n: c };
 }
 
+// Tiêu đề phần có sẵn trong file Word (ví dụ "PART A. MULTIPLE CHOICE", "I. LISTENING:", "II. LEXICO-GRAMMAR", "III. READING").
+// Hệ thống tự đặt tiêu đề Phần I/II/III ở đầu mỗi phần, nên bỏ các dòng này để không bị trùng hoặc lạc giữa phần khi đảo nhóm.
+function hsgIsPartTitle(it) {
+    if (!it || (it.k !== 'h' && it.k !== 'p')) return false;
+    const t = it.runs.map(r => r.t).join('').replace(/\s+/g, ' ').trim();
+    if (!t || t.length > 70) return false;
+    if (it.k === 'p' && t !== t.toUpperCase()) return false;     // đoạn văn thường chỉ bị coi là tiêu đề khi viết HOA toàn bộ (vd. "II. LEXICO-GRAMMAR AND READING")
+    if (/^(?:PART|SECTION|PHẦN)\s+(?:[IVX]+|[A-Z])\b/i.test(t)) return true;                       // PART A..., PART II..., PHẦN I...
+    // "I. LISTENING", "II. LEXICO-GRAMMAR", "III. READING": số La Mã kèm tên phần (không đụng tới tiêu đề nhỏ trong bài đọc như "I. Early life")
+    return /^[IVX]{1,4}\s*[.:)]/.test(t) && /listening|lexico|grammar|reading|vocabulary|language|use of english|writing|cloze|multiple choice|nghe|đọc|từ vựng|ngữ pháp|trắc nghiệm/i.test(t);
+}
+// pre = các dòng đứng trước tiêu đề phần đầu tiên (ví dụ tên đề thi), hiện phía trên Phần I; body = phần còn lại đã bỏ tiêu đề phần
+function hsgPrep(items) {
+    const t0 = items.findIndex(hsgIsPartTitle), q0 = items.findIndex(x => x.k === 'q');
+    let pre = [];
+    if (t0 > 0 && (q0 < 0 || t0 < q0)) pre = items.slice(0, t0);
+    else if (t0 < 0 && items.length > 1 && items[0].k === 'h' && items[1].k !== 'q') {
+        // không có tiêu đề phần nào: nếu dòng đầu là tên đề thi (không phải hướng dẫn làm bài) thì giữ riêng phía trên Phần I
+        const t = items[0].runs.map(r => r.t).join('').trim();
+        if (t.length <= 100 && !/^(?:part|section|question|listen|you\s+(?:will|are)|read|mark|choose|complete|fill|the\s+following)\b/i.test(t)) pre = [items[0]];
+    }
+    return { pre, body: items.slice(pre.length).filter(x => !hsgIsPartTitle(x)) };
+}
+
 // Đảo đáp án A-D của một câu (giữ nguyên nếu có đáp án kiểu "tất cả các đáp án trên")
 function hsgShufOpts(q) {
     if (q.qtype === 'sa' || !q.opts) return;
@@ -3239,12 +3297,13 @@ function hsgCalc(items) {
 function hsgPreviewHtml() {
     const ex = { hsgLis: $('hsg-lis').value, hsgP2: $('hsg-p2').value, hsgMax: $('hsg-max').value, hsgLisPts: $('hsg-lispts').value, hsgP2Pts: $('hsg-p2pts').value, hsgP3Pts: $('hsg-p3pts').value };
     const nL = hsgLisN(ex), tot = cur.filter(x => x.k === 'q').length, cnt = hsgCounts(cur, ex), P = hsgPts(ex, cnt);
-    const sp1 = hsgSplit(cur, nL), sp2 = hsgSplit(sp1.rest, hsgP2N(ex));
+    const pp = hsgPrep(cur), sp1 = hsgSplit(pp.body, nL), sp2 = hsgSplit(sp1.rest, hsgP2N(ex));
     const f = v => String(Math.round(v * 100) / 100);
     const ban = (i, cls, txt) => '<div class="sch-state ' + cls + '"><b>' + hsgPartName(i) + ' (' + cnt[i - 1] + ' câu, ' + f(P.pts[i - 1]) + ' điểm)</b>' + txt + '</div>';
     const STD = [15, 37, 18], dif = cnt.some((c, i) => c !== STD[i]);
     let h = '<div class="note" style="margin-bottom:12px;text-align:center">Tổng ' + tot + ' câu · ' + f(P.total) + ' điểm' +
         (dif ? '<br><span class="warn-t">Khác hướng dẫn (Phần I 15 câu, Phần II 37 câu, Phần III 18 câu = 70 câu). Nếu đề của Thầy đúng cấu trúc hướng dẫn, hãy kiểm tra lại file Word (thiếu/thừa câu hoặc đánh số chưa liên tục).</span>' : '') + '</div>' +
+        renderBlocks(pp.pre, true, teacherQHtml, 0) +
         ban(1, 'open', ': luôn đứng đầu, giữ nguyên thứ tự câu, chỉ đảo đáp án A–D. File nghe tự động phát khi học sinh bấm "Bắt đầu làm bài".' +
             (tot < nL ? '<br><span class="warn-t">Đề chỉ có ' + tot + ' câu, ít hơn số câu Phần I đã đặt (' + nL + ').</span>' : '')) +
         renderBlocks(sp1.lis, true, teacherQHtml, 0);
