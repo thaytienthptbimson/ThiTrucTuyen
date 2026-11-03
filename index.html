@@ -327,6 +327,10 @@ body.shot-hide #list-student,body.shot-hide #q-panel{visibility:hidden}
 
     <details id="libbox" class="card" open>
       <summary id="lt">Danh sách đề thi</summary>
+      <div class="bar" style="margin-top:12px;align-items:center">
+        <button class="btn sec" type="button" id="btn-sync-lib" title="Đối chiếu với GitHub và nạp thêm các đề đã đẩy lên mà danh sách trên máy này chưa có">↻ Đồng bộ với GitHub</button>
+        <span class="note" id="sync-st" style="margin:0;white-space:pre-line"></span>
+      </div>
       <div id="libl" style="margin-top:12px"></div>
     </details>
 
@@ -548,6 +552,9 @@ const LK = 'exams_v2';
 // Tên file danh sách các đề trên GitHub và các file .json không phải đề thi (khai báo sớm vì trang chọn đề chạy ngay khi mở)
 const EXAM_INDEX_FILE = 'danh-sach-de.json';
 const NON_EXAM_JSON = /^(?:package(?:-lock)?|tsconfig|manifest|composer|vocabulary|danh-sach-de|exams)\.json$/i;
+// Các đề đang có trên GitHub: map tên file (chữ thường) -> id đề ('' nếu chưa đọc được nội dung); complete = danh sách file đã đầy đủ (đọc bằng token)
+const REMOTE = { map: null, complete: false, busy: 0 };
+const LIB_HIDE = 'lib_hidden_v1';
 const L4 = 'ABCD';
 const HS = { a: null, src: '', bad: 0, ready: 0, go: 0, on: 0, done: 0, free: 0, saveT: 0 };
 
@@ -657,12 +664,12 @@ async function fetchJsonQuiet(fname) {
     } catch(e) { return null; }
 }
 // Liệt kê file .json ở gốc repo GitHub Pages; lưu tạm 10 phút để không vượt giới hạn gọi API của GitHub
-async function listRepoJsonFiles() {
+async function listRepoJsonFiles(fresh) {
     const m = /^([a-z0-9-]+)\.github\.io$/i.exec(String(location.hostname || ''));
     if(!m) return [];
     const seg = String(location.pathname || '/').split('/').filter(Boolean)[0] || '';
     const owner = m[1], repo = seg && !/\.html?$/i.test(seg) ? seg : m[1] + '.github.io', ck = 'exam_files_' + owner + '/' + repo;
-    try { const c = JSON.parse(localStorage.getItem(ck) || 'null'); if(c && Date.now() - c.t < 600000 && Array.isArray(c.f)) return c.f; } catch(e) {}
+    if(!fresh) { try { const c = JSON.parse(localStorage.getItem(ck) || 'null'); if(c && Date.now() - c.t < 600000 && Array.isArray(c.f)) return c.f; } catch(e) {} }
     try {
         const res = await fetch('https://api.github.com/repos/' + encodeURIComponent(owner) + '/' + encodeURIComponent(repo) + '/contents/', { headers: { Accept: 'application/vnd.github+json' } });
         if(!res.ok) return [];
@@ -673,7 +680,8 @@ async function listRepoJsonFiles() {
     } catch(e) { return []; }
 }
 
-async function discoverAvailableExams() {
+async function discoverAvailableExams(opts) {
+    opts = opts || {};
     const found = [];
     const seen = new Set();
     const addExam = (x, fk) => {
@@ -686,7 +694,7 @@ async function discoverAvailableExams() {
     };
 
     // 1. Gom tên các file đề: danh sách do app cập nhật + liệt kê repo + tên mặc định
-    const [idx, api] = await Promise.all([fetchJsonQuiet(EXAM_INDEX_FILE), listRepoJsonFiles()]);
+    const [idx, api] = await Promise.all([fetchJsonQuiet(EXAM_INDEX_FILE), listRepoJsonFiles(opts.fresh)]);
     const names = [];
     const addName = n => {
         n = String(n || '').trim();
@@ -711,8 +719,8 @@ async function discoverAvailableExams() {
     const all = await fetchJsonQuiet('exams.json');
     if(all) (Array.isArray(all) ? all : [all]).forEach((item, i) => addExam(item, (item && item.fileKey) || ('de' + (i + 1))));
 
-    // 4. Đề giáo viên vừa tạo trên máy này
-    try {
+    // 4. Đề giáo viên vừa tạo trên máy này (bỏ qua khi chỉ cần biết đề nào đang có trên GitHub)
+    if(opts.local !== false) try {
         const local = JSON.parse(localStorage.getItem(LK) || '[]');
         if(Array.isArray(local)) local.forEach((x, i) => addExam(x, (x && x.fileKey) || ('de' + (i + 1))));
     } catch(e) {}
@@ -736,22 +744,132 @@ async function populateStudentHub() {
 }
 
 function loadLib() {
-    try { lib = JSON.parse(localStorage.getItem(LK) || '[]'); } catch(e) { lib = []; }
-    if(!Array.isArray(lib) || !lib.length) {
-        lib = [];
-        try { localStorage.setItem(LK, JSON.stringify(lib)); } catch(e) {}
-    }
+    let good = true;
+    try { lib = JSON.parse(localStorage.getItem(LK) || '[]'); } catch(e) { lib = []; good = false; }
+    if(!Array.isArray(lib)) { lib = []; good = false; }
+    if(!lib.length && good) { try { localStorage.setItem(LK, '[]'); } catch(e) {} }      // dữ liệu hỏng thì không ghi đè, để còn cứu được
     ensureFileKeys(lib);
     showLib();
+    setTimeout(() => syncLibFromGitHub(false), 0);      // tự nạp thêm các đề đã đẩy lên GitHub mà máy này chưa có
 }
-function saveLib() {
+function saveLib(quiet) {
     ensureFileKeys(lib);
     let ok = true;
     try { localStorage.setItem(LK, JSON.stringify(lib)); }
-    catch(e) { ok = false; alert('Lỗi bộ nhớ trình duyệt, vui lòng xuất file .json để sao lưu.'); }
+    catch(e) { ok = false; if(!quiet) alert('Lỗi bộ nhớ trình duyệt, vui lòng xuất file .json để sao lưu.'); }
     showLib();
     return ok;
 }
+
+// ===== Đồng bộ "Danh sách đề thi" của giáo viên với các đề đã đẩy lên GitHub =====
+// Danh sách này lưu trong bộ nhớ của từng trình duyệt, nên đề đẩy lên từ máy/trình duyệt khác (hoặc sau khi xóa dữ liệu duyệt web)
+// trước đây không hiện. Nay app đọc lại các file đề trên GitHub và nạp thêm những đề còn thiếu.
+const hiddenIds = () => { try { const a = JSON.parse(localStorage.getItem(LIB_HIDE) || '[]'); return Array.isArray(a) ? a : []; } catch(e) { return []; } };
+const hideId = id => { try { localStorage.setItem(LIB_HIDE, JSON.stringify([...new Set(hiddenIds().concat(id))].slice(-300))); } catch(e) {} };
+const natCmp = (a, b) => String(a).localeCompare(String(b), 'en', { numeric: true, sensitivity: 'base' });
+
+// Tên file đề kế tiếp còn trống (không trùng đề trong danh sách và đề đã có trên GitHub) để đề mới không ghi đè đề cũ
+function nextFileKey() {
+    const used = new Set(lib.map(x => String(x.fileKey || '').toLowerCase()));
+    if(REMOTE.map) REMOTE.map.forEach((v, k) => used.add(k));
+    let n = 1; while(used.has('de' + n)) n++;
+    return 'de' + n;
+}
+
+function remoteTag(x, fk) {
+    if(!REMOTE.map) return '';
+    const k = fk.toLowerCase();
+    if(REMOTE.map.has(k)) {
+        const id = REMOTE.map.get(k);
+        return !id || id === x.id ? '<span class="tg" style="color:var(--ok)">☁ Đã có trên GitHub</span>' : '<span class="tg warn-t">⚠ Trùng tên file với một đề khác trên GitHub</span>';
+    }
+    return REMOTE.complete ? '<span class="tg">Chưa đẩy lên GitHub</span>' : '';
+}
+
+function syncStatus(t, bad) { const n = $('sync-st'); if(!n) return; n.textContent = t; n.classList.toggle('warn-t', !!bad); }
+
+async function mapPool(arr, n, fn) {
+    const out = new Array(arr.length); let i = 0;
+    await Promise.all(Array.from({ length: Math.min(n, arr.length) }, async () => {
+        while(i < arr.length) { const k = i++; try { out[k] = await fn(arr[k]); } catch(e) { out[k] = null; } }
+    }));
+    return out;
+}
+
+// Đọc bằng token (đầy đủ, mới nhất, đọc được cả repo riêng tư): liệt kê mọi file .json trong thư mục đề rồi đọc từng file
+async function remoteExamsViaApi(c) {
+    const files = await ghListJson(c);
+    const cand = files.filter(f => !NON_EXAM_JSON.test(f.name)).sort((a, b) => natCmp(a.name, b.name)).slice(0, 150);
+    const readF = async f => JSON.parse(await ghBlobText(c, f.sha));
+    const data = await mapPool(cand, 6, readF);
+    const found = [], seen = new Set();
+    const add = (x, fk) => {
+        if(!x || !x.id || !Array.isArray(x.items)) return;
+        fk = normFileKey(fk, found.length);
+        const key = (fk + '::' + x.id).toLowerCase();
+        if(seen.has(key)) return;
+        seen.add(key); found.push(Object.assign({}, x, { fileKey: fk }));
+    };
+    cand.forEach((f, i) => { if(data[i]) (Array.isArray(data[i]) ? data[i] : [data[i]]).forEach(x => add(x, f.name.replace(/\.json$/i, ''))); });
+    const all = files.find(f => /^exams\.json$/i.test(f.name));
+    if(all) { const d = await mapPool([all], 1, readF); if(d[0]) (Array.isArray(d[0]) ? d[0] : [d[0]]).forEach((x, i) => add(x, (x && x.fileKey) || ('de' + (i + 1)))); }
+    return { found, keys: cand.map(f => f.name.replace(/\.json$/i, '')), complete: true };
+}
+
+async function fetchRemoteExams(manual) {
+    const c = ghConf(); let note = '';
+    if(c) {
+        try { return Object.assign(await remoteExamsViaApi(c), { note }); }
+        catch(e) { note = 'Không đọc được bằng token (' + e.message + '), đã chuyển sang đọc công khai.'; }
+    }
+    const found = await discoverAvailableExams({ local: false, fresh: !!manual });
+    return { found, keys: [], complete: false, note };
+}
+
+function syncLibFromGitHub(manual) {
+    if(REMOTE.busy) return REMOTE.p;
+    REMOTE.busy = 1;
+    const btn = $('btn-sync-lib'); if(btn) btn.disabled = true;
+    syncStatus('⏳ Đang đối chiếu với GitHub...');
+    REMOTE.p = (async () => {
+        try {
+            const r = await fetchRemoteExams(manual);
+            if(!r.found.length && !r.keys.length) {
+                syncStatus('Chưa đọc được đề nào trên GitHub (chưa đẩy đề, chưa có mạng, hoặc trang chưa chạy trên GitHub).' + (r.note ? '\n' + r.note : ''), !!r.note);
+                return;
+            }
+            if(manual) { try { localStorage.removeItem(LIB_HIDE); } catch(e) {} }
+            const map = new Map(); r.keys.forEach(k => map.set(String(k).toLowerCase(), ''));
+            r.found.forEach(x => { const k = x.fileKey.toLowerCase(); if(!map.get(k)) map.set(k, x.id); });
+            REMOTE.map = map; REMOTE.complete = !!r.complete;
+            const hide = new Set(hiddenIds()); let added = 0, hidden = 0; const clash = [];
+            r.found.forEach(x => {
+                if(lib.some(y => y.id === x.id)) return;
+                if(lib.some(y => String(y.fileKey || '').toLowerCase() === x.fileKey.toLowerCase())) { clash.push(x); return; }
+                if(hide.has(x.id)) { hidden++; return; }
+                const n = normExam(x, 'e' + Date.now() + Math.random().toString(36).slice(2, 6), x.fileKey);
+                if(!n) return;
+                n.fileKey = x.fileKey; lib.push(n); added++;
+            });
+            let saved = true;
+            if(added) { lib.sort((a, b) => natCmp(a.fileKey, b.fileKey)); saved = saveLib(true); } else showLib();
+            const total = new Set(r.found.map(x => x.fileKey.toLowerCase())).size;
+            let t = '✔ ' + ghHHmm() + ' — GitHub có ' + total + ' đề' + (added ? '; đã nạp thêm ' + added + ' đề vào danh sách.' : '; danh sách trên máy này đã đủ.');
+            if(hidden) t += '\n' + hidden + ' đề đã xóa khỏi danh sách trên máy này nên chưa nạp lại (bấm "Đồng bộ với GitHub" để hiện lại).';
+            if(clash.length) t += '\n⚠ Trùng tên file với đề khác trên GitHub: ' + clash.map(x => x.fileKey + '.json').join(', ') + '. Đẩy đề trùng tên sẽ ghi đè đề trên GitHub, hãy đổi "Tên file" của đề.';
+            if(!saved) t += '\n⚠ Bộ nhớ trình duyệt đầy nên các đề nạp từ GitHub chỉ hiện trong lần mở này (lần sau sẽ tự nạp lại).';
+            if(r.note) t += '\n' + r.note;
+            syncStatus(t, clash.length > 0 || !saved || !!r.note);
+            if(added) showToast('Đã nạp thêm ' + added + ' đề từ GitHub vào danh sách đề thi.', 7000);
+        } catch(e) {
+            syncStatus('✖ Chưa đồng bộ được với GitHub: ' + (e && e.message ? e.message : e), true);
+        } finally {
+            REMOTE.busy = 0; const b = $('btn-sync-lib'); if(b) b.disabled = false;
+        }
+    })();
+    return REMOTE.p;
+}
+$('btn-sync-lib').onclick = () => syncLibFromGitHub(true);
 
 function buildExamStudentLink(x, idx) {
     const fk = normFileKey(x.fileKey, idx);
@@ -778,7 +896,7 @@ function showLib() {
         <div class="lr">
             <div class="lr-info"><span class="no">${i+1}</span>
             <div>
-                <b>${esc(x.name)}</b> <span class="tg">${esc(fk)}.json</span>
+                <b>${esc(x.name)}</b> <span class="tg">${esc(fk)}.json</span>${remoteTag(x, fk)}
                 <div class="note">${x.items.filter(k=>k.k==='q').length} câu • Cài đặt: ${x.time||0} phút - Thang điểm: ${tScale} • Số lần thi: ${attemptLimit(x) || 'không giới hạn'} • Link thi: <code>?de=${esc(fk)}</code>${x.pwHash ? ' • 🔒 Có mật khẩu' : ''}${x.webhook ? '' : '<br><span class="warn-t">Chưa có liên kết Google Sheet: điểm sẽ không được lưu.</span>'}${x.scale === 'hsg' ? (x.hsgAudio ? '<br>🎧 File nghe: <code>' + esc(x.hsgAudio) + '</code> • Phần I: ' + hsgLisN(x) + ' câu • Phần II: ' + Math.max(0, x.items.filter(k => k.k === 'q').length - hsgLisN(x)) + ' câu • Tổng ' + hsgMax(x) + ' điểm' : '<br><span class="warn-t">Chưa có file nghe cho Phần I – Listening.</span>') : ''}${(x.openAt||x.closeAt) ? `<br>${x.openAt ? 'Mở: ' + fmtDT(x.openAt) : 'Mở: ngay'} — ${x.closeAt ? 'Đóng: ' + fmtDT(x.closeAt) : 'không giới hạn'}` : ''}</div>
             </div></div>
             <div class="lr-act">
@@ -794,7 +912,10 @@ function showLib() {
 }
 
 window.delExam = (id) => {
-    if(confirm('Xóa đề thi này?')) { 
+    const dx = lib.find(y => y.id === id), dk = dx ? normFileKey(dx.fileKey).toLowerCase() : '';
+    const onGh = !!(dx && REMOTE.map && REMOTE.map.has(dk));
+    if(confirm('Xóa đề thi này?' + (onGh ? '\n\nĐề này đã có trên GitHub. Xóa ở đây chỉ gỡ khỏi danh sách trên máy này; file ' + dk + '.json trên GitHub vẫn còn (học sinh vẫn thấy). Muốn gỡ hẳn, hãy xóa file đó trên GitHub.' : ''))) { 
+        hideId(id);
         if(exam && exam.id === id) exam = null; lib = lib.filter(x => x.id !== id); saveLib(); 
         $('reqbox').classList.add('hide'); $('resbox').classList.add('hide'); clearTimeout(resTimer);$('list-teacher').innerHTML=''; 
     }
@@ -2035,9 +2156,9 @@ $('file').onchange = async e => {
     if(!qs.length){alert('Không nhận diện được câu hỏi nào.'); $('loading').classList.add('hide'); return}
     await Promise.all(IM.map(prep));
     
-    const nextIdx = lib.length;
+    const nextKey = nextFileKey();
     const ex={
-        id:'e'+Date.now(), fileKey:'de'+(nextIdx+1), name:f.name.replace(/\.docx$/i,''), at:Date.now(), 
+        id:'e'+Date.now(), fileKey:nextKey, name:f.name.replace(/\.docx$/i,''), at:Date.now(), 
         items, eq, img:IM, time:0, scale:'english', webhook:'', openAt:0, closeAt:0,
         shufGrp: false, shufQ: true, shufOpt: true, maxAttempts: 1, hsgAudio: '', hsgLis: 15, hsgMax: 70, hsgLisPts: 0, hsgP2Pts: 0, hsgFree: false
     };
@@ -3716,14 +3837,24 @@ async function ghPut(c, name, text, msg, sha, tries) {
     catch (e) { if ((e.status === 409 || e.status === 422) && tries < 2) return ghPut(c, name, text, msg, undefined, tries + 1); throw e; }
 }
 // Đọc nội dung file JSON trên GitHub (qua blob nên đọc được cả file lớn); null nếu file chưa có
-async function ghReadText(c, name) {
-    const sha = await ghSha(c, name);
-    if (!sha) return null;
+async function ghBlobText(c, sha) {
     const d = await ghReq(c, 'GET', ghRepoPath(c) + '/git/blobs/' + encodeURIComponent(sha));
     const bin = atob(String((d && d.content) || '').replace(/\s/g, ''));
     const u8 = new Uint8Array(bin.length);
     for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
-    return { sha, text: new TextDecoder('utf-8').decode(u8) };
+    return new TextDecoder('utf-8').decode(u8);
+}
+async function ghReadText(c, name) {
+    const sha = await ghSha(c, name);
+    if (!sha) return null;
+    return { sha, text: await ghBlobText(c, sha) };
+}
+// Liệt kê các file .json trong thư mục đề của repo (kèm mã sha để đọc nội dung)
+async function ghListJson(c) {
+    const q = c.branch ? '?ref=' + encodeURIComponent(c.branch) : '';
+    const d = await ghReq(c, 'GET', ghRepoPath(c) + '/contents' + (c.dir ? '/' + c.dir.split('/').map(encodeURIComponent).join('/') : '') + q);
+    if (!Array.isArray(d)) throw ghErr(0, 'Không đọc được danh sách file trên GitHub.');
+    return d.filter(f => f && f.type === 'file' && f.sha && /^[A-Za-z0-9_-]+\.json$/.test(String(f.name)));
 }
 // Thay đề x trong danh sách exams.json (khớp theo id hoặc tên file); chưa có thì thêm vào cuối; các đề khác giữ nguyên
 function ghMerge(list, x) {
@@ -3764,6 +3895,7 @@ async function ghPushExam(x) {
     let pm = {}; try { pm = JSON.parse(localStorage.getItem(GH_PK) || '{}') || {}; } catch (e) {}
     if (pm[x.id] && String(pm[x.id]).toLowerCase() !== fk.toLowerCase()) res.warn.push('Đề đã đổi tên file: file cũ "' + pm[x.id] + '.json" vẫn còn trên GitHub, hãy xóa thủ công nếu không dùng nữa.');
     pm[x.id] = fk; try { localStorage.setItem(GH_PK, JSON.stringify(pm)); } catch (e) {}
+    if (REMOTE.map) REMOTE.map.set(fk.toLowerCase(), x.id);
     return res;
 }
 
@@ -3782,6 +3914,7 @@ function ghRun(x, extra) {
     if (GH.busy) return GH.last;
     GH.busy = 1; ghBtns(true); ghPushStatus('⏳ Đang đẩy lên GitHub...');
     GH.last = ghPushExam(x).then(r => {
+        try { showLib(); } catch (e) {}
         const t = '✔ ' + ghHHmm() + ' — Đã đẩy lên GitHub: ' + r.files.join(', ') + '. Trang web cập nhật sau khoảng 1–2 phút.' + (r.warn.length ? '\n⚠ ' + r.warn.join('\n⚠ ') : '');
         ghPushStatus(t, r.warn.length > 0);
         if (extra || r.warn.length) alert('Đã lưu cài đặt và đẩy lên GitHub: ' + r.files.join(', ') + '.' + (r.warn.length ? '\n\n⚠ ' + r.warn.join('\n⚠ ') : '') + (extra || ''));
