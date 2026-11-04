@@ -555,6 +555,8 @@ const NON_EXAM_JSON = /^(?:package(?:-lock)?|tsconfig|manifest|composer|vocabula
 // Các đề đang có trên GitHub: map tên file (chữ thường) -> id đề ('' nếu chưa đọc được nội dung); complete = danh sách file đã đầy đủ (đọc bằng token)
 const REMOTE = { map: null, complete: false, busy: 0 };
 const LIB_HIDE = 'lib_hidden_v1';
+// Nơi lưu danh sách đề của giáo viên: IndexedDB (dung lượng lớn) thay cho localStorage (~5 MB, đề có ảnh/công thức là tràn)
+const LIBIO = { dbP: null, q: Promise.resolve() };
 const L4 = 'ABCD';
 const HS = { a: null, src: '', bad: 0, ready: 0, go: 0, on: 0, done: 0, free: 0, saveT: 0 };
 
@@ -721,7 +723,7 @@ async function discoverAvailableExams(opts) {
 
     // 4. Đề giáo viên vừa tạo trên máy này (bỏ qua khi chỉ cần biết đề nào đang có trên GitHub)
     if(opts.local !== false) try {
-        const local = JSON.parse(localStorage.getItem(LK) || '[]');
+        const local = (await readStoredLib()).arr;
         if(Array.isArray(local)) local.forEach((x, i) => addExam(x, (x && x.fileKey) || ('de' + (i + 1))));
     } catch(e) {}
     return found;
@@ -743,22 +745,87 @@ async function populateStudentHub() {
     }).join('');
 }
 
+// --- Lưu/đọc danh sách đề: IndexedDB trước; trình duyệt không cho dùng IndexedDB thì quay về localStorage ---
+function libDb() {
+    if(LIBIO.dbP) return LIBIO.dbP;
+    LIBIO.dbP = new Promise((resolve, reject) => {
+        try {
+            if(!window.indexedDB) return reject(new Error('no-idb'));
+            const rq = indexedDB.open('exam_app_v1', 1);
+            rq.onupgradeneeded = () => { try { rq.result.createObjectStore('kv'); } catch(e) {} };
+            rq.onsuccess = () => {
+                const db = rq.result;
+                db.onversionchange = () => { try { db.close(); } catch(e) {} LIBIO.dbP = null; };
+                resolve(db);
+            };
+            rq.onerror = () => reject(rq.error || new Error('idb-open'));
+            rq.onblocked = () => reject(new Error('idb-blocked'));
+        } catch(e) { reject(e); }
+    }).catch(e => { LIBIO.dbP = null; throw e; });
+    return LIBIO.dbP;
+}
+function idbGet(key) {
+    return libDb().then(db => new Promise((resolve, reject) => {
+        const rq = db.transaction('kv', 'readonly').objectStore('kv').get(key);
+        rq.onsuccess = () => resolve(rq.result);
+        rq.onerror = () => reject(rq.error);
+    }));
+}
+function idbSet(key, val) {
+    return libDb().then(db => new Promise((resolve, reject) => {
+        const tx = db.transaction('kv', 'readwrite');
+        tx.objectStore('kv').put(val, key);
+        tx.oncomplete = () => resolve(true);
+        tx.onerror = () => reject(tx.error || new Error('idb-write'));
+        tx.onabort = () => reject(tx.error || new Error('idb-abort'));
+    }));
+}
+// Đọc danh sách đề đã lưu trên máy này. localStorage còn dữ liệu = bản cũ chưa chuyển (hoặc bản ghi dự phòng mới nhất), nên ưu tiên; không thì lấy IndexedDB.
+// Trả về { arr, good, legacy }: good=false nếu dữ liệu hỏng; legacy=true nếu đang đọc từ localStorage.
+async function readStoredLib() {
+    let txt = null, legacy = false;
+    try { const t = localStorage.getItem(LK); if(t != null) { txt = t; legacy = true; } } catch(e) {}
+    if(txt == null) { try { const v = await idbGet(LK); if(typeof v === 'string') txt = v; } catch(e) {} }
+    let arr = [], good = true;
+    try { arr = JSON.parse(txt || '[]'); } catch(e) { arr = []; good = false; }
+    if(!Array.isArray(arr)) { arr = []; good = false; }
+    return { arr, good, legacy };
+}
+// Ghi danh sách đề hiện tại (chụp nội dung ngay lúc gọi, ghi lần lượt theo thứ tự gọi). Luôn trả về Promise<boolean>, không bao giờ reject.
+function persistLib() {
+    const txt = JSON.stringify(lib);
+    const job = LIBIO.q.then(async () => {
+        try {
+            await idbSet(LK, txt);
+            try { localStorage.removeItem(LK); } catch(e) {}      // đã nằm an toàn trong IndexedDB: giải phóng chỗ trong localStorage
+            return true;
+        } catch(e) {}
+        try { localStorage.setItem(LK, txt); return true; } catch(e) { return false; }
+    });
+    LIBIO.q = job;
+    return job;
+}
+
 function loadLib() {
-    let good = true;
-    try { lib = JSON.parse(localStorage.getItem(LK) || '[]'); } catch(e) { lib = []; good = false; }
-    if(!Array.isArray(lib)) { lib = []; good = false; }
-    if(!lib.length && good) { try { localStorage.setItem(LK, '[]'); } catch(e) {} }      // dữ liệu hỏng thì không ghi đè, để còn cứu được
-    ensureFileKeys(lib);
-    showLib();
-    setTimeout(() => syncLibFromGitHub(false), 0);      // tự nạp thêm các đề đã đẩy lên GitHub mà máy này chưa có
+    (async () => {
+        try {
+            const r = await readStoredLib();
+            lib = r.arr;
+            ensureFileKeys(lib);
+            showLib();
+            if(r.good && r.legacy && lib.length) await persistLib();      // chuyển danh sách cũ trong localStorage sang IndexedDB (dữ liệu hỏng thì để nguyên, không ghi đè)
+        } catch(e) { showLib(); }
+        syncLibFromGitHub(false);      // tự nạp thêm các đề đã đẩy lên GitHub mà máy này chưa có
+    })();
 }
 function saveLib(quiet) {
     ensureFileKeys(lib);
-    let ok = true;
-    try { localStorage.setItem(LK, JSON.stringify(lib)); }
-    catch(e) { ok = false; if(!quiet) alert('Lỗi bộ nhớ trình duyệt, vui lòng xuất file .json để sao lưu.'); }
+    const p = persistLib().then(ok => {
+        if(!ok && !quiet) alert('Lỗi bộ nhớ trình duyệt, vui lòng xuất file .json để sao lưu.');
+        return ok;
+    });
     showLib();
-    return ok;
+    return p;      // Promise<boolean>: true = đã lưu xong
 }
 
 // ===== Đồng bộ "Danh sách đề thi" của giáo viên với các đề đã đẩy lên GitHub =====
@@ -852,7 +919,7 @@ function syncLibFromGitHub(manual) {
                 n.fileKey = x.fileKey; lib.push(n); added++;
             });
             let saved = true;
-            if(added) { lib.sort((a, b) => natCmp(a.fileKey, b.fileKey)); saved = saveLib(true); } else showLib();
+            if(added) { lib.sort((a, b) => natCmp(a.fileKey, b.fileKey)); saved = await saveLib(true); } else showLib();
             const total = new Set(r.found.map(x => x.fileKey.toLowerCase())).size;
             let t = '✔ ' + ghHHmm() + ' — GitHub có ' + total + ' đề' + (added ? '; đã nạp thêm ' + added + ' đề vào danh sách.' : '; danh sách trên máy này đã đủ.');
             if(hidden) t += '\n' + hidden + ' đề đã xóa khỏi danh sách trên máy này nên chưa nạp lại (bấm "Đồng bộ với GitHub" để hiện lại).';
@@ -1245,7 +1312,7 @@ $('li-one').onchange = async e => {
         n.id = lib[i].id;
         n.fileKey = lib[i].fileKey || normFileKey(f.name, i);
         lib[i] = keepPwPlain(n, lib[i]);
-        if(saveLib()) {
+        if(await saveLib()) {
             refreshOpenExam();
             alert(`Đã cập nhật dữ liệu đề thi thành công! Nhớ xuất lại file ${n.fileKey}.json và tải lên Github.`);
         }
@@ -2591,7 +2658,7 @@ async function initStudentFlow(id, deParam) {
     // 3. Tìm trong localStorage (đề giáo viên vừa tạo trên máy này)
     if (!exam) {
         let local = [];
-        try { local = JSON.parse(localStorage.getItem(LK) || '[]'); } catch(e) {}
+        try { local = (await readStoredLib()).arr; } catch(e) {}
         ensureFileKeys(local);
         exam = matchExamInList(local, rawId, rawDe);
     }
