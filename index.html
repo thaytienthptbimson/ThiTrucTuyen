@@ -7,7 +7,13 @@
 <!-- MathJax 3: hiển thị công thức và hỗ trợ đọc giọng nói -->
 <script>
 window.MathJax = {
-  tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']], processEscapes: true },
+  loader: { load: ['[tex]/mhchem', '[tex]/ams', '[tex]/cancel'] },
+  tex: {
+    packages: { '[+]': ['mhchem', 'ams', 'cancel'] },
+    inlineMath: [['\\(', '\\)']],
+    displayMath: [['\\[', '\\]']],
+    processEscapes: true
+  },
   options: { ignoreHtmlClass: 'tex2jax_ignore', processHtmlClass: 'tex2jax_process' },
   startup: { typeset: false } // Sẽ gọi thủ công sau khi render HTML
 };
@@ -222,6 +228,21 @@ body.pg-lock img{-webkit-user-drag:none}
 body.hsg-on{padding-bottom:72px}
 body.shot-hide #list-student,body.shot-hide #q-panel{visibility:hidden}
 @media print{body.sh-on>*{display:none!important}body.sh-on::before{content:"Bài thi không được phép in hoặc lưu thành PDF.";display:block;padding:40px;font-size:20px}}
+img.im.tbl-im{display:block;max-width:100%;height:auto;border-radius:6px;margin:10px 0;border:1px solid var(--bd);background:#fff;box-shadow:0 2px 6px rgba(20,35,47,.06)}
+.studio-modal{position:fixed;inset:0;background:rgba(20,35,47,.65);z-index:120;display:flex;align-items:center;justify-content:center;padding:16px}
+.studio-card{background:var(--card);border:1px solid var(--bd);border-radius:12px;width:min(100%,980px);max-height:92vh;display:flex;flex-direction:column;box-shadow:0 16px 42px rgba(20,35,47,.25);overflow:hidden}
+.studio-hdr{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-bottom:1px solid var(--bd);background:var(--bg)}
+.studio-hdr h2{margin:0;font-size:17px;color:var(--pri)}
+.studio-tabs{display:flex;gap:6px;padding:10px 20px 0;border-bottom:1px solid var(--bd);background:#f8fafc;flex-wrap:wrap}
+.studio-tab{border:1px solid transparent;border-bottom:0;background:transparent;padding:8px 14px;font:600 13.5px inherit;color:var(--mut);border-radius:8px 8px 0 0;cursor:pointer}
+.studio-tab.active{background:var(--card);color:var(--pri);border-color:var(--bd)}
+.studio-body{padding:18px 20px;overflow:auto;flex:1}
+.studio-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.studio-prev{min-height:110px;padding:14px;border:1px dashed var(--pri);border-radius:8px;background:#fbfdfe;overflow:auto}
+.eq-chip-list{display:grid;gap:8px;max-height:360px;overflow:auto;margin-top:10px}
+.eq-chip-row{display:flex;gap:8px;align-items:center;padding:8px 10px;border:1px solid var(--bd);border-radius:8px;background:#fff}
+.eq-chip-row input{margin:0;flex:1;font-family:ui-monospace,Consolas,monospace;font-size:13.5px}
+.eq-chip-prev{min-width:130px;max-width:260px;padding:4px 8px;background:var(--tint);border-radius:6px;font-size:14px;overflow:auto}
 </style>
 </head>
 <body>
@@ -279,9 +300,14 @@ body.shot-hide #list-student,body.shot-hide #q-panel{visibility:hidden}
         <label class="btn" for="file">Tải đề Word (.docx)</label>
         <label class="btn sec" for="li-multi">Nhập đề (.json)</label>
         <button class="btn sec" type="button" id="btn-export-all">Xuất tất cả (exams.json)</button>
+        <button class="btn sec" type="button" id="btn-open-studio" title="Chuyển đổi công thức Toán, Lý, Hóa, Sinh sang LaTeX và Bảng biểu sang Ảnh">∑ Công cụ LaTeX &amp; Bảng sang Ảnh</button>
         <input type="file" id="file" accept=".docx" hidden>
         <input type="file" id="li-one" accept=".json,application/json" hidden>
         <input type="file" id="li-multi" accept=".json,application/json" multiple hidden>
+      </div>
+      <div class="chks" style="margin-top:12px;padding:10px 12px;background:var(--tint);border-radius:var(--r)">
+        <label class="chk"><input type="checkbox" id="chk-auto-latex" checked><span><b>Tự động chuyển công thức sang LaTeX:</b> Nhận diện công thức Toán học, Vật lí, Hóa học (phân tử, ion, phương trình phản ứng), Sinh học (kiểu gen, phép lai, NST) từ Equation, MathType và văn bản chỉ số trên/dưới sang chuẩn LaTeX hiển thị bằng MathJax.</span></label>
+        <label class="chk"><input type="checkbox" id="chk-auto-tbl-img" checked><span><b>Tự động chuyển bảng biểu sang định dạng Ảnh (.png):</b> Chuyển các bảng số liệu, bảng biến thiên, bảng xét dấu, bảng thống kê trong file Word thành ảnh sắc nét (kèm công thức LaTeX trong ô bảng) để hiển thị chuẩn trên mọi trình duyệt.</span></label>
       </div>
       <ol class="steps">
         <li>Tải từng file Word lên. Mỗi đề được gán một tên file (<code>de1.json</code>, <code>de2.json</code>...), có thể đổi trong phần cài đặt đề.</li>
@@ -428,6 +454,7 @@ body.shot-hide #list-student,body.shot-hide #q-panel{visibility:hidden}
         <button class="btn" id="btn-save-settings">Lưu cài đặt</button>
         <button class="btn sec" id="btn-export-cur" type="button">Xuất file .json</button>
         <button class="btn sec" id="btn-push-cur" type="button" title="Lưu cài đặt rồi đẩy file .json của đề này lên GitHub">Đẩy lên GitHub</button>
+        <button class="btn sec" id="btn-convert-cur-latex" type="button" title="Quét và chuyển đổi toàn bộ công thức Toán, Lý, Hóa, Sinh trong đề đang mở sang LaTeX">∑ Chuẩn hóa công thức LaTeX</button>
         <button class="btn gr" id="btn-copy-link">Sao chép liên kết</button>
       </div>
       <p class="note" id="gh-push-st"></p>
@@ -510,6 +537,78 @@ body.shot-hide #list-student,body.shot-hide #q-panel{visibility:hidden}
     <button class="btn gr" id="hsg-gate-btn" type="button">▶ Phát bài nghe</button>
   </div>
 </div>
+<div id="latex-tbl-studio" class="studio-modal hide" role="dialog" aria-modal="true">
+  <div class="studio-card">
+    <div class="studio-hdr">
+      <h2>∑ Công cụ Chuyển đổi Công thức LaTeX (Toán • Lý • Hóa • Sinh) &amp; Bảng biểu sang Ảnh</h2>
+      <button class="btn sec" type="button" id="btn-close-studio" style="padding:5px 12px">Đóng ✕</button>
+    </div>
+    <div class="studio-tabs">
+      <button class="studio-tab active" type="button" data-stab="formula">1. Chuyển đổi Công thức sang LaTeX</button>
+      <button class="studio-tab" type="button" data-stab="table">2. Chuyển Bảng biểu sang Ảnh (.png)</button>
+      <button class="studio-tab" type="button" data-stab="exam-eq">3. Công thức &amp; Bảng trong đề đang mở</button>
+    </div>
+    <div class="studio-body">
+      <div id="stab-formula">
+        <p class="note" style="margin:0 0 10px">Nhập hoặc dán văn bản có công thức <b>Toán học</b> (<code>x^2 + √(x+1) = 0</code>, <code>∫_0^1</code>), <b>Hóa học</b> (<code>Fe2(SO4)3 + 6NaOH -> 2Fe(OH)3↓ + 3Na2SO4</code>, <code>SO4^2-</code>), <b>Vật lí</b> (<code>u = U0 cos(100πt + π/3)</code>, <code>^{235}_{92}U</code>), <b>Sinh học</b> (<code>(P): AB/ab × ab/ab</code>, <code>X^A X^a</code>, <code>2n = 24</code>) để chuyển sang chuẩn LaTeX.</p>
+        <div class="bar" style="margin-bottom:10px">
+          <button class="btn sec" type="button" id="btn-sample-math">Mẫu Toán</button>
+          <button class="btn sec" type="button" id="btn-sample-chem">Mẫu Hóa học</button>
+          <button class="btn sec" type="button" id="btn-sample-phys">Mẫu Vật lí</button>
+          <button class="btn sec" type="button" id="btn-sample-bio">Mẫu Sinh học</button>
+        </div>
+        <div class="studio-grid">
+          <div>
+            <label style="font-size:13px;font-weight:600;color:var(--mut);display:block;margin-bottom:6px">Văn bản / Công thức gốc (Toán, Lý, Hóa, Sinh)</label>
+            <textarea id="st-f-in" rows="5" placeholder="Ví dụ: Cho phương trình 2Al + 3H2SO4 -> Al2(SO4)3 + 3H2↑ hoặc x = 4cos(2πt - π/6) (cm)"></textarea>
+            <div class="bar" style="margin-top:8px">
+              <button class="btn" type="button" id="btn-st-convert-f">Chuyển sang LaTeX</button>
+              <button class="btn sec" type="button" id="btn-st-copy-f">Sao chép mã LaTeX</button>
+            </div>
+          </div>
+          <div>
+            <label style="font-size:13px;font-weight:600;color:var(--mut);display:block;margin-bottom:6px">Mã đầu ra chuẩn LaTeX</label>
+            <textarea id="st-f-out" rows="5" placeholder="Kết quả mã LaTeX \( ... \) sẽ hiện ở đây"></textarea>
+            <div style="font-size:13px;font-weight:600;color:var(--mut);margin:10px 0 6px">Xem trước hiển thị trên trình duyệt (MathJax):</div>
+            <div id="st-f-prev" class="studio-prev"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="stab-table" class="hide">
+        <p class="note" style="margin:0 0 10px">Dán trực tiếp bảng từ <b>Word / Excel</b> vào khung bên trái, hoặc nhập bảng dạng các cột cách nhau bởi dấu <code>|</code> hay phím Tab (hỗ trợ cả công thức LaTeX, chỉ số Hóa/Lý/Sinh và <b>Bảng biến thiên / Bảng xét dấu</b> có mũi tên <code>\nearrow</code>, <code>\searrow</code>, đường sọc đôi <code>||</code>). Hệ thống sẽ kết xuất bảng thành <b>ảnh PNG độ phân giải cao</b>.</p>
+        <div class="bar" style="margin-bottom:10px">
+          <button class="btn sec" type="button" id="btn-sample-bbt">Mẫu Bảng biến thiên (Toán)</button>
+          <button class="btn sec" type="button" id="btn-sample-tchem">Mẫu Bảng Hóa - Sinh</button>
+          <button class="btn sec" type="button" id="btn-sample-tphys">Mẫu Bảng số liệu Vật lí</button>
+        </div>
+        <div class="studio-grid">
+          <div>
+            <label style="font-size:13px;font-weight:600;color:var(--mut);display:block;margin-bottom:6px">Dán bảng từ Word/Excel hoặc nhập nội dung bảng (dùng | để tách cột)</label>
+            <div id="st-t-paste" contenteditable="true" style="min-height:110px;max-height:200px;overflow:auto;padding:10px;border:1px solid var(--bd);border-radius:8px;background:#fff;margin-bottom:8px;font-size:14px" title="Dán trực tiếp bảng từ Word hoặc Excel vào đây"></div>
+            <textarea id="st-t-in" rows="5" placeholder="Hoặc nhập bảng bằng ký tự | :&#10;x | -∞ | 0 | 2 | +∞&#10;y' | + | 0 | - | 0 | +&#10;y | ↗ | 4 | ↘ | 0 | ↗"></textarea>
+            <div class="bar" style="margin-top:8px">
+              <button class="btn" type="button" id="btn-st-render-t">Kết xuất Bảng thành Ảnh (.png)</button>
+              <button class="btn gr" type="button" id="btn-st-dl-t">Tải ảnh PNG</button>
+            </div>
+          </div>
+          <div>
+            <label style="font-size:13px;font-weight:600;color:var(--mut);display:block;margin-bottom:6px">Ảnh bảng biểu đã tạo (chạy trực tiếp trên mọi trình duyệt):</label>
+            <div id="st-t-prev" class="studio-prev" style="text-align:center">Chưa có ảnh bảng. Hãy bấm "Kết xuất Bảng thành Ảnh (.png)".</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="stab-exam-eq" class="hide">
+        <div class="bar" style="justify-content:space-between;align-items:center;margin-bottom:10px">
+          <span class="note" id="st-eq-summary" style="margin:0">Chưa mở đề thi nào.</span>
+          <button class="btn" type="button" id="btn-st-reconvert-exam">∑ Quét &amp; chuyển công thức đề này sang LaTeX</button>
+        </div>
+        <div id="st-eq-list" class="eq-chip-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
 <div id="toast" class="toast hide" role="status"></div>
 
 <script>
@@ -534,14 +633,16 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;',
 const _nativeAlert = typeof window.alert === 'function' ? window.alert.bind(window) : null;
 const _nativeConfirm = typeof window.confirm === 'function' ? window.confirm.bind(window) : null;
 const _inIframe = () => { try { return window.self !== window.top; } catch(e) { return true; } };
-window.alert = function(msg) {
+function alert(msg) {
     if (!_inIframe() && _nativeAlert) { try { _nativeAlert(msg); return; } catch(e) {} }
     if (typeof showToast === 'function') showToast(String(msg), 6000);
-};
-window.confirm = function(msg) {
+}
+window.alert = alert;
+function confirm(msg) {
     if (!_inIframe() && _nativeConfirm) { try { return _nativeConfirm(msg); } catch(e) {} }
     return true;
-};
+}
+window.confirm = confirm;
 
 let base=[], cur=[], lib=[], exam=null;
 let studentData = { name: '', class: '', startTime: 0 };
@@ -1983,91 +2084,1795 @@ window.exportRank = async kind => {
 };
 
 const MN='http://schemas.openxmlformats.org/officeDocument/2006/math',WN='http://schemas.openxmlformats.org/wordprocessingml/2006/main';
-const AC={'\u0302':'\\hat','\u0303':'\\tilde','\u0307':'\\dot','\u0308':'\\ddot','\u20D7':'\\vec','→':'\\vec','\u0305':'\\bar','\u030C':'\\check'};
-const NR={'∑':'\\sum','∏':'\\prod','∫':'\\int','∬':'\\iint','∭':'\\iiint','∮':'\\oint','⋃':'\\bigcup','⋂':'\\bigcap'};
-const FN=/^(sin|cos|tan|cot|sec|csc|arcsin|arccos|arctan|sinh|cosh|tanh|log|ln|lg|lim|exp|max|min|det|gcd|sup|inf|mod)$/;
-const SYM={'∆':'\\Delta ','µ':'\\mu ','°':'^\\circ ','℃':'^\\circ\\text{C}','Å':'\\text{\\AA}'},SYR=/[∆µ°℃Å]/g;
+const AC={'\u0302':'\\hat','\u0303':'\\tilde','\u0307':'\\dot','\u0308':'\\ddot','\u20D7':'\\vec','→':'\\vec','⟶':'\\vec','\u0305':'\\bar','\u030C':'\\check','\u0306':'\\breve','︵':'\\overset{\\frown}','⌒':'\\overset{\\frown}'};
+const NR={'∑':'\\sum','∏':'\\prod','∫':'\\int','∬':'\\iint','∭':'\\iiint','∮':'\\oint','⋃':'\\bigcup','⋂':'\\bigcap','⋁':'\\bigvee','⋀':'\\bigwedge'};
+const FN=/^(sin|cos|tan|cot|tg|cotg|sec|csc|arcsin|arccos|arctan|arccot|sinh|cosh|tanh|log|ln|lg|lim|exp|max|min|det|gcd|lcm|sup|inf|mod|arg|deg|dim|ker|hom)$/i;
+const SYM={
+  '∆':'\\Delta ','Δ':'\\Delta ','∇':'\\nabla ','µ':'\\mu ','μ':'\\mu ','°':'^\\circ ','℃':'^\\circ\\mathrm{C}','℉':'^\\circ\\mathrm{F}','Å':'\\mathrm{\\AA}',
+  'α':'\\alpha ','β':'\\beta ','γ':'\\gamma ','δ':'\\delta ','ε':'\\varepsilon ','ϵ':'\\epsilon ','ζ':'\\zeta ','η':'\\eta ','θ':'\\theta ','ϑ':'\\vartheta ',
+  'ι':'\\iota ','κ':'\\kappa ','λ':'\\lambda ','ν':'\\nu ','ξ':'\\xi ','π':'\\pi ','ϖ':'\\varpi ','ρ':'\\rho ','ϱ':'\\varrho ','σ':'\\sigma ','ς':'\\varsigma ',
+  'τ':'\\tau ','υ':'\\upsilon ','φ':'\\varphi ','ϕ':'\\phi ','χ':'\\chi ','ψ':'\\psi ','ω':'\\omega ',
+  'Γ':'\\Gamma ','Λ':'\\Lambda ','Ξ':'\\Xi ','Π':'\\Pi ','Σ':'\\Sigma ','Υ':'\\Upsilon ','Φ':'\\Phi ','Ψ':'\\Psi ','Ω':'\\Omega ','Ω':'\\Omega ',
+  '±':'\\pm ','∓':'\\mp ','×':'\\times ','÷':'\\div ','·':'\\cdot ','∙':'\\cdot ','∗':'*','∘':'\\circ ','•':'\\bullet ',
+  '≤':'\\le ','⩽':'\\le ','≥':'\\ge ','⩾':'\\ge ','≠':'\\ne ','≈':'\\approx ','≃':'\\simeq ','≅':'\\cong ','≡':'\\equiv ','∼':'\\sim ','∝':'\\propto ',
+  '∞':'\\infty ','∂':'\\partial ','∅':'\\varnothing ','∈':'\\in ','∉':'\\notin ','∋':'\\ni ','⊂':'\\subset ','⊃':'\\supset ','⊆':'\\subseteq ','⊇':'\\supseteq ',
+  '⊄':'\\not\\subset ','∪':'\\cup ','∩':'\\cap ','∖':'\\setminus ','∀':'\\forall ','∃':'\\exists ','∄':'\\nexists ','¬':'\\neg ','∧':'\\land ','∨':'\\lor ',
+  '⊥':'\\perp ','∥':'\\parallel ','∠':'\\angle ','∡':'\\measuredangle ','△':'\\triangle ','□':'\\square ',
+  '→':'\\rightarrow ','⟶':'\\longrightarrow ','←':'\\leftarrow ','⟵':'\\longleftarrow ','↔':'\\leftrightarrow ','⟷':'\\longleftrightarrow ',
+  '⇒':'\\Rightarrow ','⟹':'\\Longrightarrow ','⇐':'\\Leftarrow ','⟸':'\\Longleftarrow ','⇔':'\\Leftrightarrow ','⟺':'\\Longleftrightarrow ',
+  '⇌':'\\rightleftharpoons ','⇄':'\\rightleftharpoons ','↑':'\\uparrow ','↓':'\\downarrow ','↗':'\\nearrow ','↘':'\\searrow ','↦':'\\mapsto ',
+  'ℕ':'\\mathbb{N}','ℤ':'\\mathbb{Z}','ℚ':'\\mathbb{Q}','ℝ':'\\mathbb{R}','ℂ':'\\mathbb{C}','ℓ':'\\ell ','ℏ':'\\hbar ','′':"'",'″':"''",'‴':"'''"
+};
+const SYR=new RegExp('['+Object.keys(SYM).join('').replace(/[-[\]{}()*+?.,\\^$|#\s]/g,'\\$&')+']','g');
+
+// Chuyển ký tự toán học Unicode (Mathematical Alphanumeric Symbols U+1D400..U+1D7FF) và chỉ số Unicode về chuẩn ASCII/LaTeX
+const UNI_SUP={'⁰':'0','¹':'1','²':'2','³':'3','⁴':'4','⁵':'5','⁶':'6','⁷':'7','⁸':'8','⁹':'9','⁺':'+','⁻':'-','⁼':'=','⁽':'(','⁾':')','ⁿ':'n','ⁱ':'i'};
+const UNI_SUB={'₀':'0','₁':'1','₂':'2','₃':'3','₄':'4','₅':'5','₆':'6','₇':'7','₈':'8','₉':'9','₊':'+','₋':'-','₌':'=','₍':'(','₎':')','ₐ':'a','ₑ':'e','ₒ':'o','ₓ':'x','ₕ':'h','ₖ':'k','ₗ':'l','ₘ':'m','ₙ':'n','ₚ':'p','ₛ':'s','ₜ':'t'};
+function normMathUnicode(str) {
+  let out = '';
+  for (const ch of String(str || '')) {
+    const cp = ch.codePointAt(0);
+    if (cp >= 0x1D400 && cp <= 0x1D7FF) {
+      // Mathematical Alphanumeric block
+      if (cp >= 0x1D400 && cp <= 0x1D433) out += String.fromCharCode((cp - 0x1D400 < 26 ? 65 : 71) + (cp - 0x1D400));
+      else if (cp >= 0x1D434 && cp <= 0x1D467) out += String.fromCharCode((cp - 0x1D434 < 26 ? 65 : 71) + (cp - 0x1D434));
+      else if (cp >= 0x1D468 && cp <= 0x1D49B) out += String.fromCharCode((cp - 0x1D468 < 26 ? 65 : 71) + (cp - 0x1D468));
+      else if (cp >= 0x1D6FC && cp <= 0x1D714) {
+        const g = ['\\alpha ','\\beta ','\\gamma ','\\delta ','\\varepsilon ','\\zeta ','\\eta ','\\theta ','\\iota ','\\kappa ','\\lambda ','\\mu ','\\nu ','\\xi ','o','\\pi ','\\rho ','\\varsigma ','\\sigma ','\\tau ','\\upsilon ','\\varphi ','\\chi ','\\psi ','\\omega '];
+        out += g[cp - 0x1D6FC] || ch;
+      } else if (cp >= 0x1D7CE && cp <= 0x1D7FF) out += String((cp - 0x1D7CE) % 10);
+      else out += ch.normalize('NFKD');
+    } else if (cp === 0x210E) out += 'h';
+    else out += ch;
+  }
+  out = out.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾ⁿⁱ]+/g, m => '^{' + [...m].map(c => UNI_SUP[c] || c).join('') + '}');
+  out = out.replace(/[₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎ₐₑₒₓₕₖₗₘₙₚₛₜ]+/g, m => '_{' + [...m].map(c => UNI_SUB[c] || c).join('') + '}');
+  return out;
+}
+
+// Bảng mã font Symbol của Word (<w:sym w:font="Symbol" w:char="F0xx"/>)
+const W_SYM_MAP = {
+  'F020':' ','F022':'\\forall ','F024':'\\exists ','F027':'\\ni ','F02A':'*','F02B':'+','F02D':'-','F02E':'.','F02F':'/',
+  'F03C':'<','F03D':'=','F03E':'>','F040':'\\cong ','F041':'\\text{A}','F042':'\\text{B}','F043':'\\Chi ','F044':'\\Delta ',
+  'F045':'\\text{E}','F046':'\\Phi ','F047':'\\Gamma ','F048':'\\text{H}','F049':'\\text{I}','F04A':'\\vartheta ','F04B':'\\text{K}',
+  'F04C':'\\Lambda ','F04D':'\\text{M}','F04E':'\\text{N}','F04F':'\\text{O}','F050':'\\Pi ','F051':'\\Theta ','F052':'\\text{P}',
+  'F053':'\\Sigma ','F054':'\\text{T}','F055':'\\Upsilon ','F057':'\\Omega ','F058':'\\Xi ','F059':'\\Psi ','F05A':'\\text{Z}',
+  'F05C':'\\therefore ','F05E':'\\perp ','F061':'\\alpha ','F062':'\\beta ','F063':'\\chi ','F064':'\\delta ','F065':'\\varepsilon ',
+  'F066':'\\varphi ','F067':'\\gamma ','F068':'\\eta ','F069':'\\iota ','F06A':'\\phi ','F06B':'\\kappa ','F06C':'\\lambda ',
+  'F06D':'\\mu ','F06E':'\\nu ','F06F':'o','F070':'\\pi ','F071':'\\theta ','F072':'\\rho ','F073':'\\sigma ','F074':'\\tau ',
+  'F075':'\\upsilon ','F076':'\\varpi ','F077':'\\omega ','F078':'\\xi ','F079':'\\psi ','F07A':'\\zeta ','F07E':'\\sim ',
+  'F0A3':'\\le ','F0A5':'\\infty ','F0B0':'^\\circ ','F0B1':'\\pm ','F0B2':"''",'F0B3':'\\ge ','F0B4':'\\times ','F0B5':'\\propto ',
+  'F0B6':'\\partial ','F0B7':'\\cdot ','F0B8':'\\div ','F0B9':'\\ne ','F0BA':'\\equiv ','F0BB':'\\approx ','F0C4':'\\otimes ',
+  'F0C5':'\\oplus ','F0C6':'\\varnothing ','F0C7':'\\cap ','F0C8':'\\cup ','F0C9':'\\supset ','F0CA':'\\supseteq ','F0CB':'\\not\\subset ',
+  'F0CC':'\\subset ','F0CD':'\\subseteq ','F0CE':'\\in ','F0CF':'\\notin ','F0D0':'\\angle ','F0D1':'\\nabla ','F0D6':'\\sqrt{}',
+  'F0D7':'\\cdot ','F0D8':'\\neg ','F0D9':'\\land ','F0DA':'\\lor ','F0DB':'\\Leftrightarrow ','F0DC':'\\Leftarrow ','F0DD':'\\Uparrow ',
+  'F0DE':'\\Rightarrow ','F0DF':'\\Downarrow ','F0E5':'\\sum ','F0F2':'\\int ','F0AB':'\\leftrightarrow ','F0AC':'\\leftarrow ',
+  'F0AD':'\\uparrow ','F0AE':'\\rightarrow ','F0AF':'\\downarrow '
+};
+
+const ARROW_RE = /^\\?(?:rightarrow|longrightarrow|leftarrow|longleftarrow|leftrightarrow|longleftrightarrow|rightleftharpoons|Rightarrow|Leftrightarrow|to|gets|[→⟶←⟵↔⟷⇌⇄])$/;
+function makeReactionArrow(base, low, upp) {
+  const isRev = /rightleftharpoons|[⇌⇄]/.test(base);
+  const isLeft = /leftarrow|[←⟵]/.test(base) && !/leftrightarrow/.test(base);
+  if (isRev) {
+    let r = '\\rightleftharpoons';
+    if (upp) r = `\\overset{${upp}}{${r}}`;
+    if (low) r = `\\underset{${low}}{${r}}`;
+    return r;
+  }
+  const cmd = isLeft ? '\\xleftarrow' : '\\xrightarrow';
+  return cmd + (low ? `[${low}]` : '') + `{${upp || ''}}`;
+}
 
 function omml(n){
-  const K=e=>[...e.children],C=(e,x)=>e&&K(e).find(c=>c.localName===x),
+  if(!n) return '';
+  const K=e=>e?[...e.children]:[],C=(e,x)=>e&&K(e).find(c=>c.localName===x),
     S=e=>e?K(e).map(omml).join(''):'',A=(e,x)=>S(C(e,x)),
-    V=(e,x)=>{const c=C(e,x);return c&&c.hasAttribute('m:val')?c.getAttribute('m:val'):null},
+    V=(e,x)=>{const c=C(e,x);if(!c)return null;return c.getAttribute('m:val')??c.getAttribute('w:val')??c.getAttribute('val')??null},
     E=e=>K(e).filter(x=>x.localName==='e').map(S);
   switch(n.localName){
     case 'r':{
-      const t=C(n,'t');if(!t)return'';
-      const s=t.textContent.replace(/([#$%&_{}])/g,'\\$1'),rp=C(n,'rPr');
-      if(C(rp,'nor'))return'\\text{'+s+'}';
-      return(V(rp,'sty')==='p'||FN.test(s))?'\\mathrm{'+s+'}':s.replace(SYR,c=>SYM[c]);
+      const ts=K(n).filter(c=>c.localName==='t');
+      const syms=K(n).filter(c=>c.localName==='sym');
+      let raw=ts.map(t=>t.textContent).join('');
+      syms.forEach(sy=>{
+        const ch=(sy.getAttribute('w:char')||sy.getAttribute('char')||'').toUpperCase();
+        if(W_SYM_MAP[ch]) raw+=W_SYM_MAP[ch];
+      });
+      if(!raw) return '';
+      raw = normMathUnicode(raw);
+      const s=raw.replace(/([#$%&_])/g,'\\$1'),rp=C(n,'rPr')||C(n,'w:rPr');
+      if(C(rp,'nor')) return '\\text{'+s+'}';
+      const trimmed = s.trim();
+      if(FN.test(trimmed)) return '\\'+trimmed.toLowerCase().replace(/^tg$/,'tan').replace(/^cotg$/,'cot')+' ';
+      return (V(rp,'sty')==='p') ? '\\mathrm{'+s.replace(SYR,c=>SYM[c])+'}' : s.replace(SYR,c=>SYM[c]);
     }
-    case 'f':return(V(C(n,'fPr'),'type')==='noBar'?'\\binom':'\\frac')+`{${A(n,'num')}}{${A(n,'den')}}`;
-    case 'sSup':return`{${A(n,'e')}}^{${A(n,'sup')}}`;
-    case 'sSub':return`{${A(n,'e')}}_{${A(n,'sub')}}`;
-    case 'sSubSup':return`{${A(n,'e')}}_{${A(n,'sub')}}^{${A(n,'sup')}}`;
-    case 'sPre':return`{}_{${A(n,'sub')}}^{${A(n,'sup')}}{${A(n,'e')}}`;
-    case 'rad':{const d=A(n,'deg');return d?`\\sqrt[${d}]{${A(n,'e')}}`:`\\sqrt{${A(n,'e')}}`}
+    case 'f':{
+      const tp=V(C(n,'fPr'),'type'),num=A(n,'num'),den=A(n,'den');
+      if(ARROW_RE.test(num.trim())) return makeReactionArrow(num.trim(), den, '');
+      if(ARROW_RE.test(den.trim())) return makeReactionArrow(den.trim(), '', num);
+      if(tp==='noBar') return `\\binom{${num}}{${den}}`;
+      if(tp==='lin') return `{${num}}/{${den}}`;
+      return `\\frac{${num}}{${den}}`;
+    }
+    case 'sSup':{
+      const b=A(n,'e'),sp=A(n,'sup');
+      if(ARROW_RE.test(b.trim())) return makeReactionArrow(b.trim(), '', sp);
+      return `{${b}}^{${sp}}`;
+    }
+    case 'sSub':{
+      const b=A(n,'e'),sb=A(n,'sub');
+      if(ARROW_RE.test(b.trim())) return makeReactionArrow(b.trim(), sb, '');
+      return `{${b}}_{${sb}}`;
+    }
+    case 'sSubSup':{
+      const b=A(n,'e'),sb=A(n,'sub'),sp=A(n,'sup');
+      if(ARROW_RE.test(b.trim())) return makeReactionArrow(b.trim(), sb, sp);
+      return `{${b}}_{${sb}}^{${sp}}`;
+    }
+    case 'sPre':return `{}_{${A(n,'sub')}}^{${A(n,'sup')}}{${A(n,'e')}}`;
+    case 'rad':{const d=A(n,'deg').trim();return d?`\\sqrt[${d}]{${A(n,'e')}}`:`\\sqrt{${A(n,'e')}}`}
     case 'd':{
-      const p=C(n,'dPr'),b=V(p,'begChr'),en=V(p,'endChr'),sp=V(p,'sepChr'),dl=c=>c===''?'.':c==='{'?'\\{':c==='}'?'\\}':c;
-      return`\\left${dl(b===null?'(':b)}${E(n).join(sp===null?'|':sp)}\\right${dl(en===null?')':en)}`;
+      const p=C(n,'dPr'),b=V(p,'begChr'),en=V(p,'endChr'),sp=V(p,'sepChr');
+      const dl=c=>{
+        if(c===''||c==='.')return'.';
+        if(c==='{')return'\\{';if(c==='}')return'\\}';
+        if(c==='‖'||c==='||')return'\\Vert ';
+        if(c==='⟨'||c==='〈')return'\\langle ';if(c==='⟩'||c==='〉')return'\\rangle ';
+        if(c==='⌊')return'\\lfloor ';if(c==='⌋')return'\\rfloor ';
+        if(c==='⌈')return'\\lceil ';if(c==='⌉')return'\\rceil ';
+        return c;
+      };
+      const els=E(n),sep=sp===null?'|':(sp==='|'?'\\middle| ':sp);
+      return `\\left${dl(b===null?'(':b)}${els.join(sep)}\\right${dl(en===null?')':en)}`;
     }
     case 'nary':{
-      const c=V(C(n,'naryPr'),'chr')||'∫',su=A(n,'sub'),up=A(n,'sup');
-      return(NR[c]||c)+(su?`_{${su}}`:'')+(up?`^{${up}}`:'')+`{${A(n,'e')}}`;
+      const p=C(n,'naryPr'),c=V(p,'chr')||'∫',su=A(n,'sub').trim(),up=A(n,'sup').trim(),e=A(n,'e');
+      if(ARROW_RE.test(c.trim())) return makeReactionArrow(c.trim(), su, up) + (e?`{${e}}`:'');
+      return (NR[c]||SYM[c]||c)+(su?`_{${su}}`:'')+(up?`^{${up}}`:'')+`{${e}}`;
     }
-    case 'func':return`${A(n,'fName')}\\,${A(n,'e')}`;
-    case 'limLow':return`\\mathop{${A(n,'e')}}\\limits_{${A(n,'lim')}}`;
-    case 'limUpp':return`\\mathop{${A(n,'e')}}\\limits^{${A(n,'lim')}}`;
-    case 'acc':return`${AC[V(C(n,'accPr'),'chr')]||'\\hat'}{${A(n,'e')}}`;
+    case 'func':{
+      const fn=A(n,'fName').trim(),e=A(n,'e');
+      return `${fn}\\,${e}`;
+    }
+    case 'limLow':{
+      const eNode=C(n,'e'),lim=A(n,'lim').trim();
+      if(eNode && C(eNode,'limUpp')){
+        const uNode=C(eNode,'limUpp'),base=A(uNode,'e').trim(),upp=A(uNode,'lim').trim();
+        if(ARROW_RE.test(base)) return makeReactionArrow(base, lim, upp);
+      }
+      const b=A(n,'e').trim();
+      if(ARROW_RE.test(b)) return makeReactionArrow(b, lim, '');
+      return `\\mathop{${b}}\\limits_{${lim}}`;
+    }
+    case 'limUpp':{
+      const eNode=C(n,'e'),lim=A(n,'lim').trim();
+      if(eNode && C(eNode,'limLow')){
+        const lNode=C(eNode,'limLow'),base=A(lNode,'e').trim(),low=A(lNode,'lim').trim();
+        if(ARROW_RE.test(base)) return makeReactionArrow(base, low, lim);
+      }
+      const b=A(n,'e').trim();
+      if(ARROW_RE.test(b)) return makeReactionArrow(b, '', lim);
+      return `\\mathop{${b}}\\limits^{${lim}}`;
+    }
+    case 'acc':{
+      const chr=V(C(n,'accPr'),'chr'),e=A(n,'e').trim();
+      const plain=e.replace(/\\[a-zA-Z]+|[{}^_\s]/g,'');
+      if((chr==='\u20D7'||chr==='→'||chr==='⟶'||!chr && /vec/.test(AC[chr]||'')) && plain.length>=2) return `\\overrightarrow{${e}}`;
+      if(chr==='↔'||chr==='\u20E1') return `\\overleftrightarrow{${e}}`;
+      if(chr==='︵'||chr==='⌒'||chr==='\u0361') return `\\overset{\\frown}{${e}}`;
+      const cmd=AC[chr]||'\\hat';
+      if(cmd==='\\vec' && plain.length>=2) return `\\overrightarrow{${e}}`;
+      return `${cmd}{${e}}`;
+    }
     case 'bar':return(V(C(n,'barPr'),'pos')==='bot'?'\\underline':'\\overline')+`{${A(n,'e')}}`;
-    case 'groupChr':return(V(C(n,'groupChrPr'),'pos')==='top'?'\\overbrace':'\\underbrace')+`{${A(n,'e')}}`;
+    case 'groupChr':{
+      const p=C(n,'groupChrPr'),pos=V(p,'pos'),chr=V(p,'chr')||'';
+      if(ARROW_RE.test(chr)) return pos==='top'?`\\overset{\\longrightarrow}{${A(n,'e')}}`:`\\underset{\\longrightarrow}{${A(n,'e')}}`;
+      return(pos==='top'?'\\overbrace':'\\underbrace')+`{${A(n,'e')}}`;
+    }
     case 'borderBox':return`\\boxed{${A(n,'e')}}`;
+    case 'box':case 'phant':return A(n,'e');
     case 'm':return'\\begin{matrix}'+K(n).filter(x=>x.localName==='mr').map(r=>E(r).join('&')).join('\\\\')+'\\end{matrix}';
     case 'eqArr':return'\\begin{aligned}'+E(n).join('\\\\')+'\\end{aligned}';
     default:return/Pr$/.test(n.localName)?'':S(n);
   }
 }
 
+// ===================== BỘ GIẢI MÃ MATHTYPE (MTEF v3 / v5) TRONG OLE / WMF SANG LATEX =====================
+const MTEF_GREEK = {
+  0x41:'\\text{A}',0x42:'\\text{B}',0x43:'\\Chi ',0x44:'\\Delta ',0x45:'\\text{E}',0x46:'\\Phi ',0x47:'\\Gamma ',0x48:'\\text{H}',
+  0x49:'\\text{I}',0x4A:'\\vartheta ',0x4B:'\\text{K}',0x4C:'\\Lambda ',0x4D:'\\text{M}',0x4E:'\\text{N}',0x4F:'\\text{O}',0x50:'\\Pi ',
+  0x51:'\\Theta ',0x52:'\\text{P}',0x53:'\\Sigma ',0x54:'\\text{T}',0x55:'\\Upsilon ',0x57:'\\Omega ',0x58:'\\Xi ',0x59:'\\Psi ',0x5A:'\\text{Z}',
+  0x61:'\\alpha ',0x62:'\\beta ',0x63:'\\chi ',0x64:'\\delta ',0x65:'\\varepsilon ',0x66:'\\varphi ',0x67:'\\gamma ',0x68:'\\eta ',
+  0x69:'\\iota ',0x6A:'\\phi ',0x6B:'\\kappa ',0x6C:'\\lambda ',0x6D:'\\mu ',0x6E:'\\nu ',0x6F:'o',0x70:'\\pi ',0x71:'\\theta ',
+  0x72:'\\rho ',0x73:'\\sigma ',0x74:'\\tau ',0x75:'\\upsilon ',0x76:'\\varpi ',0x77:'\\omega ',0x78:'\\xi ',0x79:'\\psi ',0x7A:'\\zeta '
+};
+const MTEF_SYM = {
+  0x22:'\\forall ',0x24:'\\exists ',0x2B:'+',0x2D:'-',0x2A:'*',0x2F:'/',0x3D:'=',0x3C:'<',0x3E:'>',0x40:'\\cong ',0x5E:'\\perp ',0x7E:'\\sim ',
+  0xA3:'\\le ',0xA5:'\\infty ',0xB0:'^\\circ ',0xB1:'\\pm ',0xB3:'\\ge ',0xB4:'\\times ',0xB5:'\\propto ',0xB6:'\\partial ',0xB7:'\\cdot ',
+  0xB8:'\\div ',0xB9:'\\ne ',0xBA:'\\equiv ',0xBB:'\\approx ',0xC5:'\\oplus ',0xC6:'\\varnothing ',0xC7:'\\cap ',0xC8:'\\cup ',
+  0xC9:'\\supset ',0xCA:'\\supseteq ',0xCB:'\\not\\subset ',0xCC:'\\subset ',0xCD:'\\subseteq ',0xCE:'\\in ',0xCF:'\\notin ',
+  0xD0:'\\angle ',0xD1:'\\nabla ',0xD6:'\\sqrt{}',0xD7:'\\cdot ',0xD9:'\\land ',0xDA:'\\lor ',0xDB:'\\Leftrightarrow ',
+  0xDC:'\\Leftarrow ',0xDE:'\\Rightarrow ',0xE5:'\\sum ',0xF2:'\\int ',0xAB:'\\leftrightarrow ',0xAC:'\\leftarrow ',0xAE:'\\rightarrow ',
+  0xAD:'\\uparrow ',0xAF:'\\downarrow '
+};
+
+function parseMtefToLatex(u8, startOffset) {
+  try {
+    const ver = u8[startOffset];
+    if (ver !== 3 && ver !== 5) return '';
+    let p = startOffset + 5;
+    if (ver === 5) {
+      while (p < u8.length && u8[p] !== 0) p++;
+      p++; // null-terminated app key
+      if (p < u8.length) p++; // equation options
+    }
+    const readNudge = () => {
+      if (p >= u8.length) return;
+      const dx = u8[p], dy = u8[p + 1];
+      if (dx === 128 && dy === 128) p += 6; else p += 2;
+    };
+    const readStr = () => {
+      let s = '';
+      while (p < u8.length && u8[p] !== 0) { s += String.fromCharCode(u8[p++]); }
+      p++; return s;
+    };
+    const mapChar = (tf, ch) => {
+      if (ch >= 0xF000 && ch <= 0xF0FF) {
+        const hex = ch.toString(16).toUpperCase();
+        if (W_SYM_MAP[hex]) return W_SYM_MAP[hex];
+        ch &= 0xFF;
+      }
+      if (tf === 4 || tf === 6 || tf === 134 || tf === 132) {
+        if (MTEF_GREEK[ch]) return MTEF_GREEK[ch];
+        if (MTEF_SYM[ch]) return MTEF_SYM[ch];
+      }
+      if (MTEF_SYM[ch] && ch >= 0xA0) return MTEF_SYM[ch];
+      const s = String.fromCodePoint(ch);
+      if (SYM[s]) return SYM[s];
+      if (/[#$%&_]/.test(s)) return '\\' + s;
+      return s;
+    };
+    const applyEmbell = (base, emb) => {
+      switch (emb) {
+        case 2: return `\\dot{${base}}`;
+        case 3: return `\\ddot{${base}}`;
+        case 5: return `${base}'`;
+        case 6: return `${base}''`;
+        case 7: return `\\overleftarrow{${base}}`;
+        case 8: return base.length > 1 ? `\\overrightarrow{${base}}` : `\\vec{${base}}`;
+        case 9: return `\\overleftrightarrow{${base}}`;
+        case 10: return `\\hat{${base}}`;
+        case 11: return `\\tilde{${base}}`;
+        case 12: return `\\overline{${base}}`;
+        case 17: return `\\underline{${base}}`;
+        case 20: return `\\overset{\\frown}{${base}}`;
+        default: return base;
+      }
+    };
+    let steps = 0;
+    const readObjList = () => {
+      const items = [];
+      while (p < u8.length && steps++ < 4000) {
+        const rec = u8[p++];
+        const type = rec & 0x0F, opt = (rec >> 4) & 0x0F;
+        if (type === 0) break; // END
+        if (type === 1) { // LINE
+          if (opt & 0x08) readNudge();
+          if (opt & 0x04) p += 2; // line spacing
+          if (opt & 0x02) { // RULER
+            const nStops = u8[p++];
+            p += nStops * 3;
+          }
+          if (opt & 0x01) { items.push(''); continue; } // null line
+          items.push(readObjList());
+        } else if (type === 2) { // CHAR
+          if (opt & 0x08) readNudge();
+          const tfRaw = u8[p++];
+          const tf = tfRaw > 128 ? tfRaw - 128 : tfRaw;
+          let mtcode = 0;
+          if (ver === 5) {
+            if (!(opt & 0x02)) { mtcode = u8[p] | (u8[p + 1] << 8); p += 2; }
+            if (opt & 0x80) p++; // 8-bit enc
+            else if (opt & 0x10) p += 2; // 16-bit enc
+          } else {
+            mtcode = u8[p++];
+          }
+          let chTex = mapChar(tf, mtcode);
+          if (opt & 0x01) { // embellishments follow
+            while (p < u8.length) {
+              const er = u8[p++];
+              if ((er & 0x0F) === 0) break;
+              if ((er & 0x0F) === 6) {
+                if ((er >> 4) & 0x08) readNudge();
+                const emb = u8[p++];
+                chTex = applyEmbell(chTex, emb);
+              }
+            }
+          }
+          items.push(chTex);
+        } else if (type === 3) { // TMPL
+          if (opt & 0x08) readNudge();
+          const sel = u8[p++];
+          let variation = u8[p++];
+          if (variation & 0x80) variation = (variation & 0x7F) | (u8[p++] << 7);
+          const tmplOpt = u8[p++];
+          const slots = [];
+          while (p < u8.length && steps++ < 4000) {
+            const pk = u8[p];
+            if ((pk & 0x0F) === 0) { p++; break; }
+            slots.push(readObjList());
+          }
+          const s0 = slots[0] || '', s1 = slots[1] || '', s2 = slots[2] || '';
+          if (sel === 0 || sel === 1 || sel === 2 || sel === 3 || sel === 4 || sel === 5 || sel === 6 || sel === 7 || sel === 8) {
+            // Fences / Parentheses / Brackets / Braces / Bars
+            const lMap = {0:'(',1:'[',2:'\\{',3:'|',4:'\\Vert ',5:'\\langle ',6:'(',7:'\\lfloor ',8:'\\lceil '};
+            const rMap = {0:')',1:']',2:'\\}',3:'|',4:'\\Vert ',5:'\\rangle ',6:']',7:'\\rfloor ',8:'\\rceil '};
+            const L = (variation === 2) ? '.' : (lMap[sel] || '(');
+            const R = (variation === 1) ? '.' : (rMap[sel] || ')');
+            items.push(`\\left${L}${s0}\\right${R}`);
+          } else if (sel === 10) { // Root: [radicand, nth]
+            items.push(s1 ? `\\sqrt[${s1}]{${s0}}` : `\\sqrt{${s0}}`);
+          } else if (sel === 11) { // Fraction: [num, den]
+            items.push(`\\frac{${s0}}{${s1}}`);
+          } else if (sel === 12) { // Subbar / Overbar
+            items.push(variation ? `\\overline{${s0}}` : `\\underline{${s0}}`);
+          } else if (sel === 13) { // Double bar
+            items.push(`\\overline{\\overline{${s0}}}`);
+          } else if (sel === 14) { // Arrow with text above/below
+            items.push(`\\xrightarrow[${s1}]{${s0}}`);
+          } else if (sel >= 15 && sel <= 22) { // Integrals / Sums / Products
+            const op = (sel >= 15 && sel <= 19) ? '\\int' : (sel === 21 ? '\\sum' : (sel === 22 ? '\\prod' : '\\oint'));
+            items.push(`${op}${s1 ? `_{${s1}}` : ''}${s2 ? `^{${s2}}` : ''}{${s0}}`);
+          } else if (sel === 24 || sel === 25) { // Overbrace / Underbrace
+            items.push((sel === 25 ? '\\overbrace' : '\\underbrace') + `{${s0}}${s1 ? `^{${s1}}` : ''}`);
+          } else if (sel === 27 || sel === 28 || sel === 29) { // Sub / Sup / SubSup
+            if (sel === 27) items.push(`_{${s0}}`);
+            else if (sel === 28) items.push(`^{${s0}}`);
+            else items.push(`_{${s0}}^{${s1}}`);
+          } else if (sel === 31 || sel === 32) { // Vector / Hat / Arc over slot
+            items.push(`\\overrightarrow{${s0}}`);
+          } else {
+            items.push(slots.filter(Boolean).join(' '));
+          }
+        } else if (type === 4) { // PILE (system of equations / stack)
+          if (opt & 0x08) readNudge();
+          p += 2; // halign, valign
+          if (opt & 0x02) { const ns = u8[p++]; p += ns * 3; }
+          const rows = [];
+          while (p < u8.length && steps++ < 4000) {
+            if ((u8[p] & 0x0F) === 0) { p++; break; }
+            rows.push(readObjList());
+          }
+          items.push('\\begin{aligned}' + rows.filter(Boolean).join('\\\\') + '\\end{aligned}');
+        } else if (type === 5) { // MATRIX
+          if (opt & 0x08) readNudge();
+          p++; // valign
+          p += 2; // h_just, v_just
+          const rows = u8[p++], cols = u8[p++];
+          p += Math.ceil((rows + 1) / 4) + Math.ceil((cols + 1) / 4);
+          const cells = [];
+          while (p < u8.length && steps++ < 4000) {
+            if ((u8[p] & 0x0F) === 0) { p++; break; }
+            cells.push(readObjList());
+          }
+          const mRows = [];
+          for (let r = 0; r < rows; r++) mRows.push(cells.slice(r * cols, (r + 1) * cols).join('&'));
+          items.push('\\begin{matrix}' + mRows.join('\\\\') + '\\end{matrix}');
+        } else if (type === 6) { // EMBELL
+          if (opt & 0x08) readNudge();
+          const emb = u8[p++];
+          if (items.length) items[items.length - 1] = applyEmbell(items[items.length - 1], emb);
+        } else if (type === 8) { // FONT_STYLE_DEF
+          p++; readStr();
+        } else if (type === 9) { // SIZE
+          const ltype = u8[p++];
+          if (ltype === 100) p += 2;
+          else if (ltype === 101) p += 3;
+          else p += 1;
+        } else if (type >= 10 && type <= 14) {
+          // FULL, SUB, SUB2, SYM, SUBSYM size records (no extra bytes)
+        } else if (type === 15) { // COLOR
+          p += 2;
+        } else {
+          break;
+        }
+      }
+      return items.join('');
+    };
+    const res = readObjList().replace(/\s+/g, ' ').trim();
+    return res;
+  } catch (e) {
+    return '';
+  }
+}
+
+// Quét tìm luồng MTEF trong file nhị phân OLE (oleObject*.bin) hoặc WMF (image*.wmf)
+function extractMtefFromBytes(u8) {
+  if (!u8 || u8.length < 32) return '';
+  // 1. Kiểm tra nếu có MathML nhúng trực tiếp trong bin/wmf
+  try {
+    const ascii = new TextDecoder('latin1').decode(u8);
+    const mml = /<math[\s\S]*?<\/math>/i.exec(ascii);
+    if (mml) {
+      const doc = new DOMParser().parseFromString(mml[0], 'application/xml');
+      const txt = doc.documentElement ? doc.documentElement.textContent.trim() : '';
+      if (txt) return txt;
+    }
+    // Kiểm tra AppsMFCC trong WMF của MathType
+    const idxApp = ascii.indexOf('AppsMFCC');
+    if (idxApp >= 0 && idxApp + 20 < u8.length) {
+      for (let k = idxApp + 8; k < Math.min(u8.length - 8, idxApp + 120); k++) {
+        if ((u8[k] === 5 || u8[k] === 3) && u8[k + 1] <= 1 && u8[k + 2] <= 2) {
+          const tex = parseMtefToLatex(u8, k);
+          if (tex) return tex;
+        }
+      }
+    }
+  } catch (e) {}
+  // 2. Tìm EQNOLEFILEHDR (0x0000001C = 28 byte header, tiếp theo 0x00020000)
+  for (let i = 0; i < u8.length - 34; i++) {
+    if (u8[i] === 0x1C && u8[i + 1] === 0x00 && u8[i + 2] === 0x00 && u8[i + 3] === 0x00 &&
+        u8[i + 4] === 0x00 && u8[i + 5] === 0x00 && u8[i + 6] === 0x02 && u8[i + 7] === 0x00) {
+      const mtefStart = i + 28;
+      if (mtefStart < u8.length && (u8[mtefStart] === 3 || u8[mtefStart] === 5)) {
+        const tex = parseMtefToLatex(u8, mtefStart);
+        if (tex) return tex;
+      }
+    }
+  }
+  return '';
+}
+
+// ===================== TRÍCH XUẤT CẤU TRÚC BẢNG WORD (<w:tbl>) & TIỀN XỬ LÝ TÀI LIỆU =====================
+function extractWordTableMeta(tblNode) {
+  const K = e => e ? [...e.children] : [], C = (e, x) => e && K(e).find(c => c.localName === x);
+  const V = (e, a) => e ? (e.getAttribute('w:' + a) ?? e.getAttribute(a) ?? null) : null;
+  const parseBorder = bNode => {
+    if (!bNode) return null;
+    const val = V(bNode, 'val') || 'none';
+    if (val === 'none' || val === 'nil') return { style: 'none', width: 0, color: 'transparent' };
+    const sz = parseInt(V(bNode, 'sz') || '4', 10);
+    const col = V(bNode, 'color');
+    return {
+      style: val === 'double' ? 'double' : (/dash|dot/i.test(val) ? 'dashed' : 'solid'),
+      width: Math.max(1, Math.min(3, Math.round(sz / 4))),
+      color: (col && col !== 'auto' && /^[0-9A-Fa-f]{6}$/.test(col)) ? '#' + col : '#334155'
+    };
+  };
+  const tblPr = C(tblNode, 'tblPr'), bdrNode = C(tblPr, 'tblBorders');
+  const defBdr = { style: 'solid', width: 1, color: '#334155' };
+  const tblBorders = {
+    top: parseBorder(C(bdrNode, 'top')) || defBdr,
+    bottom: parseBorder(C(bdrNode, 'bottom')) || defBdr,
+    left: parseBorder(C(bdrNode, 'left')) || defBdr,
+    right: parseBorder(C(bdrNode, 'right')) || defBdr,
+    insideH: parseBorder(C(bdrNode, 'insideH')) || defBdr,
+    insideV: parseBorder(C(bdrNode, 'insideV')) || defBdr
+  };
+  const grid = C(tblNode, 'tblGrid');
+  const colWidths = grid ? K(grid).filter(c => c.localName === 'gridCol').map(c => parseInt(V(c, 'w') || '0', 10)) : [];
+  const rows = [];
+  K(tblNode).filter(c => c.localName === 'tr').forEach(tr => {
+    const rowCells = [];
+    K(tr).filter(c => c.localName === 'tc').forEach(tc => {
+      const tcPr = C(tc, 'tcPr');
+      const gs = C(tcPr, 'gridSpan'), vm = C(tcPr, 'vMerge'), shd = C(tcPr, 'shd'), va = C(tcPr, 'vAlign'), tcB = C(tcPr, 'tcBorders');
+      const colspan = gs ? Math.max(1, parseInt(V(gs, 'val') || '1', 10)) : 1;
+      const vMerge = vm ? ((V(vm, 'val') === 'restart') ? 'restart' : 'continue') : null;
+      const fill = shd ? V(shd, 'fill') : null;
+      const bg = (fill && fill !== 'auto' && !/^f{6}$/i.test(fill) && /^[0-9A-Fa-f]{6}$/.test(fill)) ? '#' + fill : null;
+      const vAlign = va ? (V(va, 'val') || 'center') : 'center';
+      // Canh lề đoạn văn đầu tiên trong ô
+      let align = 'left';
+      const firstP = C(tc, 'p'), pPr = C(firstP, 'pPr'), jc = C(pPr, 'jc');
+      if (jc) {
+        const jv = V(jc, 'val') || '';
+        if (jv === 'center') align = 'center';
+        else if (jv === 'right' || jv === 'end') align = 'right';
+      }
+      const bdrs = {};
+      if (tcB) {
+        ['top', 'bottom', 'left', 'right', 'tl2br', 'tr2bl'].forEach(k => {
+          const b = parseBorder(C(tcB, k));
+          if (b) bdrs[k] = b;
+        });
+      }
+      rowCells.push({ colspan, vMerge, bg, vAlign, align, bdrs });
+    });
+    rows.push(rowCells);
+  });
+  return { tblBorders, colWidths, rows };
+}
+
+// Thay thế thẻ <m:oMath> kể cả khi có lồng nhau hoặc có thuộc tính namespace
+function replaceOMathInXml(xml, eq) {
+  xml = xml.replace(/<m:oMathParaPr>[\s\S]*?<\/m:oMathParaPr>|<\/?m:oMathPara(?:\s[^>]*)?>/g, '');
+  let safety = 0;
+  const leafRe = /<m:oMath(?:\s[^>]*)?>((?:(?!<m:oMath\b)[\s\S])*?)<\/m:oMath>/g;
+  while (leafRe.test(xml) && safety++ < 20) {
+    xml = xml.replace(leafRe, (m) => {
+      let t = '';
+      try {
+        const doc = new DOMParser().parseFromString(`<r xmlns:m="${MN}" xmlns:w="${WN}">${m}</r>`, 'application/xml');
+        t = omml(doc.documentElement.firstElementChild).replace(/\s+/g, ' ').trim();
+      } catch (e) {}
+      const u = /<w:u [^>]*w:val="(?!none)/.test(m);
+      return `<w:r>${u ? '<w:rPr><w:u w:val="single"/></w:rPr>' : ''}<w:t xml:space="preserve">⟪${eq.push({t}) - 1}⟫</w:t></w:r>`;
+    });
+  }
+  return xml;
+}
+
 async function pre(buf){
-  const eq=[];
+  const eq=[], tblMeta=[];
   try{
     const z=await JSZip.loadAsync(buf),fl=z.file('word/document.xml');
     if(fl){
       let x=await fl.async('string');
+      let changed=false;
+
+      // 1. Chuyển đổi các ký tự <w:sym> (Symbol font) trong Word sang ký hiệu chuẩn
+      if(x.includes('<w:sym')){
+        x=x.replace(/<w:sym\b[^>]*?w:char="([0-9A-Fa-f]{2,4})"[^>]*?\/>/g,(m,ch)=>{
+          const hex=ch.toUpperCase().padStart(4,'F0');
+          const sym=W_SYM_MAP[hex]||W_SYM_MAP['F0'+ch.toUpperCase().slice(-2)];
+          return sym?`<w:t xml:space="preserve">⟪${eq.push({t:sym})-1}⟫</w:t>`:m;
+        });
+        changed=true;
+      }
+
+      // 2. Giải mã công thức MathType nhúng trong <w:object> / oleObject*.bin hoặc ảnh WMF
+      if(x.includes('OLEObject') || x.includes('Equation.')){
+        const relFile=z.file('word/_rels/document.xml.rels');
+        const relMap={};
+        if(relFile){
+          const relXml=await relFile.async('string');
+          const reRel=/<Relationship\b[^>]*?\bId="([^"]+)"[^>]*?\bTarget="([^"]+)"/g;
+          let rm; while((rm=reRel.exec(relXml))) relMap[rm[1]]=rm[2].replace(/^\/+/,'');
+        }
+        const objRe=/<w:object\b[\s\S]*?<\/w:object>/g;
+        const matches=[...x.matchAll(objRe)];
+        for(const m of matches){
+          const block=m[0];
+          const rIds=[...block.matchAll(/\br:id="([^"]+)"/g)].map(k=>k[1]);
+          let latex='';
+          for(const rid of rIds){
+            const target=relMap[rid];
+            if(!target) continue;
+            const zf=z.file('word/'+target.replace(/^word\//,''))||z.file(target);
+            if(zf){
+              const u8=await zf.async('uint8array');
+              latex=extractMtefFromBytes(u8);
+              if(latex) break;
+            }
+          }
+          if(latex){
+            const u=/<w:u [^>]*w:val="(?!none)/.test(block);
+            const rep=`<w:r>${u?'<w:rPr><w:u w:val="single"/></w:rPr>':''}<w:t xml:space="preserve">⟪${eq.push({t:latex})-1}⟫</w:t></w:r>`;
+            x=x.replace(block,rep);
+            changed=true;
+          }
+        }
+      }
+
+      // 3. Chuyển đổi toàn bộ công thức Word Equation (<m:oMath>) sang LaTeX
       if(x.includes('<m:oMath')){
-        x=x.replace(/<m:oMathParaPr>[\s\S]*?<\/m:oMathParaPr>|<\/?m:oMathPara>|<m:oMathPara [^>]*>/g,'')
-          .replace(/<m:oMath>[\s\S]*?<\/m:oMath>/g,m=>{
-            let t='';
-            try{t=omml(new DOMParser().parseFromString(`<r xmlns:m="${MN}" xmlns:w="${WN}">${m}</r>`,'application/xml').documentElement.firstElementChild).replace(/\s+/g,' ').trim()}catch(e){}
-            const u=/<w:u [^>]*w:val="(?!none)/.test(m);
-            return`<w:r>${u?'<w:rPr><w:u w:val="single"/></w:rPr>':''}<w:t xml:space="preserve">⟪${eq.push({t})-1}⟫</w:t></w:r>`;
-          });
+        x=replaceOMathInXml(x,eq);
+        changed=true;
+      }
+
+      // 4. Trích xuất cấu trúc & định dạng của các bảng biểu (<w:tbl>) để kết xuất sang ảnh sắc nét
+      if(x.includes('<w:tbl')){
+        try{
+          const doc=new DOMParser().parseFromString(x,'application/xml');
+          const tbls=[...doc.getElementsByTagName('w:tbl')];
+          tbls.forEach(tb=>tblMeta.push(extractWordTableMeta(tb)));
+        }catch(e){}
+      }
+
+      if(changed){
         z.file('word/document.xml',x);
         buf=await z.generateAsync({type:'arraybuffer'});
       }
     }
   }catch(e){}
-  return{buf,eq};
+  return{buf,eq,tblMeta};
+}
+
+// ===================== BỘ VẼ CÔNG THỨC LATEX & BẢNG BIỂU SANG ĐỊNH DẠNG ẢNH PNG TRÊN CANVAS 2D =====================
+// Chuyển chuỗi LaTeX sang dạng hiển thị trực quan và đo/vẽ trực tiếp lên Canvas 2D độ phân giải cao (Retina 2x)
+const TEX_DISPLAY_MAP = {
+  '\\alpha':'α','\\beta':'β','\\gamma':'γ','\\delta':'δ','\\varepsilon':'ε','\\epsilon':'ϵ','\\zeta':'ζ','\\eta':'η',
+  '\\theta':'θ','\\vartheta':'ϑ','\\iota':'ι','\\kappa':'κ','\\lambda':'λ','\\mu':'μ','\\nu':'ν','\\xi':'ξ','\\pi':'π',
+  '\\rho':'ρ','\\sigma':'σ','\\varsigma':'ς','\\tau':'τ','\\upsilon':'υ','\\varphi':'φ','\\phi':'ϕ','\\chi':'χ','\\psi':'ψ','\\omega':'ω',
+  '\\Gamma':'Γ','\\Delta':'Δ','\\Theta':'Θ','\\Lambda':'Λ','\\Xi':'Ξ','\\Pi':'Π','\\Sigma':'Σ','\\Upsilon':'Υ','\\Phi':'Φ','\\Psi':'Ψ','\\Omega':'Ω',
+  '\\pm':'±','\\mp':'∓','\\times':'×','\\div':'÷','\\cdot':'·','\\circ':'∘','\\bullet':'•','\\star':'⋆','\\ast':'*',
+  '\\le':'≤','\\leq':'≤','\\ge':'≥','\\geq':'≥','\\ne':'≠','\\neq':'≠','\\approx':'≈','\\simeq':'≃','\\cong':'≅','\\equiv':'≡','\\sim':'∼','\\propto':'∝',
+  '\\infty':'∞','\\partial':'∂','\\nabla':'∇','\\varnothing':'∅','\\emptyset':'∅','\\in':'∈','\\notin':'∉','\\ni':'∋',
+  '\\subset':'⊂','\\supset':'⊃','\\subseteq':'⊆','\\supseteq':'⊇','\\cup':'∪','\\cap':'∩','\\setminus':'∖',
+  '\\forall':'∀','\\exists':'∃','\\nexists':'∄','\\neg':'¬','\\land':'∧','\\lor':'∨','\\perp':'⊥','\\parallel':'∥','\\angle':'∠','\\triangle':'△',
+  '\\rightarrow':'→','\\to':'→','\\longrightarrow':'⟶','\\leftarrow':'←','\\gets':'←','\\longleftarrow':'⟵',
+  '\\leftrightarrow':'↔','\\longleftrightarrow':'⟷','\\Rightarrow':'⇒','\\Longrightarrow':'⟹','\\Leftarrow':'⇐','\\Leftrightarrow':'⇔','\\iff':'⇔',
+  '\\rightleftharpoons':'⇌','\\uparrow':'↑','\\downarrow':'↓','\\nearrow':'↗','\\searrow':'↘','\\swarrow':'↙','\\nwarrow':'↖','\\mapsto':'↦',
+  '\\sum':'∑','\\prod':'∏','\\int':'∫','\\iint':'∬','\\iiint':'∭','\\oint':'∮','\\bigcup':'⋃','\\bigcap':'⋂',
+  '\\dots':'…','\\ldots':'…','\\cdots':'⋯','\\vdots':'⋮','\\ddots':'⋱','\\AA':'Å','\\ell':'ℓ','\\hbar':'ℏ',
+  '\\Vert':'‖','\\|':'‖','\\langle':'⟨','\\rangle':'⟩','\\lfloor':'⌊','\\rfloor':'⌋','\\lceil':'⌈','\\rceil':'⌉',
+  '\\{':'{','\\}':'}','\\,':' ','\\;':' ','\\:':' ','\\!':'','\\quad':'  ','\\qquad':'    ','\\ ':' '
+};
+
+function parseBraceArg(s, pos) {
+  while (pos < s.length && s[pos] === ' ') pos++;
+  if (pos >= s.length) return { val: '', end: pos };
+  if (s[pos] === '{') {
+    let depth = 1, i = pos + 1;
+    while (i < s.length && depth > 0) {
+      if (s[i] === '\\') { i += 2; continue; }
+      if (s[i] === '{') depth++;
+      else if (s[i] === '}') depth--;
+      i++;
+    }
+    return { val: s.slice(pos + 1, Math.max(pos + 1, i - 1)), end: i };
+  }
+  if (s[pos] === '\\') {
+    const m = /^\\[a-zA-Z]+/.exec(s.slice(pos));
+    if (m) return { val: m[0], end: pos + m[0].length };
+    return { val: s.slice(pos, pos + 2), end: pos + 2 };
+  }
+  return { val: s[pos], end: pos + 1 };
+}
+
+function parseBracketArg(s, pos) {
+  while (pos < s.length && s[pos] === ' ') pos++;
+  if (s[pos] !== '[') return null;
+  let depth = 1, i = pos + 1;
+  while (i < s.length && depth > 0) {
+    if (s[i] === '[') depth++;
+    else if (s[i] === ']') depth--;
+    i++;
+  }
+  return { val: s.slice(pos + 1, Math.max(pos + 1, i - 1)), end: i };
+}
+
+// Đo và tạo Box 2D cho biểu thức LaTeX để vẽ trực tiếp lên Canvas
+function measureLatexBox(tex, ctx, fontSize, upright) {
+  tex = String(tex || '').trim();
+  if (!tex) return { w: 0, asc: fontSize * 0.7, desc: fontSize * 0.2, draw() {} };
+  const fontFam = '"Be Vietnam Pro", "Cambria Math", "Times New Roman", serif';
+  const setF = (sz, it, bd) => {
+    ctx.font = `${bd ? '700 ' : ''}${it ? 'italic ' : ''}${Math.round(sz * 10) / 10}px ${fontFam}`;
+  };
+  const boxes = [];
+  let i = 0;
+  while (i < tex.length) {
+    if (tex[i] === ' ') { i++; continue; }
+    if (tex[i] === '{') {
+      const g = parseBraceArg(tex, i);
+      i = g.end;
+      boxes.push(measureLatexBox(g.val, ctx, fontSize, upright));
+    } else if (tex[i] === '\\') {
+      const m = /^\\([a-zA-Z]+|.)/.exec(tex.slice(i));
+      const cmd = m ? m[0] : '\\';
+      i += cmd.length;
+      if (cmd === '\\left' || cmd === '\\right' || cmd === '\\middle') {
+        while (i < tex.length && tex[i] === ' ') i++;
+        let d = '';
+        if (tex.slice(i).startsWith('\\{') || tex.slice(i).startsWith('\\}') || tex.slice(i).startsWith('\\|')) {
+          d = tex.slice(i + 1, i + 2); i += 2;
+        } else if (tex.slice(i).startsWith('\\Vert')) {
+          d = '‖'; i += 5;
+        } else if (i < tex.length) {
+          d = tex[i++];
+        }
+        if (d && d !== '.') {
+          setF(fontSize * 1.1, false, false);
+          const w = ctx.measureText(d).width + 2;
+          boxes.push({
+            w, asc: fontSize * 0.85, desc: fontSize * 0.3,
+            draw(c, x, y) { setF(fontSize * 1.1, false, false); c.fillText(d, x + 1, y); }
+          });
+        }
+      } else if (cmd === '\\frac' || cmd === '\\dfrac' || cmd === '\\tfrac' || cmd === '\\binom') {
+        const isBinom = cmd === '\\binom';
+        const subSz = Math.max(10, fontSize * 0.82);
+        const numG = parseBraceArg(tex, i); i = numG.end;
+        const denG = parseBraceArg(tex, i); i = denG.end;
+        const bNum = measureLatexBox(numG.val, ctx, subSz, upright);
+        const bDen = measureLatexBox(denG.val, ctx, subSz, upright);
+        const pad = isBinom ? 10 : 6;
+        const w = Math.max(bNum.w, bDen.w) + pad * 2;
+        const axis = fontSize * 0.32;
+        const asc = axis + bNum.asc + bNum.desc + 4;
+        const desc = Math.max(fontSize * 0.25, bDen.asc + bDen.desc + 4 - axis);
+        boxes.push({
+          w, asc, desc,
+          draw(c, x, y) {
+            const barY = y - axis;
+            bNum.draw(c, x + (w - bNum.w) / 2, barY - 3 - bNum.desc);
+            bDen.draw(c, x + (w - bDen.w) / 2, barY + 4 + bDen.asc);
+            if (isBinom) {
+              setF(fontSize * 1.35, false, false);
+              c.fillText('(', x + 1, y + 2);
+              c.fillText(')', x + w - 7, y + 2);
+            } else {
+              c.save();
+              c.beginPath();
+              c.strokeStyle = c.fillStyle;
+              c.lineWidth = Math.max(1, fontSize / 13);
+              c.moveTo(x + 2, barY);
+              c.lineTo(x + w - 2, barY);
+              c.stroke();
+              c.restore();
+            }
+          }
+        });
+      } else if (cmd === '\\sqrt') {
+        const optG = parseBracketArg(tex, i);
+        if (optG) i = optG.end;
+        const radG = parseBraceArg(tex, i); i = radG.end;
+        const bRad = measureLatexBox(radG.val, ctx, fontSize, upright);
+        const bDeg = optG ? measureLatexBox(optG.val, ctx, Math.max(9, fontSize * 0.62), true) : null;
+        const leadW = (bDeg ? Math.max(fontSize * 0.65, bDeg.w + 2) : fontSize * 0.58);
+        const w = leadW + bRad.w + 5;
+        const asc = bRad.asc + 5;
+        const desc = bRad.desc + 2;
+        boxes.push({
+          w, asc, desc,
+          draw(c, x, y) {
+            if (bDeg) bDeg.draw(c, x + 1, y - asc * 0.45);
+            const rx = x + leadW;
+            const topY = y - bRad.asc - 3;
+            const botY = y + bRad.desc;
+            c.save();
+            c.beginPath();
+            c.strokeStyle = c.fillStyle;
+            c.lineWidth = Math.max(1.1, fontSize / 12);
+            c.moveTo(rx - leadW * 0.75, y - fontSize * 0.25);
+            c.lineTo(rx - leadW * 0.55, y - fontSize * 0.32);
+            c.lineTo(rx - leadW * 0.3, botY);
+            c.lineTo(rx, topY);
+            c.lineTo(rx + bRad.w + 3, topY);
+            c.stroke();
+            c.restore();
+            bRad.draw(c, rx + 2, y);
+          }
+        });
+      } else if (cmd === '\\xrightarrow' || cmd === '\\xleftarrow') {
+        const isLeft = cmd === '\\xleftarrow';
+        const optG = parseBracketArg(tex, i); if (optG) i = optG.end;
+        const upG = parseBraceArg(tex, i); i = upG.end;
+        const subSz = Math.max(9.5, fontSize * 0.72);
+        const bUp = upG.val ? measureLatexBox(upG.val, ctx, subSz, true) : null;
+        const bLow = (optG && optG.val) ? measureLatexBox(optG.val, ctx, subSz, true) : null;
+        const w = Math.max(fontSize * 1.6, (bUp ? bUp.w : 0) + 14, (bLow ? bLow.w : 0) + 14);
+        const axis = fontSize * 0.3;
+        const asc = axis + (bUp ? bUp.asc + bUp.desc + 4 : fontSize * 0.4);
+        const desc = Math.max(fontSize * 0.2, bLow ? bLow.asc + bLow.desc + 4 - axis : fontSize * 0.2);
+        boxes.push({
+          w, asc, desc,
+          draw(c, x, y) {
+            const ay = y - axis;
+            if (bUp) bUp.draw(c, x + (w - bUp.w) / 2, ay - 4 - bUp.desc);
+            if (bLow) bLow.draw(c, x + (w - bLow.w) / 2, ay + 4 + bLow.asc);
+            c.save();
+            c.beginPath();
+            c.strokeStyle = c.fillStyle;
+            c.lineWidth = Math.max(1.1, fontSize / 12);
+            c.moveTo(x + 3, ay);
+            c.lineTo(x + w - 3, ay);
+            if (isLeft) {
+              c.moveTo(x + 8, ay - 3.5); c.lineTo(x + 3, ay); c.lineTo(x + 8, ay + 3.5);
+            } else {
+              c.moveTo(x + w - 8, ay - 3.5); c.lineTo(x + w - 3, ay); c.lineTo(x + w - 8, ay + 3.5);
+            }
+            c.stroke();
+            c.restore();
+          }
+        });
+      } else if (cmd === '\\overset' || cmd === '\\underset') {
+        const g1 = parseBraceArg(tex, i); i = g1.end;
+        const g2 = parseBraceArg(tex, i); i = g2.end;
+        const b1 = measureLatexBox(g1.val, ctx, Math.max(9.5, fontSize * 0.72), true);
+        const b2 = measureLatexBox(g2.val, ctx, fontSize, upright);
+        const w = Math.max(b1.w, b2.w) + 4;
+        if (cmd === '\\overset') {
+          boxes.push({
+            w, asc: b2.asc + b1.asc + b1.desc + 2, desc: b2.desc,
+            draw(c, x, y) {
+              b2.draw(c, x + (w - b2.w) / 2, y);
+              b1.draw(c, x + (w - b1.w) / 2, y - b2.asc - 2 - b1.desc);
+            }
+          });
+        } else {
+          boxes.push({
+            w, asc: b2.asc, desc: b2.desc + b1.asc + b1.desc + 2,
+            draw(c, x, y) {
+              b2.draw(c, x + (w - b2.w) / 2, y);
+              b1.draw(c, x + (w - b1.w) / 2, y + b2.desc + 2 + b1.asc);
+            }
+          });
+        }
+      } else if (cmd === '\\overrightarrow' || cmd === '\\vec' || cmd === '\\overline' || cmd === '\\bar' || cmd === '\\underline' || cmd === '\\hat' || cmd === '\\tilde' || cmd === '\\boxed' || cmd === '\\cancel') {
+        const g = parseBraceArg(tex, i); i = g.end;
+        const b = measureLatexBox(g.val, ctx, fontSize, upright);
+        const pad = cmd === '\\boxed' ? 4 : 1;
+        const w = b.w + pad * 2;
+        const asc = b.asc + (cmd === '\\underline' ? 0 : 5) + pad;
+        const desc = b.desc + (cmd === '\\underline' ? 4 : 0) + pad;
+        boxes.push({
+          w, asc, desc,
+          draw(c, x, y) {
+            b.draw(c, x + pad, y);
+            c.save();
+            c.strokeStyle = c.fillStyle;
+            c.lineWidth = Math.max(1, fontSize / 13);
+            const topY = y - b.asc - 2;
+            if (cmd === '\\overline' || cmd === '\\bar') {
+              c.beginPath(); c.moveTo(x + pad, topY); c.lineTo(x + w - pad, topY); c.stroke();
+            } else if (cmd === '\\overrightarrow' || cmd === '\\vec') {
+              c.beginPath(); c.moveTo(x + pad, topY); c.lineTo(x + w - pad, topY);
+              c.moveTo(x + w - pad - 4, topY - 2.5); c.lineTo(x + w - pad, topY); c.lineTo(x + w - pad - 4, topY + 2.5);
+              c.stroke();
+            } else if (cmd === '\\underline') {
+              const botY = y + b.desc + 2;
+              c.beginPath(); c.moveTo(x + pad, botY); c.lineTo(x + w - pad, botY); c.stroke();
+            } else if (cmd === '\\hat') {
+              const mid = x + w / 2;
+              c.beginPath(); c.moveTo(mid - 4, topY + 2); c.lineTo(mid, topY - 2); c.lineTo(mid + 4, topY + 2); c.stroke();
+            } else if (cmd === '\\boxed') {
+              c.strokeRect(x + 0.5, y - b.asc - pad, w - 1, b.asc + b.desc + pad * 2);
+            } else if (cmd === '\\cancel') {
+              c.beginPath(); c.moveTo(x, y + b.desc); c.lineTo(x + w, y - b.asc); c.stroke();
+            }
+            c.restore();
+          }
+        });
+      } else if (cmd === '\\mathrm' || cmd === '\\text' || cmd === '\\textbf' || cmd === '\\mathbf' || cmd === '\\mathit' || cmd === '\\mathbb' || cmd === '\\ce' || cmd === '\\mathop') {
+        const g = parseBraceArg(tex, i); i = g.end;
+        boxes.push(measureLatexBox(g.val, ctx, fontSize, cmd !== '\\mathit'));
+      } else if (cmd === '\\begin') {
+        const envG = parseBraceArg(tex, i); i = envG.end;
+        const endTag = `\\end{${envG.val}}`;
+        const endIdx = tex.indexOf(endTag, i);
+        const body = endIdx >= 0 ? tex.slice(i, endIdx) : tex.slice(i);
+        i = endIdx >= 0 ? endIdx + endTag.length : tex.length;
+        const rowStrs = body.split(/\\\\/).map(r => r.trim()).filter(Boolean);
+        const grid = rowStrs.map(r => r.split('&').map(c => measureLatexBox(c.trim(), ctx, fontSize * 0.9, upright)));
+        const nCols = grid.reduce((m, r) => Math.max(m, r.length), 1);
+        const colW = new Array(nCols).fill(0);
+        grid.forEach(r => r.forEach((cell, ci) => { colW[ci] = Math.max(colW[ci], cell.w); }));
+        const rowH = grid.map(r => ({
+          asc: r.reduce((m, cell) => Math.max(m, cell.asc), fontSize * 0.6),
+          desc: r.reduce((m, cell) => Math.max(m, cell.desc), fontSize * 0.2)
+        }));
+        const totH = rowH.reduce((s, r) => s + r.asc + r.desc + 4, 0);
+        const totW = colW.reduce((s, w) => s + w, 0) + (nCols - 1) * 10 + 4;
+        const axis = fontSize * 0.3;
+        boxes.push({
+          w: totW, asc: totH / 2 + axis, desc: Math.max(0, totH / 2 - axis),
+          draw(c, x, y) {
+            let cy = y - totH / 2 - axis;
+            grid.forEach((r, ri) => {
+              cy += rowH[ri].asc;
+              let cx = x + 2;
+              r.forEach((cell, ci) => {
+                cell.draw(c, cx + (colW[ci] - cell.w) / 2, cy);
+                cx += colW[ci] + 10;
+              });
+              cy += rowH[ri].desc + 4;
+            });
+          }
+        });
+      } else if (cmd === '\\limits' || cmd === '\\nolimits' || cmd === '\\displaystyle' || cmd === '\\textstyle') {
+        // ignore modifier
+      } else {
+        const sym = TEX_DISPLAY_MAP[cmd] ?? cmd.replace(/^\\/, '');
+        const isFn = /^\\(sin|cos|tan|cot|log|ln|lg|lim|max|min|exp|det)$/i.test(cmd);
+        setF(fontSize, false, false);
+        const w = ctx.measureText(sym).width + (isFn ? 2 : 0);
+        boxes.push({
+          w, asc: fontSize * 0.76, desc: fontSize * 0.2,
+          draw(c, x, y) { setF(fontSize, false, false); c.fillText(sym, x, y); }
+        });
+      }
+    } else if (tex[i] === '^' || tex[i] === '_') {
+      let supVal = null, subVal = null;
+      while (i < tex.length && (tex[i] === '^' || tex[i] === '_')) {
+        const kind = tex[i++];
+        const g = parseBraceArg(tex, i); i = g.end;
+        if (kind === '^') supVal = g.val; else subVal = g.val;
+        while (i < tex.length && tex[i] === ' ') i++;
+      }
+      const sSz = Math.max(9.5, fontSize * 0.72);
+      const bSup = supVal !== null ? measureLatexBox(supVal, ctx, sSz, true) : null;
+      const bSub = subVal !== null ? measureLatexBox(subVal, ctx, sSz, true) : null;
+      const baseBox = boxes.length ? boxes.pop() : { w: 0, asc: fontSize * 0.7, desc: fontSize * 0.15, draw() {} };
+      const scriptW = Math.max(bSup ? bSup.w : 0, bSub ? bSub.w : 0) + 1;
+      const w = baseBox.w + scriptW;
+      const supShift = Math.max(fontSize * 0.36, baseBox.asc - sSz * 0.35);
+      const subShift = Math.max(fontSize * 0.24, baseBox.desc + sSz * 0.25);
+      const asc = Math.max(baseBox.asc, bSup ? supShift + bSup.asc : 0);
+      const desc = Math.max(baseBox.desc, bSub ? subShift + bSub.desc : 0);
+      boxes.push({
+        w, asc, desc,
+        draw(c, x, y) {
+          baseBox.draw(c, x, y);
+          if (bSup) bSup.draw(c, x + baseBox.w + 0.5, y - supShift);
+          if (bSub) bSub.draw(c, x + baseBox.w + 0.5, y + subShift);
+        }
+      });
+    } else {
+      // Ký tự thường hoặc số/toán tử
+      let run = '';
+      const isAlpha = /[A-Za-z]/.test(tex[i]);
+      while (i < tex.length && !/[\\{}^_\s]/.test(tex[i]) && (/[A-Za-z]/.test(tex[i]) === isAlpha)) {
+        run += tex[i++];
+      }
+      if (!run && i < tex.length) run = tex[i++];
+      const it = isAlpha && !upright && run.length === 1;
+      const pad = /^[+\-=<>±×÷→⟶⇌⇒⇔]$/.test(run) ? 3 : 0;
+      setF(fontSize, it, false);
+      const w = ctx.measureText(run).width + pad * 2;
+      boxes.push({
+        w, asc: fontSize * 0.76, desc: fontSize * 0.2,
+        draw(c, x, y) { setF(fontSize, it, false); c.fillText(run, x + pad, y); }
+      });
+    }
+  }
+  const totalW = boxes.reduce((s, b) => s + b.w, 0);
+  const maxAsc = boxes.reduce((m, b) => Math.max(m, b.asc), fontSize * 0.75);
+  const maxDesc = boxes.reduce((m, b) => Math.max(m, b.desc), fontSize * 0.2);
+  return {
+    w: totalW, asc: maxAsc, desc: maxDesc,
+    draw(c, x, y) {
+      let cx = x;
+      boxes.forEach(b => { b.draw(c, cx, y); cx += b.w; });
+    }
+  };
+}
+
+// Kiểm tra xem một bảng <table> trong Word có phải là bảng khung chia câu hỏi / chia cột đáp án A, B, C, D hay không
+function isQuestionOrOptionLayoutTable(tbl, meta) {
+  const txt = (tbl.textContent || '').replace(/\s+/g, ' ').trim();
+  // 1. Nếu bảng chứa từ 1 câu hỏi trở lên ("Câu 1.", "Question 1.") -> bảng khung bao câu hỏi
+  if (/(?:^|\s)(?:câu|question)\s*\d+\s*[.:)]/i.test(txt)) return 'question-wrapper';
+  // 2. Kiểm tra nếu các ô của bảng chính là 4 phương án lựa chọn A., B., C., D. (hoặc a), b), c), d))
+  const cells = [...tbl.querySelectorAll('td,th')].map(c => (c.textContent || '').replace(/\s+/g, ' ').trim()).filter(Boolean);
+  if (cells.length >= 2 && cells.length <= 8) {
+    const hasA = cells.some(c => /^A\s*[.)]/i.test(c));
+    const hasB = cells.some(c => /^B\s*[.)]/i.test(c));
+    const hasC = cells.some(c => /^C\s*[.)]/i.test(c));
+    const hasD = cells.some(c => /^D\s*[.)]/i.test(c));
+    if (hasA && hasB && hasC && hasD) return 'option-grid';
+  }
+  return false;
+}
+
+// Tách nội dung HTML trong một ô bảng thành danh sách đoạn văn, mỗi đoạn gồm các token (văn bản định dạng, công thức LaTeX, hoặc ảnh)
+function extractCellParagraphs(td, eq) {
+  const paras = [];
+  let curTokens = [];
+  const pushPara = () => {
+    if (curTokens.length) { paras.push(curTokens); curTokens = []; }
+  };
+  const walk = (node, style) => {
+    if (node.nodeType === 3) {
+      const raw = node.nodeValue.normalize('NFC').replace(/[\r\n\u00a0]+/g, ' ');
+      if (!raw) return;
+      // Tách công thức ⟪idx⟫ hoặc \(...\) hoặc $...$ trong văn bản
+      let last = 0;
+      raw.replace(TK, (m, a, b, c, d, e, f, off) => {
+        if (off > last) curTokens.push({ kind: 'text', text: raw.slice(last, off), style });
+        last = off + m.length;
+        if (a != null) {
+          const eqTex = ((eq || [])[a] || {}).t || '';
+          curTokens.push({ kind: 'math', tex: eqTex, style });
+        } else if (c || d || e || f) {
+          curTokens.push({ kind: 'math', tex: c || d || e || f, style });
+        }
+        return m;
+      });
+      if (last < raw.length) curTokens.push({ kind: 'text', text: raw.slice(last), style });
+      return;
+    }
+    if (node.nodeType !== 1) return;
+    const tag = node.tagName;
+    if (tag === 'IMG') {
+      const src = node.getAttribute('src') || '';
+      if (src) curTokens.push({ kind: 'img', src });
+      return;
+    }
+    if (tag === 'BR') { pushPara(); return; }
+    const nextStyle = Object.assign({}, style);
+    if (tag === 'B' || tag === 'STRONG') nextStyle.b = true;
+    if (tag === 'I' || tag === 'EM') nextStyle.i = true;
+    if (tag === 'U') nextStyle.u = true;
+    if (tag === 'SUB') nextStyle.sub = true;
+    if (tag === 'SUP') nextStyle.sup = true;
+    node.childNodes.forEach(ch => walk(ch, nextStyle));
+    if (/^(P|DIV|LI|H[1-6])$/.test(tag)) pushPara();
+  };
+  walk(td, { b: td.tagName === 'TH', i: false, u: false, sub: false, sup: false });
+  pushPara();
+  if (!paras.length) paras.push([]);
+  return paras;
+}
+
+// Kết xuất một phần tử <table> (cùng metadata từ Word và mảng công thức eq) thành ảnh PNG base64 sắc nét (2x DPI)
+async function renderTableToPngDataUrl(tblEl, meta, eq) {
+  const trs = [...tblEl.rows];
+  if (!trs.length) return '';
+
+  // 1. Nạp trước các ảnh <img> nếu có bên trong ô bảng
+  const imgMap = new Map();
+  const imgEls = [...tblEl.querySelectorAll('img')];
+  await Promise.all(imgEls.map(im => new Promise(res => {
+    const src = im.getAttribute('src') || '';
+    if (!src || /emf|wmf/i.test(src.slice(0, 40))) return res();
+    const imgObj = new Image();
+    imgObj.onload = () => { imgMap.set(src, imgObj); res(); };
+    imgObj.onerror = () => res();
+    imgObj.src = src;
+  })));
+
+  // 2. Xây dựng ma trận lưới (xử lý colspan và rowspan)
+  const grid = [];
+  const cellsList = [];
+  let maxCols = 0;
+
+  trs.forEach((tr, rIdx) => {
+    if (!grid[rIdx]) grid[rIdx] = [];
+    let cIdx = 0;
+    const tds = [...tr.cells];
+    tds.forEach((td, tdIdx) => {
+      while (grid[rIdx][cIdx]) cIdx++;
+      const mCell = (meta && meta.rows && meta.rows[rIdx] && meta.rows[rIdx][tdIdx]) || {};
+      const colspan = Math.max(1, parseInt(td.getAttribute('colspan') || mCell.colspan || 1, 10));
+      const rowspan = Math.max(1, parseInt(td.getAttribute('rowspan') || 1, 10));
+      const isHeader = td.tagName === 'TH' || (rIdx === 0 && trs.length > 1 && tds.every(x => x.tagName === 'TH'));
+      const rawTxt = (td.textContent || '').trim();
+      // Nhận diện bảng biến thiên / bảng xét dấu để tự căn giữa các ô giá trị/dấu/mũi tên
+      const isBbtCell = /^([+\-0]|\\|\\||↗|↘|\+∞|-∞|∞|x|y|y'|f\(x\)|f'\(x\))$/i.test(rawTxt);
+      const cellObj = {
+        r: rIdx, c: cIdx, colspan, rowspan,
+        isHeader,
+        bg: mCell.bg || (isHeader ? '#f1f5f9' : '#ffffff'),
+        align: mCell.align || (isHeader || isBbtCell ? 'center' : 'left'),
+        vAlign: mCell.vAlign || 'center',
+        bdrs: mCell.bdrs || {},
+        paras: extractCellParagraphs(td, eq)
+      };
+      cellsList.push(cellObj);
+      for (let dr = 0; dr < rowspan; dr++) {
+        if (!grid[rIdx + dr]) grid[rIdx + dr] = [];
+        for (let dc = 0; dc < colspan; dc++) {
+          grid[rIdx + dr][cIdx + dc] = cellObj;
+        }
+      }
+      cIdx += colspan;
+      if (cIdx > maxCols) maxCols = cIdx;
+    });
+  });
+
+  const nRows = grid.length;
+  const nCols = Math.max(1, maxCols);
+
+  // 3. Khởi tạo context đo kích thước
+  const mCanvas = document.createElement('canvas');
+  const mCtx = mCanvas.getContext('2d');
+  const baseFont = 15;
+  const fontFam = '"Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+  const padX = 11, padY = 8;
+
+  // Chuyển mỗi đoạn văn trong ô thành mảng các "box" (từ, công thức LaTeX, ảnh) có thể ngắt dòng
+  function buildParaBoxes(tokens) {
+    const items = [];
+    tokens.forEach(tk => {
+      if (tk.kind === 'math') {
+        const box = measureLatexBox(tk.tex, mCtx, baseFont, false);
+        items.push({ kind: 'math', w: box.w + 2, asc: box.asc, desc: box.desc, draw: (c, x, y) => box.draw(c, x + 1, y) });
+      } else if (tk.kind === 'img') {
+        const im = imgMap.get(tk.src);
+        if (im && im.naturalWidth) {
+          const maxW = 180, maxH = 110;
+          const sc = Math.min(1, maxW / im.naturalWidth, maxH / im.naturalHeight);
+          const w = Math.round(im.naturalWidth * sc), h = Math.round(im.naturalHeight * sc);
+          items.push({ kind: 'img', w: w + 4, asc: h * 0.8, desc: h * 0.2, draw: (c, x, y) => c.drawImage(im, x + 2, y - h * 0.8, w, h) });
+        }
+      } else if (tk.kind === 'text') {
+        const st = tk.style || {};
+        const fSz = (st.sub || st.sup) ? Math.round(baseFont * 0.76) : baseFont;
+        const fontStr = `${st.b ? '700 ' : ''}${st.i ? 'italic ' : ''}${fSz}px ${fontFam}`;
+        // Tách theo từ (giữ khoảng trắng) để ngắt dòng tự nhiên
+        const parts = tk.text.split(/(\s+)/).filter(Boolean);
+        parts.forEach(part => {
+          // Chuyển các mũi tên / ký hiệu bảng biến thiên sang ký tự đẹp
+          const cleanPart = part.replace(/\\nearrow/g, '↗').replace(/\\searrow/g, '↘').replace(/\+oo|\+\\infty/g, '+∞').replace(/-oo|-\\infty/g, '-∞');
+          mCtx.font = fontStr;
+          const w = mCtx.measureText(cleanPart).width;
+          items.push({
+            kind: 'word', isSpace: /^\s+$/.test(cleanPart), text: cleanPart, style: st, fontStr, fSz,
+            w, asc: st.sup ? baseFont * 0.88 : fSz * 0.78, desc: st.sub ? baseFont * 0.42 : fSz * 0.22,
+            draw(c, x, y) {
+              c.font = fontStr;
+              const dy = st.sup ? -baseFont * 0.32 : (st.sub ? baseFont * 0.24 : 0);
+              c.fillText(cleanPart, x, y + dy);
+              if (st.u && !/^\s+$/.test(cleanPart)) {
+                c.save();
+                c.beginPath();
+                c.strokeStyle = c.fillStyle;
+                c.lineWidth = 1;
+                c.moveTo(x, y + dy + 2);
+                c.lineTo(x + w, y + dy + 2);
+                c.stroke();
+                c.restore();
+              }
+            }
+          });
+        });
+      }
+    });
+    return items;
+  }
+
+  cellsList.forEach(cell => {
+    cell.paraBoxes = cell.paras.map(buildParaBoxes);
+    cell.naturalW = cell.paraBoxes.reduce((m, p) => Math.max(m, p.reduce((s, x) => s + x.w, 0)), 0) + padX * 2 + 4;
+    cell.minW = cell.paraBoxes.reduce((m, p) => Math.max(m, p.reduce((mw, x) => Math.max(mw, x.isSpace ? 0 : x.w), 0)), 28) + padX * 2;
+  });
+
+  // 4. Tính độ rộng từng cột (ưu tiên tỉ lệ cột từ Word, hoặc tự cân đối theo nội dung trong phạm vi 860px)
+  const MAX_TABLE_W = 860, MIN_COL_W = 44;
+  let colWidths = new Array(nCols).fill(MIN_COL_W);
+  const colNatural = new Array(nCols).fill(MIN_COL_W);
+
+  cellsList.forEach(cell => {
+    const shareNat = cell.naturalW / cell.colspan;
+    const shareMin = Math.min(220, cell.minW / cell.colspan);
+    for (let k = 0; k < cell.colspan; k++) {
+      const ci = cell.c + k;
+      colNatural[ci] = Math.max(colNatural[ci], shareNat);
+      colWidths[ci] = Math.max(colWidths[ci], shareMin);
+    }
+  });
+
+  if (meta && Array.isArray(meta.colWidths) && meta.colWidths.length === nCols && meta.colWidths.every(w => w > 0)) {
+    const sumW = meta.colWidths.reduce((a, b) => a + b, 0);
+    const targetTotal = Math.min(MAX_TABLE_W, Math.max(360, colNatural.reduce((a, b) => a + b, 0)));
+    colWidths = meta.colWidths.map((w, i) => Math.max(colWidths[i], Math.round(targetTotal * w / sumW)));
+  } else {
+    const sumNat = colNatural.reduce((a, b) => a + b, 0);
+    if (sumNat <= MAX_TABLE_W) {
+      colWidths = colNatural.map(w => Math.ceil(w));
+    } else {
+      const sumMin = colWidths.reduce((a, b) => a + b, 0);
+      const extra = Math.max(0, MAX_TABLE_W - sumMin);
+      const flexSum = colNatural.reduce((s, w, i) => s + Math.max(0, w - colWidths[i]), 0) || 1;
+      colWidths = colWidths.map((mw, i) => Math.round(mw + extra * Math.max(0, colNatural[i] - mw) / flexSum));
+    }
+  }
+
+  // 5. Ngắt dòng văn bản/công thức trong từng ô và tính chiều cao từng hàng
+  function wrapCellLines(cell, availW) {
+    const innerW = Math.max(24, availW - padX * 2);
+    const lines = [];
+    cell.paraBoxes.forEach(pItems => {
+      if (!pItems.length) {
+        lines.push({ items: [], w: 0, asc: baseFont * 0.75, desc: baseFont * 0.22 });
+        return;
+      }
+      let cur = [], curW = 0, curAsc = baseFont * 0.78, curDesc = baseFont * 0.24;
+      const flush = () => {
+        while (cur.length && cur[cur.length - 1].isSpace) {
+          const sp = cur.pop(); curW -= sp.w;
+        }
+        lines.push({ items: cur, w: curW, asc: curAsc, desc: curDesc });
+        cur = []; curW = 0; curAsc = baseFont * 0.78; curDesc = baseFont * 0.24;
+      };
+      pItems.forEach(it => {
+        if (!cur.length && it.isSpace) return;
+        if (cur.length && curW + it.w > innerW && !it.isSpace) {
+          flush();
+        }
+        cur.push(it);
+        curW += it.w;
+        curAsc = Math.max(curAsc, it.asc);
+        curDesc = Math.max(curDesc, it.desc);
+      });
+      if (cur.length) flush();
+    });
+    const contentH = lines.reduce((s, l) => s + l.asc + l.desc + 4, 0);
+    return { lines, contentH, totalH: contentH + padY * 2 };
+  }
+
+  const rowHeights = new Array(nRows).fill(34);
+  cellsList.forEach(cell => {
+    let cw = 0;
+    for (let k = 0; k < cell.colspan; k++) cw += colWidths[cell.c + k];
+    cell.w = cw;
+    cell.layout = wrapCellLines(cell, cw);
+    if (cell.rowspan === 1) {
+      rowHeights[cell.r] = Math.max(rowHeights[cell.r], Math.ceil(cell.layout.totalH));
+    }
+  });
+  // Phân bổ chiều cao cho các ô gộp hàng (rowspan > 1)
+  cellsList.forEach(cell => {
+    if (cell.rowspan > 1) {
+      let curSum = 0;
+      for (let k = 0; k < cell.rowspan; k++) curSum += rowHeights[cell.r + k];
+      if (cell.layout.totalH > curSum) {
+        const add = Math.ceil((cell.layout.totalH - curSum) / cell.rowspan);
+        for (let k = 0; k < cell.rowspan; k++) rowHeights[cell.r + k] += add;
+      }
+    }
+  });
+
+  const colX = [0];
+  for (let c = 0; c < nCols; c++) colX.push(colX[c] + colWidths[c]);
+  const rowY = [0];
+  for (let r = 0; r < nRows; r++) rowY.push(rowY[r] + rowHeights[r]);
+
+  const margin = 4;
+  const totalW = colX[nCols] + margin * 2;
+  const totalH = rowY[nRows] + margin * 2;
+  const scale = 2; // Retina 2x
+
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(totalW * scale);
+  canvas.height = Math.round(totalH * scale);
+  const ctx = canvas.getContext('2d');
+  ctx.scale(scale, scale);
+
+  // Nền trắng toàn bảng
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, totalW, totalH);
+
+  const defBdr = { style: 'solid', width: 1, color: '#334155' };
+  const tbBdr = (meta && meta.tblBorders) || { top: defBdr, bottom: defBdr, left: defBdr, right: defBdr, insideH: defBdr, insideV: defBdr };
+
+  function drawLineSpec(x1, y1, x2, y2, spec) {
+    if (!spec || spec.style === 'none' || spec.width <= 0) return;
+    ctx.save();
+    ctx.strokeStyle = spec.color || '#334155';
+    ctx.lineWidth = spec.width || 1;
+    if (spec.style === 'dashed') ctx.setLineDash([4, 3]);
+    if (spec.style === 'double') {
+      const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy) || 1;
+      const nx = -dy / len * 1.6, ny = dx / len * 1.6;
+      ctx.beginPath();
+      ctx.moveTo(x1 + nx, y1 + ny); ctx.lineTo(x2 + nx, y2 + ny);
+      ctx.moveTo(x1 - nx, y1 - ny); ctx.lineTo(x2 - nx, y2 - ny);
+      ctx.stroke();
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // 6. Vẽ nền, nội dung chữ/công thức và đường viền từng ô
+  cellsList.forEach(cell => {
+    const x = margin + colX[cell.c];
+    const y = margin + rowY[cell.r];
+    const w = colX[cell.c + cell.colspan] - colX[cell.c];
+    const h = rowY[cell.r + cell.rowspan] - rowY[cell.r];
+
+    // Nền ô
+    ctx.fillStyle = cell.bg || '#ffffff';
+    ctx.fillRect(x, y, w, h);
+
+    // Canh dọc nội dung
+    let curY = y + padY;
+    if (cell.vAlign === 'center' || cell.vAlign === 'middle') {
+      curY = y + Math.max(padY, (h - cell.layout.contentH) / 2);
+    } else if (cell.vAlign === 'bottom') {
+      curY = y + Math.max(padY, h - padY - cell.layout.contentH);
+    }
+
+    // Vẽ từng dòng trong ô
+    ctx.fillStyle = '#14232f';
+    cell.layout.lines.forEach(line => {
+      curY += line.asc;
+      let curX = x + padX;
+      if (cell.align === 'center') {
+        curX = x + Math.max(padX, (w - line.w) / 2);
+      } else if (cell.align === 'right') {
+        curX = x + Math.max(padX, w - padX - line.w);
+      }
+      line.items.forEach(it => {
+        // Nếu là dấu hai sọc đứng || của bảng biến thiên -> vẽ 2 sọc đứng xuyên suốt chiều cao ô
+        if (it.kind === 'word' && it.text.trim() === '||' && cell.layout.lines.length === 1 && line.items.length === 1) {
+          const midX = x + w / 2;
+          drawLineSpec(midX, y + 2, midX, y + h - 2, { style: 'double', width: 1.1, color: '#14232f' });
+        } else {
+          it.draw(ctx, curX, curY);
+        }
+        curX += it.w;
+      });
+      curY += line.desc + 4;
+    });
+
+    // Đường viền 4 cạnh + đường chéo (nếu có)
+    const bTop = cell.bdrs.top || (cell.r === 0 ? tbBdr.top : tbBdr.insideH);
+    const bBot = cell.bdrs.bottom || (cell.r + cell.rowspan === nRows ? tbBdr.bottom : tbBdr.insideH);
+    const bLeft = cell.bdrs.left || (cell.c === 0 ? tbBdr.left : tbBdr.insideV);
+    const bRight = cell.bdrs.right || (cell.c + cell.colspan === nCols ? tbBdr.right : tbBdr.insideV);
+
+    drawLineSpec(x, y, x + w, y, bTop);
+    drawLineSpec(x, y + h, x + w, y + h, bBot);
+    drawLineSpec(x, y, x, y + h, bLeft);
+    drawLineSpec(x + w, y, x + w, y + h, bRight);
+    if (cell.bdrs.tl2br) drawLineSpec(x, y, x + w, y + h, cell.bdrs.tl2br);
+    if (cell.bdrs.tr2bl) drawLineSpec(x + w, y, x, y + h, cell.bdrs.tr2bl);
+  });
+
+  return {
+    dataUrl: canvas.toDataURL('image/png'),
+    w: totalW,
+    h: totalH
+  };
+}
+
+// Chuyển đổi tất cả các bảng biểu nội dung (<table>) trong HTML xuất từ Mammoth sang thẻ <img> định dạng PNG
+async function convertTablesInHtml(html, tblMeta, eq, autoTblImg) {
+  if (autoTblImg === false || !/<table\b/i.test(html)) return { html, tableCount: 0 };
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const allTables = [...doc.querySelectorAll('table')];
+  if (!allTables.length) return { html, tableCount: 0 };
+
+  // Gán chỉ số bảng gốc theo thứ tự xuất hiện để khớp với tblMeta từ word/document.xml
+  allTables.forEach((tb, idx) => { tb.dataset.tmetaIdx = String(idx); });
+
+  // Xử lý từ bảng con sâu nhất ra bảng ngoài
+  const depthOf = el => { let d = 0, p = el; while (p) { if (p.tagName === 'TABLE') d++; p = p.parentElement; } return d; };
+  allTables.sort((a, b) => depthOf(b) - depthOf(a));
+
+  let tableCount = 0;
+  for (const tb of allTables) {
+    if (!tb.isConnected) continue;
+    const mIdx = parseInt(tb.dataset.tmetaIdx || '-1', 10);
+    const meta = (tblMeta && mIdx >= 0) ? tblMeta[mIdx] : null;
+    const layoutKind = isQuestionOrOptionLayoutTable(tb, meta);
+    if (layoutKind) continue; // Giữ nguyên văn bản cho bảng khung chia câu hỏi / chia cột đáp án A,B,C,D
+
+    try {
+      const rendered = await renderTableToPngDataUrl(tb, meta, eq);
+      if (rendered && rendered.dataUrl) {
+        const p = doc.createElement('p');
+        const img = doc.createElement('img');
+        img.setAttribute('src', rendered.dataUrl);
+        img.setAttribute('data-tbl-w', String(rendered.w));
+        img.setAttribute('data-tbl-h', String(rendered.h));
+        p.appendChild(img);
+        tb.replaceWith(p);
+        tableCount++;
+      }
+    } catch (e) {}
+  }
+  return { html: doc.body.innerHTML, tableCount };
+}
+
+// ===================== BỘ CHUYỂN ĐỔI CÔNG THỨC TOÁN, HÓA, VẬT LÍ, SINH HỌC SANG LATEX =====================
+// Danh sách nguyên tố hóa học chuẩn IUPAC để nhận diện chính xác công thức phân tử, ion, hợp chất hữu cơ/vô cơ
+const CHEM_ELEMENTS = new Set([
+  'H','He','Li','Be','B','C','N','O','F','Ne','Na','Mg','Al','Si','P','S','Cl','Ar',
+  'K','Ca','Sc','Ti','V','Cr','Mn','Fe','Co','Ni','Cu','Zn','Ga','Ge','As','Se','Br','Kr',
+  'Rb','Sr','Y','Zr','Nb','Mo','Tc','Ru','Rh','Pd','Ag','Cd','In','Sn','Sb','Te','I','Xe',
+  'Cs','Ba','La','Ce','Pr','Nd','Pm','Sm','Eu','Gd','Tb','Dy','Ho','Er','Tm','Yb','Lu',
+  'Hf','Ta','W','Re','Os','Ir','Pt','Au','Hg','Tl','Pb','Bi','Po','At','Rn',
+  'Fr','Ra','Ac','Th','Pa','U','Np','Pu','Am','Cm','Bk','Cf','Me','Et'
+]);
+const DIATOMIC_SET = new Set(['H2','O2','O3','N2','F2','Cl2','Br2','I2','S8','P4']);
+
+// Kiểm tra một chuỗi có phải là công thức hóa học hợp lệ hay không (ví dụ H2SO4, Fe2(SO4)3, Ca(OH)2, C6H12O6, CH3COOH, CuSO4.5H2O)
+function isChemFormulaToken(tok) {
+  if (!tok || tok.length < 2 || tok.length > 45) return false;
+  const noArrow = tok.replace(/[↑↓]$/, '');
+  const body = noArrow.replace(/^\d+/, '');
+  if (!body) return false;
+  if (DIATOMIC_SET.has(body)) return true;
+  // Loại trừ tên lớp học (10A1, 12A18, 9B2), khổ giấy (A4, B5), định dạng (MP3, MP4, 3D, 4G, 5G)
+  if (/^(?:[6-9]|1[0-2])[A-Z]\d+$/.test(noArrow) || /^(?:A[0-6]|B[0-6]|C[0-6]|MP[34]|3D|4G|5G|F[1-4]|P[12]|I[12]|U[12]|V[12])$/i.test(noArrow)) return false;
+  if (!/\d/.test(body)) return false;
+
+  // Tách thử thành các nguyên tố hóa học, dấu ngoặc, liên kết và chỉ số
+  const clean = body.replace(/[()[\]·.\-=≡^]/g, '');
+  const m = clean.match(/[A-Z][a-z]?|\d+[+-]?|[+-]|\b[nm]\b/g);
+  if (!m || m.join('') !== clean) return false;
+  const els = m.filter(x => /^[A-Z][a-z]?$/.test(x));
+  if (!els.length || !els.every(e => CHEM_ELEMENTS.has(e))) return false;
+  return els.length >= 2 || DIATOMIC_SET.has(body) || /\d*[+-]$/.test(body);
+}
+
+// Chuyển chuỗi công thức hóa học thuần sang mã LaTeX (\mathrm{...})
+function chemTokenToLatex(tok) {
+  let trail = '';
+  if (/[↑↓]$/.test(tok)) {
+    trail = tok.endsWith('↑') ? '\\uparrow' : '\\downarrow';
+    tok = tok.slice(0, -1);
+  }
+  const leadMatch = /^(\d+)(?=[A-Z(\[])/.exec(tok);
+  const lead = leadMatch ? leadMatch[1] : '';
+  let rest = lead ? tok.slice(lead.length) : tok;
+
+  // Chuyển điện tích ion ở cuối (VD: ^2+, ^3-, ^+, ^-)
+  rest = rest.replace(/\^(\d*[+-])$/, '^{$1}');
+  // Chuyển các chỉ số nguyên tử sau nguyên tố hoặc dấu đóng ngoặc (không chạm vào số đứng ngay sau dấu chấm hidrat .5H2O)
+  rest = rest.replace(/([A-Za-z)\]])(\d+(?:n(?:\+\d+|-\d+)?)?|2n(?:\+2|-2|-6)?)/g, '$1_{$2}');
+  rest = rest.replace(/≡/g, '{\\equiv}').replace(/·/g, '\\cdot ');
+  return (lead ? lead : '') + `\\mathrm{${rest}}` + trail;
+}
+
+// Chuyển đổi một đoạn văn bản tự do (có chứa công thức Toán, Lý, Hóa, Sinh) sang chuỗi có đánh dấu LaTeX \( ... \)
+function convertPlainTextFormulasToLatex(str, scale) {
+  if (!str) return str;
+  const isPureEn = scale === 'english' || scale === 'hsg';
+
+  // Bảo vệ các vùng đã là công thức ⟪n⟫, ảnh ⟦n⟧, hoặc LaTeX $...$, \(...\)
+  const slots = [];
+  const hold = tex => `⧺${slots.push(tex) - 1}⧻`;
+  let s = str.replace(TK, m => hold(m));
+
+  // 1. Chuyển chữ số mũ / chỉ số dưới Unicode (x², 10⁻⁶, H₂SO₄, u₁)
+  s = s.replace(/([A-Za-z0-9)\]])([⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾ⁿⁱ₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎ₐₑₒₓₕₖₗₘₙₚₛₜ]+)/g, (m, base, sc) => {
+    const conv = normMathUnicode(base + sc);
+    if (isChemFormulaToken(conv.replace(/[_^{}]/g, ''))) {
+      return hold(`\\(\\mathrm{${conv}}\\)`);
+    }
+    return hold(`\\(${conv}\\)`);
+  });
+
+  if (isPureEn) {
+    return s.replace(/⧺(\d+)⧻/g, (_, k) => slots[+k]);
+  }
+
+  // 2. Mũi tên phản ứng hóa học có điều kiện: --(t°, xt)--> hoặc -t°->
+  s = s.replace(/--+[\(\[]\s*([^)\]\n]{1,25}?)\s*[\)\]]--+>/g, (m, cond) => {
+    const cTex = cond.replace(/t\s*[°o0]/gi, 't^\\circ').replace(/đpnc/gi, '\\text{đpnc}').replace(/đpdd/gi, '\\text{đpdd}');
+    return hold(`\\(\\xrightarrow{${cTex}}\\)`);
+  });
+  s = s.replace(/<=>|<-->|⇌|⇄/g, () => hold('\\(\\rightleftharpoons\\)'));
+  s = s.replace(/-->|->|⟶/g, () => hold('\\(\\rightarrow\\)'));
+
+  // 3. Đồng vị hạt nhân Vật lí / Hóa học: ^{235}_{92}U hoặc _{92}^{235}U
+  s = s.replace(/(?:\^\{?\d+\}?_\{?\d+\}?|_\{?\d+\}?\^\{?\d+\}?)[A-Z][a-z]?/g, m => {
+    const nums = [...m.matchAll(/(\^|_)(\{?\d+\}?)/g)];
+    const el = /[A-Z][a-z]?$/.exec(m)[0];
+    let sup = '', sub = '';
+    nums.forEach(x => { const v = x[2].replace(/[{}]/g, ''); if (x[1] === '^') sup = v; else sub = v; });
+    return hold(`\\({}_{${sub}}^{${sup}}\\mathrm{${el}}\\)`);
+  });
+
+  // 4. Ion hóa học có điện tích gõ bằng ^ (VD: SO4^2-, Ba^2+, Fe^3+, NH4^+, NO3^-, PO4^3-)
+  s = s.replace(/(?<![\p{L}\d_])([A-Z][A-Za-z0-9()]*)\^(\{?\d*[+-]\}?)/gu, (m, body, chg) => {
+    const cleanChg = chg.replace(/[{}]/g, '');
+    const els = (body.match(/[A-Z][a-z]?/g) || []);
+    if (els.length && els.every(e => CHEM_ELEMENTS.has(e))) {
+      const subBody = body.replace(/([A-Za-z)\]])(\d+)/g, '$1_{$2}');
+      return hold(`\\(\\mathrm{${subBody}^{${cleanChg}}}\\)`);
+    }
+    return m;
+  });
+
+  // 5. Biểu thức lượng giác / dao động Vật lí - Toán học (VD: 4cos(100πt - π/3), U0 cos(ωt + φ))
+  s = s.replace(/(\d*(?:[A-Za-z]_\{?[0-9A-Za-z]+\}?\s*)?(?:sin|cos|tan|cot)\s*\([^()\n]*?[πωφΦαβθ][^()\n]*?\))/g, m => {
+    let tex = m.replace(/\b(sin|cos|tan|cot)\b/g, '\\$1')
+               .replace(/([A-Za-z])_([0-9A-Za-z]+)/g, '$1_{$2}')
+               .replace(SYR, c => SYM[c] || c);
+    return hold(`\\(${tex}\\)`);
+  });
+
+  // 6. Căn bậc hai / bậc ba Unicode: √(x^2 + 1), √2, ∛x
+  s = s.replace(/([√∛∜])\s*\(([^()\n]+)\)/g, (m, r, body) => {
+    const deg = r === '∛' ? '[3]' : (r === '∜' ? '[4]' : '');
+    const inner = body.replace(/\^([+-]?\d+|[A-Za-z])/g, '^{$1}').replace(/_([+-]?\d+|[A-Za-z])/g, '_{$1}');
+    return hold(`\\(\\sqrt${deg}{${normMathUnicode(inner)}}\\)`);
+  });
+  s = s.replace(/([√∛∜])([0-9A-Za-z]+)/g, (m, r, body) => {
+    const deg = r === '∛' ? '[3]' : (r === '∜' ? '[4]' : '');
+    return hold(`\\(\\sqrt${deg}{${body}}\\)`);
+  });
+
+  // 7. Ký hiệu biến thiên Δ (VD: Δl_0, Δt, Δφ, ΔH)
+  s = s.replace(/(?:∆|Δ)\s*([A-Za-z0-9]+(?:_(?:\{[^{}\n]+\}|[0-9A-Za-z]+))?)/g, (_, v) => {
+    const vv = v.replace(/_([0-9A-Za-z]+)/g, '_{$1}');
+    return hold(`\\(\\Delta ${vv}\\)`);
+  });
+
+  // 8. Biểu thức lũy thừa / chỉ số dưới gõ bằng ký tự ^ hoặc _ (VD: x^2, 10^{-6}, u_0, F_{đh}, X^A X^a)
+  s = s.replace(/\b([A-Za-z0-9]+)((?:(?:\^|_)(?:\{[^{}\n]+\}|[+-]?\d+|\d+[+-]|[A-Za-z]))+)/g, (m, base, scripts) => {
+    let sc = scripts.replace(/\^([+-]?\d+|\d+[+-]|[A-Za-z])/g, '^{$1}').replace(/_([+-]?\d+|[A-Za-z])/g, '_{$1}');
+    return hold(`\\(${base}${sc}\\)`);
+  });
+
+  // 9. Công thức hóa học viết liền trong văn bản (VD: Fe2(SO4)3, H2SO4, Ca(OH)2, KMnO4, CH3COOH, C2H5OH, CuSO4.5H2O, 3H2, O2, Cl2)
+  s = s.replace(/(?<![\p{L}\d_])(\d*[A-Z][A-Za-z0-9()[\]·.\-=≡]*\d[A-Za-z0-9()[\]·.\-=≡]*[↑↓]?)(?![\p{L}\d_])/gu, (m) => {
+    if (isChemFormulaToken(m)) return hold(`\\(${chemTokenToLatex(m)}\\)`);
+    return m;
+  });
+
+  // 10. Các ký hiệu Toán - Lý - Sinh đặc trưng (λ, ω, φ, Ω, π, ±, ×, ≤, ≥, ≠, ≈, ∞, ∈, ∉, ⊂, ⊆, ∪, ∩, ∅, ∀, ∃, ⇒, ⇔, ⊥, ℝ, ℤ, ℕ, ℚ, ℂ)
+  s = s.replace(/[±×÷≤⩽≥⩾≠≈≡∞∈∉⊂⊆∪∩∅∀∃⇒⇔⊥∠△ℝℤℕℚℂπλωφΦΩ]/g, ch => SYM[ch] ? hold(`\\(${SYM[ch].trim()}\\)`) : ch);
+
+  return s.replace(/⧺(\d+)⧻/g, (_, k) => slots[+k]);
+}
+
+// Chuyển đổi mảng runs (có chứa định dạng chỉ số dưới f&8, chỉ số trên f&16, gạch chân kiểu gen liên kết Sinh học f&1) sang công thức LaTeX trong mảng eq
+function convertRunsArrayToLatex(runs, eq, scale) {
+  if (!Array.isArray(runs) || !runs.length) return { runs, count: 0 };
+  const isPureEn = scale === 'english' || scale === 'hsg';
+  let count = 0;
+
+  // Bước 1: Gộp các run có chỉ số dưới (f & 8) hoặc chỉ số trên (f & 16) liền kề với ký hiệu cơ sở đứng trước/sau
+  const merged = [];
+  let i = 0;
+  while (i < runs.length) {
+    const r = runs[i];
+    const isSub = !!(r.f & 8), isSup = !!(r.f & 16);
+
+    // Giữ nguyên số thứ tự tiếng Anh: 1st, 2nd, 3rd, 4th...
+    if (isSup && /^(?:st|nd|rd|th|s|TM|®)$/i.test(r.t.trim())) {
+      merged.push(r); i++; continue;
+    }
+
+    if (isSub || isSup) {
+      const styleMask = r.f & ~24;
+      // Lấy phần hậu tố ký hiệu cơ sở ở cuối run ngay trước (nếu có, ví dụ "Cho H" -> tách "Cho " và "H")
+      let prefixBase = '';
+      if (merged.length && !(merged[merged.length - 1].f & 24)) {
+        const prev = merged[merged.length - 1];
+        const m = /((?:log|ln|lg|lim|sin|cos|tan|cot)|[A-Za-z0-9)\]]+)$/i.exec(prev.t);
+        if (m) {
+          prefixBase = m[1];
+          prev.t = prev.t.slice(0, prev.t.length - prefixBase.length);
+          if (!prev.t) merged.pop();
+        }
+      }
+
+      // Gom liên tiếp các cụm cơ sở + sub/sup (ví dụ H_2 SO_4^{2-} hoặc {}_{92}^{235}U hoặc C_n^k)
+      let texParts = prefixBase ? [prefixBase] : ['{}'];
+      let hasChem = /^[A-Z]/.test(prefixBase);
+      while (i < runs.length) {
+        const cur = runs[i];
+        const cSub = !!(cur.f & 8), cSup = !!(cur.f & 16);
+        if (cSub || cSup) {
+          const val = normMathUnicode(cur.t.trim()).replace(/([#$%&_])/g, '\\$1');
+          if (val) texParts.push(cSub ? `_{${val}}` : `^{${val}}`);
+          i++;
+          // Kiểm tra nếu run ngay sau bắt đầu bằng phần tiếp của cùng công thức (VD: "SO" trong H_2 SO_4 hoặc "(SO" hoặc ")_3")
+          if (i < runs.length && !(runs[i].f & 24) && i + 1 < runs.length && ((runs[i + 1].f & 8) || (runs[i + 1].f & 16))) {
+            const mMid = /^([A-Za-z0-9()[\]·.\-=≡]{1,12})$/.exec(runs[i].t);
+            if (mMid) {
+              texParts.push(mMid[1]);
+              if (/[A-Z]/.test(mMid[1])) hasChem = true;
+              i++;
+              continue;
+            }
+          }
+          // Trường hợp đồng vị hạt nhân: chỉ số đứng trước tên nguyên tố (VD: _{92}^{235}U)
+          if (!prefixBase && i < runs.length && !(runs[i].f & 24)) {
+            const mEl = /^([A-Z][a-z]?)(?![A-Za-z])/.exec(runs[i].t);
+            if (mEl && CHEM_ELEMENTS.has(mEl[1])) {
+              texParts.push(`\\mathrm{${mEl[1]}}`);
+              runs[i] = Object.assign({}, runs[i], { t: runs[i].t.slice(mEl[1].length) });
+              if (!runs[i].t) i++;
+            }
+          }
+        } else {
+          break;
+        }
+      }
+
+      let rawTex = texParts.join('');
+      const plainCheck = rawTex.replace(/[_^{}\\]|mathrm/g, '');
+      if (hasChem && isChemFormulaToken(plainCheck)) {
+        rawTex = `\\mathrm{${rawTex}}`;
+      } else if (/^(?:log|ln|lg|lim|sin|cos|tan|cot)/i.test(prefixBase)) {
+        rawTex = '\\' + rawTex;
+      }
+      const eqIdx = eq.push({ t: rawTex }) - 1;
+      count++;
+      merged.push({ t: `⟪${eqIdx}⟫`, f: styleMask });
+      continue;
+    }
+
+    // Bước 1b: Nhận diện kiểu gen liên kết Sinh học có gạch chân tử số: <u>AB</u>/ab -> \frac{\underline{AB}}{ab}
+    if (!isPureEn && (r.f & 1) && /^[A-Za-z]{2,5}$/.test(r.t.trim()) && i + 1 < runs.length && !(runs[i + 1].f & 1)) {
+      const numAllele = r.t.trim();
+      const nextRun = runs[i + 1];
+      const mDen = /^\s*\/\s*([A-Za-z]{2,5})\b/.exec(nextRun.t);
+      if (mDen && mDen[1].toLowerCase() === numAllele.toLowerCase()) {
+        const eqIdx = eq.push({ t: `\\frac{\\underline{\\mathrm{${numAllele}}}}{\\mathrm{${mDen[1]}}}` }) - 1;
+        count++;
+        merged.push({ t: `⟪${eqIdx}⟫`, f: r.f & ~1 });
+        runs[i + 1] = Object.assign({}, nextRun, { t: nextRun.t.slice(mDen[0].length) });
+        i++;
+        continue;
+      }
+    }
+
+    merged.push(Object.assign({}, r));
+    i++;
+  }
+
+  // Bước 2: Chuyển đổi các công thức Toán, Lý, Hóa, Sinh viết dạng văn bản thuần trong từng run
+  merged.forEach(r => {
+    const before = r.t;
+    const after = convertPlainTextFormulasToLatex(before, scale);
+    if (after !== before) {
+      r.t = after.replace(/\\\(([\s\S]+?)\\\)/g, (_, tex) => {
+        count++;
+        return `⟪${eq.push({ t: tex.trim() }) - 1}⟫`;
+      });
+    }
+  });
+
+  return { runs: merged, count };
+}
+
+function convertExamFormulasToLatex(items, eq, scale) {
+  let totalConverted = 0;
+  (items || []).forEach(it => {
+    if (it.k === 'q') {
+      if (it.stem) {
+        const r = convertRunsArrayToLatex(it.stem, eq, scale);
+        it.stem = r.runs; totalConverted += r.count;
+      }
+      if (Array.isArray(it.opts)) {
+        it.opts.forEach(o => {
+          if (o && o.runs) {
+            const r = convertRunsArrayToLatex(o.runs, eq, scale);
+            o.runs = r.runs; totalConverted += r.count;
+          }
+        });
+      }
+    } else if (it && it.runs) {
+      const r = convertRunsArrayToLatex(it.runs, eq, scale);
+      it.runs = r.runs; totalConverted += r.count;
+    }
+  });
+  return totalConverted;
+}
+
+// ===================== BỘ VẼ DỰ PHÒNG ẢNH VECTOR WMF / EMF SANG PNG TRÊN TRÌNH DUYỆT =====================
+function renderWmfBytesToPngDataUrl(u8) {
+  try {
+    const dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
+    let pos = 0;
+    // Kiểm tra Placeable WMF header (0x9AC6CDD7)
+    let bboxL = 0, bboxT = 0, bboxR = 400, bboxB = 160;
+    if (u8.length > 22 && dv.getUint32(0, true) === 0x9AC6CDD7) {
+      bboxL = dv.getInt16(6, true);
+      bboxT = dv.getInt16(8, true);
+      bboxR = dv.getInt16(10, true);
+      bboxB = dv.getInt16(12, true);
+      pos = 22;
+    }
+    if (pos + 18 > u8.length) return '';
+    const mtType = dv.getUint16(pos, true), mtHeaderSize = dv.getUint16(pos + 2, true);
+    if ((mtType !== 1 && mtType !== 2) || mtHeaderSize !== 9) return '';
+    pos += 18;
+
+    let winOrgX = bboxL, winOrgY = bboxT;
+    let winExtX = (bboxR - bboxL) || 400, winExtY = (bboxB - bboxT) || 160;
+    const ops = [];
+    while (pos + 6 <= u8.length) {
+      const sizeWords = dv.getUint32(pos, true);
+      const func = dv.getUint16(pos + 4, true);
+      if (func === 0 || sizeWords < 3) break;
+      const recEnd = pos + sizeWords * 2;
+      if (recEnd > u8.length) break;
+      if (func === 0x020B && sizeWords >= 5) { // META_SETWINDOWORG
+        winOrgY = dv.getInt16(pos + 6, true);
+        winOrgX = dv.getInt16(pos + 8, true);
+      } else if (func === 0x020C && sizeWords >= 5) { // META_SETWINDOWEXT
+        winExtY = dv.getInt16(pos + 6, true) || winExtY;
+        winExtX = dv.getInt16(pos + 8, true) || winExtX;
+      } else if (func === 0x0214 && sizeWords >= 5) { // META_MOVETO
+        ops.push({ k: 'M', y: dv.getInt16(pos + 6, true), x: dv.getInt16(pos + 8, true) });
+      } else if (func === 0x0213 && sizeWords >= 5) { // META_LINETO
+        ops.push({ k: 'L', y: dv.getInt16(pos + 6, true), x: dv.getInt16(pos + 8, true) });
+      } else if ((func === 0x0325 || func === 0x0324) && sizeWords >= 6) { // POLYLINE / POLYGON
+        const nPts = dv.getUint16(pos + 6, true);
+        const pts = [];
+        for (let i = 0; i < nPts && pos + 10 + i * 4 <= recEnd; i++) {
+          pts.push([dv.getInt16(pos + 8 + i * 4, true), dv.getInt16(pos + 10 + i * 4, true)]);
+        }
+        ops.push({ k: func === 0x0324 ? 'PG' : 'PL', pts });
+      } else if (func === 0x041B && sizeWords >= 7) { // META_RECTANGLE
+        ops.push({
+          k: 'R',
+          b: dv.getInt16(pos + 6, true), r: dv.getInt16(pos + 8, true),
+          t: dv.getInt16(pos + 10, true), l: dv.getInt16(pos + 12, true)
+        });
+      } else if (func === 0x0A32 && sizeWords >= 7) { // META_EXTTEXTOUT
+        const y = dv.getInt16(pos + 6, true), x = dv.getInt16(pos + 8, true);
+        const count = dv.getInt16(pos + 10, true), fwOpts = dv.getUint16(pos + 12, true);
+        let strOff = pos + 14 + ((fwOpts & 0x06) ? 8 : 0);
+        let s = '';
+        for (let i = 0; i < count && strOff + i < recEnd; i++) {
+          const ch = u8[strOff + i];
+          if (ch >= 32) s += String.fromCharCode(ch);
+        }
+        if (s.trim()) ops.push({ k: 'T', x, y, s });
+      }
+      pos = recEnd;
+    }
+    if (!ops.length) return '';
+    const w = Math.max(60, Math.min(640, Math.abs(winExtX)));
+    const h = Math.max(28, Math.min(360, Math.abs(winExtY)));
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, w, h);
+    ctx.strokeStyle = '#14232f'; ctx.fillStyle = '#14232f'; ctx.lineWidth = 1.4;
+    ctx.font = '15px "Cambria Math", "Times New Roman", serif';
+    const tx = x => ((x - winOrgX) / (winExtX || 1)) * (w - 8) + 4;
+    const ty = y => ((y - winOrgY) / (winExtY || 1)) * (h - 8) + 4;
+    ops.forEach(op => {
+      if (op.k === 'M') { ctx.beginPath(); ctx.moveTo(tx(op.x), ty(op.y)); }
+      else if (op.k === 'L') { ctx.lineTo(tx(op.x), ty(op.y)); ctx.stroke(); }
+      else if (op.k === 'PL' || op.k === 'PG') {
+        if (!op.pts.length) return;
+        ctx.beginPath();
+        ctx.moveTo(tx(op.pts[0][0]), ty(op.pts[0][1]));
+        for (let i = 1; i < op.pts.length; i++) ctx.lineTo(tx(op.pts[i][0]), ty(op.pts[i][1]));
+        if (op.k === 'PG') ctx.closePath();
+        ctx.stroke();
+      } else if (op.k === 'R') {
+        ctx.strokeRect(tx(op.l), ty(op.t), tx(op.r) - tx(op.l), ty(op.b) - ty(op.t));
+      } else if (op.k === 'T') {
+        ctx.fillText(op.s, tx(op.x), ty(op.y) + 12);
+      }
+    });
+    return c.toDataURL('image/png');
+  } catch (e) {
+    return '';
+  }
 }
 
 const prep = m => new Promise(r => {
-  if (/emf|wmf/i.test(m.d.slice(0, 40))) { 
-      m.bad = 1; 
-      m.isMathType = true;
-      return r(); 
+  if (/emf|wmf/i.test(m.d.slice(0, 40))) {
+    try {
+      const b64 = (m.d.split(',')[1] || '').replace(/\s/g, '');
+      const bin = atob(b64);
+      const u8 = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+      const tex = extractMtefFromBytes(u8);
+      if (tex) {
+        m.latex = tex;
+        return r();
+      }
+      const pngUrl = renderWmfBytesToPngDataUrl(u8);
+      if (pngUrl) {
+        m.d = pngUrl;
+      } else {
+        m.bad = 1; m.isMathType = true; return r();
+      }
+    } catch (e) {
+      m.bad = 1; m.isMathType = true; return r();
+    }
   }
   if (/tiff/i.test(m.d.slice(0, 40))) { m.bad = 1; return r(); }
   
   const i = new Image();
   i.onload = () => {
     let w = i.naturalWidth, h = i.naturalHeight;
-    if (m.d.length > 250000 && w > 900) {
-      const s = 900 / w, c = document.createElement('canvas');
+    const maxW = m.isTable ? 1300 : 900;
+    const maxLen = m.isTable ? 600000 : 250000;
+    if (!m.isTable && m.d.length > maxLen && w > maxW) {
+      const s = maxW / w, c = document.createElement('canvas');
       c.width = w = Math.round(w * s); c.height = h = Math.round(h * s);
       c.getContext('2d').drawImage(i, 0, 0, w, h);
       const n = c.toDataURL(/png/.test(m.d.slice(0, 20)) ? 'image/png' : 'image/jpeg', .85);
       if (n.length < m.d.length) m.d = n;
     }
-    m.w = w; m.h = h; r();
+    if (!m.w) m.w = w;
+    if (!m.h) m.h = h;
+    r();
   };
   i.onerror = () => { m.bad = 1; r(); };
   i.src = m.d;
@@ -2080,7 +3885,12 @@ function flatten(html){
     if(n.nodeType===3)return add(n.nodeValue.normalize('NFC').replace(/[\r\n\u00a0]+/g,' '),f);
     if(n.nodeType!==1)return;
     const t=n.tagName;let g=f;
-    if(t==='IMG')return add(`⟦${IM.push({d:n.getAttribute('src')||''})-1}⟧`,f);
+    if(t==='IMG'){
+      const tw=parseInt(n.getAttribute('data-tbl-w')||'0',10), th=parseInt(n.getAttribute('data-tbl-h')||'0',10);
+      const item={d:n.getAttribute('src')||''};
+      if(tw>0){ item.w=tw; item.h=th; item.isTable=true; }
+      return add(`⟦${IM.push(item)-1}⟧`,f);
+    }
     if(t==='U')g|=1;else if(t==='STRONG'||t==='B')g|=2;else if(t==='EM'||t==='I')g|=4;else if(t==='SUB')g|=8;else if(t==='SUP')g|=16;
     if(t==='BR')return add('\n',0);
     if(t==='TD'||t==='TH')add(' ',0);
@@ -2157,8 +3967,6 @@ function parse(T,F){
       return P;
     };
     
-    // Các ý a), b), c), d) viết thường: dạng Đúng/Sai. Mặc định ý nào được gạch chân là Đúng, ý để nguyên là Sai
-    // (nếu có ghi rõ "Đúng/Sai/Đ/S" ngay sau chữ a), b)... thì ưu tiên theo chữ ghi rõ đó).
     const scanLow = () => {
       const R=[]; let p=0;
       for(const L of ['a','b','c','d']){
@@ -2175,7 +3983,7 @@ function parse(T,F){
       P = scan(true,true); isTF = !!P && P.every(q=>q.key);
       if(!isTF){ const lw = scanLow(); if(lw){ P = lw; isTF = true; tfUl = true; } else P = scan(false,true); }
     }
-    if(!P) P = scan(false,false,true);   // dự phòng: các đáp án A, B, C, D dính liền nhau không có dấu cách
+    if(!P) P = scan(false,false,true);
     if(!P){ parseSkipped++; return; }
     let endD = s;
 
@@ -2187,7 +3995,6 @@ function parse(T,F){
       return{runs:mk(T,F,a,end),r:ratio(T,F,s+q.s1,end), tfKey: q.key};
     });
     
-    // Đúng/Sai theo gạch chân: bỏ gạch chân khỏi nội dung hiển thị để học sinh không nhìn thấy đáp án
     if(tfUl) o.forEach(x=>{ x.tfKey = x.r>0 ? 'D' : 'S'; x.runs = x.runs.map(r=>({t:r.t,f:r.f&~1})); });
     const rt=o.map(x=>x.r),mx=Math.max(...rt);
     let ok=-1;
@@ -2217,27 +4024,44 @@ $('file').onchange = async e => {
   $('loading').classList.remove('hide');
   const f=e.target.files[0]; e.target.value=''; if(!f) { $('loading').classList.add('hide'); return; }
   try{
-    const {buf,eq}=await pre(await f.arrayBuffer());
+    const autoLatex = !$('chk-auto-latex') || $('chk-auto-latex').checked;
+    const autoTblImg = !$('chk-auto-tbl-img') || $('chk-auto-tbl-img').checked;
+    const {buf,eq,tblMeta}=await pre(await f.arrayBuffer());
     const r=await mammoth.convertToHtml({arrayBuffer:buf},{styleMap:['u => u']});
-    const {T,F,IM}=flatten(r.value),items=parse(T,F),qs=items.filter(x=>x.k==='q');
+    const tblRes = await convertTablesInHtml(r.value, tblMeta, eq, autoTblImg);
+    const {T,F,IM}=flatten(tblRes.html),items=parse(T,F),qs=items.filter(x=>x.k==='q');
     if(!qs.length){alert('Không nhận diện được câu hỏi nào.'); $('loading').classList.add('hide'); return}
     await Promise.all(IM.map(prep));
+
+    // Tự động nhận diện môn học gợi ý từ tên file (Toán, Lý, Hóa, Sinh, Anh)
+    const fname = f.name.replace(/\.docx$/i,'');
+    let defScale = 'english';
+    if (/\b(toán|toan|math|đại số|hình học|giải tích)\b/i.test(fname)) defScale = 'math';
+    else if (/\b(lý|lí|vật lí|vat li|hóa|hoa|sinh|sử|địa|gdcd|ktpl|khtn|tin)\b/i.test(fname)) defScale = 'other';
+    else if (qs.some(q => q.qtype === 'tf' || q.qtype === 'sa') || eq.length > 3) defScale = 'other';
+
+    let inlineEqCount = 0;
+    if (autoLatex) {
+      inlineEqCount = convertExamFormulasToLatex(items, eq, defScale === 'english' && eq.length > 0 ? 'other' : defScale);
+    }
     
     const nextKey = nextFileKey();
     const ex={
-        id:'e'+Date.now(), fileKey:nextKey, name:f.name.replace(/\.docx$/i,''), at:Date.now(), 
-        items, eq, img:IM, time:0, scale:'english', webhook:'', openAt:0, closeAt:0,
+        id:'e'+Date.now(), fileKey:nextKey, name:fname, at:Date.now(), 
+        items, eq, img:IM, time:0, scale:defScale, webhook:'', openAt:0, closeAt:0,
         shufGrp: false, shufQ: true, shufOpt: true, maxAttempts: 1, hsgAudio: '', hsgLis: 15, hsgMax: 70, hsgLisPts: 0, hsgP2Pts: 0, hsgFree: false
     };
     const old=lib.find(y=>y.name===ex.name);
-    if(old){ ex.id=old.id; ex.fileKey=old.fileKey||ex.fileKey; ex.time=old.time||0; ex.openAt=old.openAt||0; ex.closeAt=old.closeAt||0; ex.scale=old.scale||'english'; ex.webhook=old.webhook||''; ex.shufGrp=!!old.shufGrp; ex.shufQ=old.shufQ!==false; ex.shufOpt=old.shufOpt!==false; ex.proctor=!!old.proctor; ex.maxViol=old.maxViol; ex.calc=!!old.calc; ex.maxAttempts=normAttempts(old.maxAttempts); ex.hsgAudio=old.hsgAudio||''; ex.hsgLis=old.hsgLis||15; ex.hsgMax=old.hsgMax||70; ex.hsgLisPts=old.hsgLisPts||0; ex.hsgP2Pts=old.hsgP2Pts||0; ex.hsgFree=!!old.hsgFree; if(old.pwHash){ ex.pwHash=old.pwHash; ex.pwSalt=old.pwSalt; if(old.pwPlain) ex.pwPlain=old.pwPlain; } }
+    if(old){ ex.id=old.id; ex.fileKey=old.fileKey||ex.fileKey; ex.time=old.time||0; ex.openAt=old.openAt||0; ex.closeAt=old.closeAt||0; ex.scale=old.scale||defScale; ex.webhook=old.webhook||''; ex.shufGrp=!!old.shufGrp; ex.shufQ=old.shufQ!==false; ex.shufOpt=old.shufOpt!==false; ex.proctor=!!old.proctor; ex.maxViol=old.maxViol; ex.calc=!!old.calc; ex.maxAttempts=normAttempts(old.maxAttempts); ex.hsgAudio=old.hsgAudio||''; ex.hsgLis=old.hsgLis||15; ex.hsgMax=old.hsgMax||70; ex.hsgLisPts=old.hsgLisPts||0; ex.hsgP2Pts=old.hsgP2Pts||0; ex.hsgFree=!!old.hsgFree; if(old.pwHash){ ex.pwHash=old.pwHash; ex.pwSalt=old.pwSalt; if(old.pwPlain) ex.pwPlain=old.pwPlain; } }
     lib=lib.filter(y=>y.name!==ex.name); lib.push(ex); saveLib();
     openExam(ex.id);
     
     const miss=qs.filter(q=> q.qtype==='mc' && !q.opts.some(o=>o.ok)).length;
     let msg = miss ? `Đã đọc ${qs.length} câu. Có ${miss} câu chưa gạch chân đáp án.` : `Đã tải thành công ${qs.length} câu.`;
+    if(eq.length) msg += `\n• Đã chuyển đổi ${eq.length} công thức (Toán/Lý/Hóa/Sinh) sang chuẩn LaTeX${inlineEqCount ? ` (gồm ${inlineEqCount} công thức từ văn bản/chỉ số)` : ''}.`;
+    if(tblRes.tableCount) msg += `\n• Đã chuyển đổi ${tblRes.tableCount} bảng biểu sang định dạng ảnh PNG sắc nét.`;
     const tfAll = qs.filter(q=>q.qtype==='tf' && q.tfu);
-    if(tfAll.length) msg += `\nĐúng/Sai: ${tfAll.length} câu, ý nào gạch chân là Đúng, ý để nguyên là Sai.`;
+    if(tfAll.length) msg += `\n• Đúng/Sai: ${tfAll.length} câu, ý nào gạch chân là Đúng, ý để nguyên là Sai.`;
     const tfNone = tfAll.filter(q=>q.opts.every(o=>o.tfKey==='S')).length;
     if(tfNone) msg += `\nLưu ý: ${tfNone} câu Đúng/Sai chưa gạch chân ý nào (cả 4 ý sẽ tính là Sai), kiểm tra lại file Word.`;
     if(parseSkipped) msg += `\nCó ${parseSkipped} câu không tìm đủ 4 phương án A–D nên đã bị bỏ qua (kiểm tra lại file Word).`;
@@ -2259,9 +4083,12 @@ function kx(l,d){
 const imH = k => {
     const m = (exam.img||[])[k];
     if(!m) return '';
+    if(m.latex) return kx(m.latex, false);
     if(m.isMathType) return `<span style="background:#fee2e2;color:#dc2626;padding:4px 8px;border-radius:6px;font-size:13px;font-weight:600;display:inline-block;margin:4px 0;line-height:1.4;">Lỗi MathType: Ảnh WMF/EMF không hỗ trợ trên Web tĩnh.<br>Giải pháp: Mở file Word &rarr; Tab MathType &rarr; Chọn Convert Equations (thành OMML) rồi tải lên lại.</span>`;
     if(m.bad) return '<span style="color:red">[Ảnh lỗi]</span>';
-    return `<img class="im" src="${esc(m.d)}" alt="">`;
+    const cls = m.isTable ? 'im tbl-im' : 'im';
+    const st = (m.isTable && m.w) ? ` style="width:min(100%, ${m.w}px)"` : '';
+    return `<img class="${cls}" src="${esc(m.d)}"${st} alt="${m.isTable ? 'Bảng biểu' : ''}">`;
 };
 
 function seg(t){
@@ -2273,6 +4100,240 @@ function seg(t){
   });
   return o+esc(t.slice(i));
 }
+
+// ===================== GIAO DIỆN CÔNG CỤ CHUYỂN ĐỔI LATEX & BẢNG SANG ẢNH =====================
+(function initLatexTableStudio(){
+  const modal = $('latex-tbl-studio');
+  if (!modal) return;
+  let lastTablePng = '';
+
+  const openStudio = (tabName) => {
+    modal.classList.remove('hide');
+    if (tabName) switchStudioTab(tabName);
+    refreshExamEqTab();
+  };
+  const closeStudio = () => modal.classList.add('hide');
+
+  function switchStudioTab(name) {
+    modal.querySelectorAll('.studio-tab').forEach(b => b.classList.toggle('active', b.dataset.stab === name));
+    ['formula', 'table', 'exam-eq'].forEach(k => {
+      const el = $('stab-' + k);
+      if (el) el.classList.toggle('hide', k !== name);
+    });
+    if (name === 'exam-eq') refreshExamEqTab();
+  }
+
+  modal.querySelectorAll('.studio-tab').forEach(b => {
+    b.onclick = () => switchStudioTab(b.dataset.stab);
+  });
+  $('btn-open-studio').onclick = () => openStudio('formula');
+  $('btn-close-studio').onclick = closeStudio;
+  modal.addEventListener('click', e => { if (e.target === modal) closeStudio(); });
+
+  // Tab 1: Chuyển đổi văn bản Công thức Toán - Lý - Hóa - Sinh sang LaTeX
+  function runStudioFormulaConvert() {
+    const raw = $('st-f-in').value;
+    if (!raw.trim()) {
+      $('st-f-out').value = '';
+      $('st-f-prev').innerHTML = '<span class="note">Hãy nhập nội dung công thức ở khung bên trái.</span>';
+      return;
+    }
+    const converted = convertPlainTextFormulasToLatex(raw, 'other');
+    $('st-f-out').value = converted;
+    $('st-f-prev').innerHTML = esc(converted).replace(/\n/g, '<br>');
+    triggerMathJax();
+  }
+
+  $('btn-st-convert-f').onclick = runStudioFormulaConvert;
+  $('st-f-out').addEventListener('input', () => {
+    $('st-f-prev').innerHTML = esc($('st-f-out').value).replace(/\n/g, '<br>');
+    triggerMathJax();
+  });
+  $('btn-st-copy-f').onclick = () => {
+    const v = $('st-f-out').value.trim();
+    if (!v) return showToast('Chưa có mã LaTeX để sao chép.');
+    copyTextSafe(v, 'Đã sao chép mã LaTeX!');
+  };
+
+  $('btn-sample-math').onclick = () => {
+    $('st-f-in').value = 'Cho hàm số y = x^3 - 3x^2 + 2. Tìm nghiệm của phương trình √(x^2 + 3) = 2x - 1 với ∀x ∈ ℝ và x ≥ 1/2.';
+    runStudioFormulaConvert();
+  };
+  $('btn-sample-chem').onclick = () => {
+    $('st-f-in').value = 'Cho phản ứng: Fe2(SO4)3 + 3Ba(OH)2 -> 2Fe(OH)3↓ + 3BaSO4↓ và N2 + 3H2 --(t°, xt)--> 2NH3↑. Ion SO4^2- phản ứng với Ba^2+.';
+    runStudioFormulaConvert();
+  };
+  $('btn-sample-phys').onclick = () => {
+    $('st-f-in').value = 'Một vật dao động điều hòa có phương trình x = 4cos(100πt - π/3) (cm), chu kì T = 2π/ω, bước sóng λ = v/f và phản ứng hạt nhân ^{235}_{92}U.';
+    runStudioFormulaConvert();
+  };
+  $('btn-sample-bio').onclick = () => {
+    $('st-f-in').value = 'Ở một loài thực vật (2n = 24), phép lai (P): X^A X^a × X^a Y thu được đời con F_1. Kiểu gen nhóm máu I^A I^B × I^O I^O.';
+    runStudioFormulaConvert();
+  };
+
+  // Tab 2: Chuyển Bảng biểu sang Ảnh (.png)
+  function buildHtmlTableFromPipeText(txt) {
+    const lines = txt.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    if (!lines.length) return '';
+    const sep = lines.some(l => l.includes('|')) ? '|' : '\t';
+    const rows = lines.map(l => l.split(sep).map(c => c.trim()));
+    let h = '<table>';
+    rows.forEach((r, ri) => {
+      h += '<tr>' + r.map(c => {
+        const tag = ri === 0 ? 'th' : 'td';
+        const conv = convertPlainTextFormulasToLatex(c, 'other');
+        return `<${tag}>${esc(conv)}</${tag}>`;
+      }).join('') + '</tr>';
+    });
+    h += '</table>';
+    return h;
+  }
+
+  async function runStudioTableRender(customMeta) {
+    const pasteBox = $('st-t-paste');
+    const pastedTbl = pasteBox ? pasteBox.querySelector('table') : null;
+    let tblEl = null;
+    if (pastedTbl) {
+      tblEl = pastedTbl.cloneNode(true);
+      // Chuyển đổi công thức Toán/Lý/Hóa/Sinh bên trong các ô bảng vừa dán
+      tblEl.querySelectorAll('td,th').forEach(cell => {
+        if (!cell.querySelector('img,table')) {
+          cell.textContent = convertPlainTextFormulasToLatex(cell.textContent || '', 'other');
+        }
+      });
+    } else {
+      const txt = ($('st-t-in').value || (pasteBox ? pasteBox.innerText : '')).trim();
+      if (!txt) {
+        $('st-t-prev').innerHTML = '<span class="note">Hãy dán bảng từ Word/Excel hoặc nhập bảng ở khung bên trái.</span>';
+        return;
+      }
+      const doc = new DOMParser().parseFromString(buildHtmlTableFromPipeText(txt), 'text/html');
+      tblEl = doc.querySelector('table');
+    }
+    if (!tblEl) return;
+    const res = await renderTableToPngDataUrl(tblEl, customMeta || null, exam ? exam.eq : []);
+    if (res && res.dataUrl) {
+      lastTablePng = res.dataUrl;
+      $('st-t-prev').innerHTML = `<img class="im tbl-im" src="${esc(res.dataUrl)}" style="margin:0 auto;width:min(100%, ${res.w}px)" alt="Bảng biểu"><div class="note" style="margin-top:6px">Kích thước chuẩn: ${res.w} × ${res.h} px (Độ phân giải Retina 2x)</div>`;
+    }
+  }
+
+  $('btn-st-render-t').onclick = () => runStudioTableRender();
+  $('st-t-paste').addEventListener('paste', () => { setTimeout(() => runStudioTableRender(), 80); });
+  $('btn-st-dl-t').onclick = () => {
+    if (!lastTablePng) return showToast('Hãy bấm "Kết xuất Bảng thành Ảnh (.png)" trước.');
+    const a = document.createElement('a');
+    a.href = lastTablePng;
+    a.download = 'bang-bieu-' + Date.now() + '.png';
+    document.body.appendChild(a); a.click(); a.remove();
+  };
+
+  $('btn-sample-bbt').onclick = () => {
+    $('st-t-paste').innerHTML = '';
+    $('st-t-in').value = [
+      'x | -∞ | -1 | 0 | 1 | +∞',
+      "y' | - | 0 | + | || | - | 0 | +",
+      'y | +∞ | ↘ | -2 | ↗ | +∞ | ↘ | 1 | ↗ | +∞'
+    ].join('\n');
+    const noInsideV = {
+      tblBorders: {
+        top: { style: 'solid', width: 1, color: '#334155' },
+        bottom: { style: 'solid', width: 1, color: '#334155' },
+        left: { style: 'solid', width: 1, color: '#334155' },
+        right: { style: 'solid', width: 1, color: '#334155' },
+        insideH: { style: 'solid', width: 1, color: '#334155' },
+        insideV: { style: 'none', width: 0, color: 'transparent' }
+      },
+      rows: [
+        [{ bdrs: { right: { style: 'solid', width: 1, color: '#334155' } } }],
+        [{ bdrs: { right: { style: 'solid', width: 1, color: '#334155' } } }],
+        [{ bdrs: { right: { style: 'solid', width: 1, color: '#334155' } } }]
+      ]
+    };
+    runStudioTableRender(noInsideV);
+  };
+  $('btn-sample-tchem').onclick = () => {
+    $('st-t-paste').innerHTML = '';
+    $('st-t-in').value = [
+      'Dung dịch | Quỳ tím | Dung dịch BaCl2 | Dung dịch AgNO3',
+      'H2SO4 0,1M | Hóa đỏ | Kết tủa trắng BaSO4↓ | Không hiện tượng',
+      'NaOH 0,1M | Hóa xanh | Không hiện tượng | Kết tủa Ag2O↓',
+      'NaCl 0,1M | Không đổi màu | Không hiện tượng | Kết tủa trắng AgCl↓'
+    ].join('\n');
+    runStudioTableRender();
+  };
+  $('btn-sample-tphys').onclick = () => {
+    $('st-t-paste').innerHTML = '';
+    $('st-t-in').value = [
+      'Lần đo | Chiều dài l (m) | Chu kì T (s) | Gia tốc g (m/s^2)',
+      '1 | 0,80 | 1,79 | 9,85 ± 0,04',
+      '2 | 1,00 | 2,01 | 9,77 ± 0,03',
+      '3 | 1,20 | 2,20 | 9,79 ± 0,03'
+    ].join('\n');
+    runStudioTableRender();
+  };
+
+  // Tab 3: Quản lý & Chỉnh sửa nhanh các công thức LaTeX & Ảnh bảng biểu trong đề đang mở
+  function refreshExamEqTab() {
+    const sumEl = $('st-eq-summary'), listEl = $('st-eq-list');
+    if (!exam) {
+      sumEl.textContent = 'Chưa chọn đề thi nào. Hãy mở một đề thi trong danh sách để xem/chỉnh sửa công thức LaTeX và bảng biểu.';
+      listEl.innerHTML = '';
+      return;
+    }
+    const eqs = exam.eq || [];
+    const tblImgs = (exam.img || []).filter(m => m && m.isTable);
+    sumEl.innerHTML = `Đề <b>${esc(exam.name)}</b> đang có <b>${eqs.length}</b> công thức LaTeX và <b>${tblImgs.length}</b> ảnh bảng biểu.`;
+    if (!eqs.length && !tblImgs.length) {
+      listEl.innerHTML = '<div class="note">Chưa có công thức LaTeX hoặc bảng biểu nào được tách riêng. Bấm nút "∑ Quét & chuyển công thức đề này sang LaTeX" ở góc phải trên để tự động nhận diện.</div>';
+      return;
+    }
+    let h = '';
+    tblImgs.forEach((m, idx) => {
+      h += `<div class="eq-chip-row"><span class="no" style="width:auto;padding:0 8px">Bảng ${idx + 1}</span><div style="flex:1;overflow:auto"><img src="${esc(m.d)}" style="max-height:90px;border:1px solid var(--bd);border-radius:4px" alt="Bảng"></div></div>`;
+    });
+    eqs.slice(0, 120).forEach((eObj, idx) => {
+      const val = (eObj && eObj.t) || '';
+      h += `<div class="eq-chip-row">
+        <span class="no">${idx + 1}</span>
+        <input type="text" data-eq-idx="${idx}" value="${esc(val)}" title="Sửa mã LaTeX của công thức này">
+        <div class="eq-chip-prev" id="eq-prev-${idx}">\\(${esc(val)}\\)</div>
+      </div>`;
+    });
+    listEl.innerHTML = h;
+    listEl.querySelectorAll('input[data-eq-idx]').forEach(inp => {
+      inp.addEventListener('input', () => {
+        const k = +inp.dataset.eqIdx;
+        if (exam && exam.eq && exam.eq[k]) {
+          exam.eq[k].t = inp.value;
+          const pv = $('eq-prev-' + k);
+          if (pv) { pv.innerHTML = `\\(${esc(inp.value)}\\)`; triggerMathJax(); }
+          cur = JSON.parse(JSON.stringify(exam.items));
+          renderTeacherPreview();
+          saveLib(true);
+        }
+      });
+    });
+    triggerMathJax();
+  }
+
+  function runConvertOnCurrentExam() {
+    if (!exam) return showToast('Hãy mở một đề thi trước.');
+    if (!Array.isArray(exam.eq)) exam.eq = [];
+    const sc = $('exam-scale').value === 'english' ? 'other' : $('exam-scale').value;
+    const n = convertExamFormulasToLatex(exam.items, exam.eq, sc);
+    cur = JSON.parse(JSON.stringify(exam.items));
+    saveLib(true);
+    renderTeacherPreview();
+    refreshExamEqTab();
+    showToast(n ? `Đã chuyển đổi thêm ${n} công thức (Toán/Lý/Hóa/Sinh) sang chuẩn LaTeX!` : `Tất cả ${exam.eq.length} công thức trong đề đã ở chuẩn LaTeX!`, 5000);
+  }
+
+  $('btn-convert-cur-latex').onclick = runConvertOnCurrentExam;
+  $('btn-st-reconvert-exam').onclick = runConvertOnCurrentExam;
+})();
+
 const rich=runs=>runs.map(r=>{
   let h=seg(r.t),f=r.f;
   if(f&8)h=`<sub>${h}</sub>`;if(f&16)h=`<sup>${h}</sup>`;if(f&4)h=`<i>${h}</i>`;if(f&2)h=`<b>${h}</b>`;if(f&1)h=`<u>${h}</u>`;
