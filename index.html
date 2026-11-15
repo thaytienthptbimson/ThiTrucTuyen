@@ -4,18 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>HỆ THỐNG THI TRỰC TUYẾN THẦY PHẠM TIẾN-GV TRƯỜNG THPT BỈM SƠN</title>
-<!-- MathJax 3: hiển thị công thức và hỗ trợ đọc giọng nói -->
+<!-- Bộ hiển thị công thức đa tầng trên trình duyệt: KaTeX + mhchem (tức thời) + Native HTML5/CSS/SVG + MathJax 3 -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/mhchem.min.js" crossorigin="anonymous"></script>
 <script>
 window.MathJax = {
-  loader: { load: ['[tex]/mhchem', '[tex]/ams', '[tex]/cancel'] },
+  loader: { load: ['[tex]/mhchem', '[tex]/cancel'] },
   tex: {
-    packages: { '[+]': ['mhchem', 'ams', 'cancel'] },
-    inlineMath: [['\\(', '\\)']],
-    displayMath: [['\\[', '\\]']],
+    packages: { '[+]': ['mhchem', 'cancel'] },
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]'], ['$$', '$$']],
     processEscapes: true
   },
-  options: { ignoreHtmlClass: 'tex2jax_ignore', processHtmlClass: 'tex2jax_process' },
-  startup: { typeset: false } // Sẽ gọi thủ công sau khi render HTML
+  startup: { typeset: false }
 };
 </script>
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -243,6 +245,61 @@ img.im.tbl-im{display:block;max-width:100%;height:auto;border-radius:6px;margin:
 .eq-chip-row{display:flex;gap:8px;align-items:center;padding:8px 10px;border:1px solid var(--bd);border-radius:8px;background:#fff}
 .eq-chip-row input{margin:0;flex:1;font-family:ui-monospace,Consolas,monospace;font-size:13.5px}
 .eq-chip-prev{min-width:130px;max-width:260px;padding:4px 8px;background:var(--tint);border-radius:6px;font-size:14px;overflow:auto}
+/* CSS hiển thị công thức Toán - Lý - Hóa - Sinh trực tiếp trên trình duyệt (HTML5/CSS/SVG & KaTeX) */
+.math-render{display:inline-block;vertical-align:middle;line-height:1.25;margin:0 1px}
+.math-render.math-block{display:block;text-align:center;margin:8px 0;overflow-x:auto}
+.math-render .katex{font-size:1.06em;line-height:1.2}
+.bmath{display:inline-flex;align-items:center;vertical-align:middle;font-family:"Cambria Math","Times New Roman","STIX Two Math",serif;font-size:1.05em;line-height:1.2;gap:1px;white-space:nowrap}
+.bmath.bmath-block{display:flex;justify-content:center;margin:8px 0;overflow-x:auto}
+.bmath i.bm-var{font-style:italic;padding:0 .5px}
+.bmath .bm-rom{font-style:normal}
+.bmath .bm-op{padding:0 3px;font-style:normal}
+.bmath .bm-fn{font-style:normal;padding-right:2px}
+.bmath .bm-bb{font-weight:700;font-family:"Cambria Math","Times New Roman",serif}
+.bmath .bm-frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 2px;font-size:.9em;line-height:1.1}
+.bmath .bm-frac>.bm-num{padding:0 3px 1px;border-bottom:1.2px solid currentColor;text-align:center;width:100%}
+.bmath .bm-frac>.bm-den{padding:1px 3px 0;text-align:center;width:100%}
+.bmath .bm-frac.bm-nobar>.bm-num{border-bottom:0}
+.bmath .bm-sqrt{display:inline-flex;align-items:stretch;vertical-align:middle;margin:0 1px}
+.bmath .bm-sqrt-deg{font-size:.65em;line-height:1;align-self:flex-start;margin-right:-2px;margin-top:1px}
+.bmath .bm-sqrt-sign{display:inline-flex;align-items:stretch;font-size:1.15em;line-height:1;padding-right:1px;user-select:none}
+.bmath .bm-sqrt-body{border-top:1.25px solid currentColor;padding:1px 3px 0 1px;display:inline-flex;align-items:center}
+.bmath .bm-subsup{display:inline-flex;flex-direction:column;justify-content:center;align-items:flex-start;vertical-align:middle;font-size:.74em;line-height:1.05;margin-left:.5px}
+.bmath .bm-subsup.bm-pre{align-items:flex-end;margin-left:0;margin-right:1px}
+.bmath .bm-subsup>.bm-sup{margin-bottom:1px}
+.bmath .bm-subsup>.bm-sub{margin-top:1px}
+.bmath sup.bm-sup-only{font-size:.74em;line-height:1;vertical-align:super;margin-left:.5px}
+.bmath sub.bm-sub-only{font-size:.74em;line-height:1;vertical-align:sub;margin-left:.5px}
+.bmath .bm-xarrow{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 4px;line-height:1}
+.bmath .bm-xarrow>.bm-xa-top{font-size:.72em;padding:0 4px;min-height:.9em;white-space:nowrap}
+.bmath .bm-xarrow>.bm-xa-mid{display:flex;align-items:center;width:100%;min-width:28px;font-size:1.05em;line-height:.8;justify-content:center;position:relative}
+.bmath .bm-xarrow>.bm-xa-mid.bm-line-r::before{content:"";flex:1;height:1.3px;background:currentColor;margin-right:-2px}
+.bmath .bm-xarrow>.bm-xa-mid.bm-line-r::after{content:"▸";font-size:.9em;line-height:1}
+.bmath .bm-xarrow>.bm-xa-mid.bm-line-l::before{content:"◂";font-size:.9em;line-height:1}
+.bmath .bm-xarrow>.bm-xa-mid.bm-line-l::after{content:"";flex:1;height:1.3px;background:currentColor;margin-left:-2px}
+.bmath .bm-xarrow>.bm-xa-bot{font-size:.72em;padding:0 4px;white-space:nowrap}
+.bmath .bm-over{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1.05}
+.bmath .bm-over>.bm-ov-top{font-size:.72em;line-height:.9;margin-bottom:1px}
+.bmath .bm-under{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1.05}
+.bmath .bm-under>.bm-un-bot{font-size:.72em;line-height:.9;margin-top:1px}
+.bmath .bm-vec{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;position:relative;padding-top:4px}
+.bmath .bm-vec::before{content:"";position:absolute;top:2px;left:1px;right:3px;height:1.2px;background:currentColor}
+.bmath .bm-vec::after{content:"";position:absolute;top:0px;right:1px;width:4px;height:4px;border-top:1.2px solid currentColor;border-right:1.2px solid currentColor;transform:rotate(45deg)}
+.bmath .bm-bar{border-top:1.25px solid currentColor;padding-top:1px;display:inline-block;line-height:1.05}
+.bmath .bm-ul{border-bottom:1.25px solid currentColor;padding-bottom:1px;display:inline-block;line-height:1.05}
+.bmath .bm-hat,.bmath .bm-arc{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1}
+.bmath .bm-hat-svg,.bmath .bm-arc-svg{width:100%;height:6px;overflow:visible;margin-bottom:1px}
+.bmath .bm-box{border:1.2px solid currentColor;padding:1px 4px;border-radius:2px;display:inline-block}
+.bmath .bm-cancel{position:relative;display:inline-block}
+.bmath .bm-cancel::after{content:"";position:absolute;left:0;right:0;top:50%;border-top:1.3px solid var(--bad);transform:rotate(-18deg)}
+.bmath .bm-lim{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 2px;line-height:1.05}
+.bmath .bm-lim>.bm-lim-op{font-style:normal;font-size:1em}
+.bmath .bm-lim>.bm-lim-sub{font-size:.7em;margin-top:1px}
+.bmath .bm-cases{display:inline-flex;align-items: center;vertical-align:middle;margin:0 2px}
+.bmath .bm-brace-l{font-size:1.8em;line-height:1;font-weight:300;padding-right:3px;user-select:none}
+.bmath .bm-matrix{display:inline-table;vertical-align:middle;border-collapse:collapse;margin:0 2px}
+.bmath .bm-matrix td{padding:1px 5px;text-align:center}
+.bmath .bm-cases .bm-matrix td{text-align:left}
 </style>
 </head>
 <body>
@@ -612,14 +669,31 @@ img.im.tbl-im{display:block;max-width:100%;height:auto;border-radius:6px;margin:
 <div id="toast" class="toast hide" role="status"></div>
 
 <script>
-// Khởi chạy kích hoạt MathJax
+// Khởi chạy hiển thị công thức trên trình duyệt (ưu tiên KaTeX đồng bộ + Native HTML5/CSS/SVG + MathJax 3)
 function triggerMathJax(tries) {
     tries = tries || 0;
+    if (window.katex && typeof window.katex.renderToString === 'function') {
+        document.querySelectorAll('.bmath[data-latex]').forEach(el => {
+            const raw = el.getAttribute('data-latex') || '';
+            const isBlk = el.classList.contains('bmath-block');
+            if (!raw) return;
+            try {
+                const h = window.katex.renderToString(preprocessLatexForBrowser(raw), {
+                    displayMode: isBlk, throwOnError: true, strict: false, trust: true
+                });
+                const sp = document.createElement('span');
+                sp.className = 'math-render' + (isBlk ? ' math-block' : '');
+                sp.setAttribute('data-latex', raw);
+                sp.innerHTML = h;
+                el.replaceWith(sp);
+            } catch (e) {}
+        });
+    }
     const M = window.MathJax;
     if(M && M.typesetPromise) {
         try { M.typesetClear(); } catch(e) {}
-        M.typesetPromise().catch(err => console.error("MathJax error:", err));
-    } else if(tries < 50) {
+        M.typesetPromise().catch(() => {});
+    } else if(tries < 25 && !window.katex) {
         setTimeout(() => triggerMathJax(tries + 1), 300);
     }
 }
@@ -1117,6 +1191,10 @@ window.openExam = (id) => {
     $('exam-pw').value = exam.pwPlain || '';
     updatePwNote();
 
+    if (!Array.isArray(exam.eq)) exam.eq = [];
+    if ((!$ ('chk-auto-latex') || $('chk-auto-latex').checked) && exam.scale !== 'hsg') {
+        convertExamFormulasToLatex(exam.items, exam.eq, 'other');
+    }
     cur = JSON.parse(JSON.stringify(exam.items)); 
     renderTeacherPreview();
     prepResults();
@@ -2168,16 +2246,20 @@ function omml(n){
   if(!n) return '';
   const K=e=>e?[...e.children]:[],C=(e,x)=>e&&K(e).find(c=>c.localName===x),
     S=e=>e?K(e).map(omml).join(''):'',A=(e,x)=>S(C(e,x)),
-    V=(e,x)=>{const c=C(e,x);if(!c)return null;return c.getAttribute('m:val')??c.getAttribute('w:val')??c.getAttribute('val')??null},
+    hasC=(e,x)=>!!(e&&C(e,x)),
+    V=(e,x)=>{const c=C(e,x);if(!c)return null;return c.getAttribute('m:val')??c.getAttribute('w:val')??c.getAttribute('val')??''},
+    isHide=(e,x)=>{const v=V(e,x);return v!==null && v!=='0' && v!=='false' && v!=='off'},
     E=e=>K(e).filter(x=>x.localName==='e').map(S);
   switch(n.localName){
     case 'r':{
-      const ts=K(n).filter(c=>c.localName==='t');
-      const syms=K(n).filter(c=>c.localName==='sym');
+      const ts=[...n.getElementsByTagName('*')].filter(c=>c.localName==='t');
+      const syms=[...n.getElementsByTagName('*')].filter(c=>c.localName==='sym');
       let raw=ts.map(t=>t.textContent).join('');
       syms.forEach(sy=>{
         const ch=(sy.getAttribute('w:char')||sy.getAttribute('char')||'').toUpperCase();
-        if(W_SYM_MAP[ch]) raw+=W_SYM_MAP[ch];
+        const hex=ch.padStart(4,'F0');
+        if(W_SYM_MAP[hex]) raw+=W_SYM_MAP[hex];
+        else if(W_SYM_MAP['F0'+ch.slice(-2)]) raw+=W_SYM_MAP['F0'+ch.slice(-2)];
       });
       if(!raw) return '';
       raw = normMathUnicode(raw);
@@ -2211,9 +2293,15 @@ function omml(n){
       return `{${b}}_{${sb}}^{${sp}}`;
     }
     case 'sPre':return `{}_{${A(n,'sub')}}^{${A(n,'sup')}}{${A(n,'e')}}`;
-    case 'rad':{const d=A(n,'deg').trim();return d?`\\sqrt[${d}]{${A(n,'e')}}`:`\\sqrt{${A(n,'e')}}`}
+    case 'rad':{
+      const p=C(n,'radPr'),d=isHide(p,'degHide')?'':A(n,'deg').trim();
+      return d?`\\sqrt[${d}]{${A(n,'e')}}`:`\\sqrt{${A(n,'e')}}`;
+    }
     case 'd':{
-      const p=C(n,'dPr'),b=V(p,'begChr'),en=V(p,'endChr'),sp=V(p,'sepChr');
+      const p=C(n,'dPr');
+      const b=hasC(p,'begChr')?V(p,'begChr'):'(';
+      const en=hasC(p,'endChr')?V(p,'endChr'):')';
+      const sp=hasC(p,'sepChr')?V(p,'sepChr'):'|';
       const dl=c=>{
         if(c===''||c==='.')return'.';
         if(c==='{')return'\\{';if(c==='}')return'\\}';
@@ -2223,12 +2311,20 @@ function omml(n){
         if(c==='⌈')return'\\lceil ';if(c==='⌉')return'\\rceil ';
         return c;
       };
-      const els=E(n),sep=sp===null?'|':(sp==='|'?'\\middle| ':sp);
-      return `\\left${dl(b===null?'(':b)}${els.join(sep)}\\right${dl(en===null?')':en)}`;
+      const els=E(n),sep=(sp===''||sp===null)?'|':(sp==='|'?'\\middle| ':sp);
+      const inner=els.join(sep);
+      if(b==='{' && (en===''||en==='.') && /\\begin\{(?:aligned|matrix)\}/.test(inner)){
+        const body=inner.replace(/^\\begin\{(?:aligned|matrix)\}|\\end\{(?:aligned|matrix)\}$/g,'');
+        return `\\begin{cases}${body}\\end{cases}`;
+      }
+      return `\\left${dl(b)}${inner}\\right${dl(en)}`;
     }
     case 'nary':{
-      const p=C(n,'naryPr'),c=V(p,'chr')||'∫',su=A(n,'sub').trim(),up=A(n,'sup').trim(),e=A(n,'e');
-      if(ARROW_RE.test(c.trim())) return makeReactionArrow(c.trim(), su, up) + (e?`{${e}}`:'');
+      const p=C(n,'naryPr'),c=(V(p,'chr')||'').trim()||'∫';
+      const su=isHide(p,'subHide')?'':A(n,'sub').trim();
+      const up=isHide(p,'supHide')?'':A(n,'sup').trim();
+      const e=A(n,'e');
+      if(ARROW_RE.test(c)) return makeReactionArrow(c, su, up) + (e?`{${e}}`:'');
       return (NR[c]||SYM[c]||c)+(su?`_{${su}}`:'')+(up?`^{${up}}`:'')+`{${e}}`;
     }
     case 'func':{
@@ -2256,18 +2352,18 @@ function omml(n){
       return `\\mathop{${b}}\\limits^{${lim}}`;
     }
     case 'acc':{
-      const chr=V(C(n,'accPr'),'chr'),e=A(n,'e').trim();
+      const chr=(V(C(n,'accPr'),'chr')||'').trim(),e=A(n,'e').trim();
       const plain=e.replace(/\\[a-zA-Z]+|[{}^_\s]/g,'');
-      if((chr==='\u20D7'||chr==='→'||chr==='⟶'||!chr && /vec/.test(AC[chr]||'')) && plain.length>=2) return `\\overrightarrow{${e}}`;
+      if((chr==='\u20D7'||chr==='→'||chr==='⟶'||(!chr && /vec/.test(AC[chr]||''))) && plain.length>=2) return `\\overrightarrow{${e}}`;
       if(chr==='↔'||chr==='\u20E1') return `\\overleftrightarrow{${e}}`;
       if(chr==='︵'||chr==='⌒'||chr==='\u0361') return `\\overset{\\frown}{${e}}`;
-      const cmd=AC[chr]||'\\hat';
+      const cmd=AC[chr]||(plain.length>=2?'\\widehat':'\\hat');
       if(cmd==='\\vec' && plain.length>=2) return `\\overrightarrow{${e}}`;
       return `${cmd}{${e}}`;
     }
     case 'bar':return(V(C(n,'barPr'),'pos')==='bot'?'\\underline':'\\overline')+`{${A(n,'e')}}`;
     case 'groupChr':{
-      const p=C(n,'groupChrPr'),pos=V(p,'pos'),chr=V(p,'chr')||'';
+      const p=C(n,'groupChrPr'),pos=V(p,'pos'),chr=(V(p,'chr')||'').trim();
       if(ARROW_RE.test(chr)) return pos==='top'?`\\overset{\\longrightarrow}{${A(n,'e')}}`:`\\underset{\\longrightarrow}{${A(n,'e')}}`;
       return(pos==='top'?'\\overbrace':'\\underbrace')+`{${A(n,'e')}}`;
     }
@@ -2277,6 +2373,136 @@ function omml(n){
     case 'eqArr':return'\\begin{aligned}'+E(n).join('\\\\')+'\\end{aligned}';
     default:return/Pr$/.test(n.localName)?'':S(n);
   }
+}
+
+// ===================== BỘ GIẢI MÃ WORD EQ FIELDS ({ EQ \f(...), \r(...), \s(...), \b(...), \i(...) }) =====================
+function splitEqFieldArgs(str) {
+  const res = [];
+  let cur = '', depth = 0;
+  for (let i = 0; i < str.length; i++) {
+    const ch = str[i];
+    if (ch === '\\' && i + 1 < str.length && /[()[\]{};,]/.test(str[i + 1])) {
+      cur += '\\' + str[i + 1]; i++; continue;
+    }
+    if (ch === '(') { depth++; cur += ch; }
+    else if (ch === ')') { if (depth > 0) depth--; cur += ch; }
+    else if ((ch === ';' || ch === ',') && depth === 0) {
+      res.push(cur.trim()); cur = '';
+    } else cur += ch;
+  }
+  res.push(cur.trim());
+  return res;
+}
+
+function parseWordEqFieldToLatex(instr) {
+  let s = String(instr || '').trim().replace(/^EQ\s+/i, '');
+  if (!s) return '';
+  const parseSeq = (txt) => {
+    let out = '', i = 0;
+    while (i < txt.length) {
+      if (txt[i] === '\\') {
+        const mCmd = /^\\([a-zA-Z]+)/.exec(txt.slice(i));
+        if (!mCmd) { out += txt[i++]; continue; }
+        const cmd = mCmd[1].toLowerCase();
+        i += mCmd[0].length;
+        const mods = [];
+        while (i < txt.length) {
+          while (i < txt.length && /\s/.test(txt[i])) i++;
+          if (txt[i] === '\\') {
+            const mLc = /^\\(lc|rc|bc)\\(.)/i.exec(txt.slice(i));
+            if (mLc) {
+              mods.push({ k: mLc[1].toLowerCase(), v: mLc[2] });
+              i += mLc[0].length;
+              continue;
+            }
+            const mm = /^\\([a-zA-Z0-9-]+)(?:\(([^()]*)\))?/.exec(txt.slice(i));
+            if (mm) {
+              const mk = mm[1].toLowerCase();
+              if (!/^(?:up|do|ai|di|li|ri|hi|lo|al|ac|ar|hs|vs|co|lc|rc|bc|su|pr|in)/i.test(mk)) break;
+              if (/^(?:al|ac|ar|su|pr|in)$/i.test(mk) && mm[0].includes('(')) {
+                mods.push({ k: mk, v: '' });
+                i += 1 + mk.length;
+                break;
+              }
+              mods.push({ k: mk, v: mm[2] || '' });
+              i += mm[0].length;
+              continue;
+            }
+          }
+          break;
+        }
+        while (i < txt.length && /\s/.test(txt[i])) i++;
+        if (txt[i] === '(') {
+          let depth = 1, p = i + 1;
+          while (p < txt.length && depth > 0) {
+            if (txt[p] === '\\' && p + 1 < txt.length && /[()[\]{}]/.test(txt[p + 1])) { p += 2; continue; }
+            if (txt[p] === '(') depth++;
+            else if (txt[p] === ')') depth--;
+            p++;
+          }
+          const inner = txt.slice(i + 1, Math.max(i + 1, p - 1));
+          i = p;
+          const args = splitEqFieldArgs(inner).map(parseSeq);
+          if (cmd === 'f') {
+            out += `\\frac{${args[0] || ''}}{${args[1] || ''}}`;
+          } else if (cmd === 'r') {
+            out += args.length > 1 ? `\\sqrt[${args[0]}]{${args[1]}}` : `\\sqrt{${args[0] || ''}}`;
+          } else if (cmd === 's') {
+            const isUp = mods.some(m => m.k.startsWith('up'));
+            const isDo = mods.some(m => m.k.startsWith('do'));
+            if (isUp && !isDo) out += `^{${args.join(',')}}`;
+            else if (isDo && !isUp) out += `_{${args.join(',')}}`;
+            else if (args.length >= 2) out += `^{${args[0]}}_{${args[1]}}`;
+            else out += `^{${args[0] || ''}}`;
+          } else if (cmd === 'i') {
+            const isSum = mods.some(m => m.k === 'su');
+            const isPrd = mods.some(m => m.k === 'pr');
+            const op = isSum ? '\\sum' : (isPrd ? '\\prod' : '\\int');
+            if (args.length >= 3) out += `${op}_{${args[0]}}^{${args[1]}}{${args[2]}}`;
+            else out += `${op}{${args.join(' ')}}`;
+          } else if (cmd === 'o') {
+            const combined = args.join('');
+            const base = args.find(a => !/[→⟶¯^~]|\\vec|\\hat/.test(a)) || args[0] || '';
+            if (/→|⟶|\\vec|\\rightarrow/.test(combined)) out += base.length > 1 ? `\\overrightarrow{${base}}` : `\\vec{${base}}`;
+            else if (/¯|_|-/.test(combined)) out += `\\overline{${base}}`;
+            else if (/︵|⌒/.test(combined)) out += `\\overset{\frown}{${base}}`;
+            else out += `\\widehat{${base}}`;
+          } else if (cmd === 'b') {
+            const lcMod = mods.find(m => m.k === 'lc');
+            const rcMod = mods.find(m => m.k === 'rc');
+            const lc = lcMod ? (lcMod.v || '{') : '(';
+            const rc = rcMod ? (rcMod.v || '.') : (lc === '{' ? '.' : ')');
+            const body = args.join(' ');
+            if (lc === '{' && (rc === '.' || rc === '') && /\\begin\{(?:aligned|matrix)\}/.test(body)) {
+              out += body.replace(/\\begin\{(?:aligned|matrix)\}/, '\\begin{cases}').replace(/\\end\{(?:aligned|matrix)\}/, '\\end{cases}');
+            } else {
+              const lTex = lc === '{' ? '\\{' : (lc === '}' ? '\\}' : lc);
+              const rTex = (rc === '.' || rc === '') ? '.' : (rc === '}' ? '\\}' : rc);
+              out += `\\left${lTex}${body}\\right${rTex}`;
+            }
+          } else if (cmd === 'a') {
+            const coMod = mods.find(m => m.k.startsWith('co'));
+            const nCols = coMod ? Math.max(1, parseInt(coMod.k.slice(2) || coMod.v || '1', 10)) : 1;
+            if (nCols <= 1) {
+              out += '\\begin{aligned}' + args.join('\\\\') + '\\end{aligned}';
+            } else {
+              const rows = [];
+              for (let r = 0; r < args.length; r += nCols) rows.push(args.slice(r, r + nCols).join('&'));
+              out += '\\begin{matrix}' + rows.join('\\\\') + '\\end{matrix}';
+            }
+          } else if (cmd === 'x') {
+            out += `\\boxed{${args.join(' ')}}`;
+          } else {
+            out += args.join(' ');
+          }
+          continue;
+        }
+      }
+      out += txt[i++];
+    }
+    return normMathUnicode(out).replace(SYR, c => SYM[c] || c);
+  };
+  return parseSeq(s).replace(/\s+/g, ' ').trim();
 }
 
 // ===================== BỘ GIẢI MÃ MATHTYPE (MTEF v3 / v5) TRONG OLE / WMF SANG LATEX =====================
@@ -2305,8 +2531,8 @@ function parseMtefToLatex(u8, startOffset) {
     let p = startOffset + 5;
     if (ver === 5) {
       while (p < u8.length && u8[p] !== 0) p++;
-      p++; // null-terminated app key
-      if (p < u8.length) p++; // equation options
+      p++; // null-terminated app key (e.g. "DSMT4\0" or "DSMT6\0")
+      if (p < u8.length) p++; // equation options byte
     }
     const readNudge = () => {
       if (p >= u8.length) return;
@@ -2317,6 +2543,22 @@ function parseMtefToLatex(u8, startOffset) {
       let s = '';
       while (p < u8.length && u8[p] !== 0) { s += String.fromCharCode(u8[p++]); }
       p++; return s;
+    };
+    const readDimArray = () => {
+      if (p >= u8.length) return;
+      const cnt = u8[p++];
+      let hi = true;
+      const nextNib = () => {
+        if (p >= u8.length) return 0x0F;
+        if (hi) { hi = false; return (u8[p] >> 4) & 0x0F; }
+        hi = true; return u8[p++] & 0x0F;
+      };
+      for (let d = 0; d < cnt; d++) {
+        nextNib();
+        let guard = 0;
+        while (p < u8.length && guard++ < 64 && nextNib() !== 0x0F) {}
+      }
+      if (!hi) p++;
     };
     const mapChar = (tf, ch) => {
       if (ch >= 0xF000 && ch <= 0xF0FF) {
@@ -2352,16 +2594,22 @@ function parseMtefToLatex(u8, startOffset) {
       }
     };
     let steps = 0;
+    const isEndPeek = () => p >= u8.length || (ver === 5 ? u8[p] === 0 : (u8[p] & 0x0F) === 0);
     const readObjList = () => {
       const items = [];
-      while (p < u8.length && steps++ < 4000) {
+      while (p < u8.length && steps++ < 5000) {
         const rec = u8[p++];
-        const type = rec & 0x0F, opt = (rec >> 4) & 0x0F;
+        const type = ver === 5 ? rec : (rec & 0x0F);
         if (type === 0) break; // END
+        let opt = ver === 5 ? 0 : ((rec >> 4) & 0x0F);
+        if (ver === 5 && (type >= 1 && type <= 6 || type === 16 || type === 19)) {
+          opt = u8[p++] || 0;
+        }
         if (type === 1) { // LINE
           if (opt & 0x08) readNudge();
           if (opt & 0x04) p += 2; // line spacing
           if (opt & 0x02) { // RULER
+            if (ver === 5 && u8[p] === 7) p++;
             const nStops = u8[p++];
             p += nStops * 3;
           }
@@ -2374,21 +2622,23 @@ function parseMtefToLatex(u8, startOffset) {
           let mtcode = 0;
           if (ver === 5) {
             if (!(opt & 0x02)) { mtcode = u8[p] | (u8[p + 1] << 8); p += 2; }
-            if (opt & 0x80) p++; // 8-bit enc
-            else if (opt & 0x10) p += 2; // 16-bit enc
+            if (opt & 0x04) p++; // 8-bit enc
+            if (opt & 0x10) p += 2; // 16-bit enc
           } else {
             mtcode = u8[p++];
           }
           let chTex = mapChar(tf, mtcode);
           if (opt & 0x01) { // embellishments follow
-            while (p < u8.length) {
+            while (p < u8.length && steps++ < 5000) {
+              if (isEndPeek()) { p++; break; }
               const er = u8[p++];
-              if ((er & 0x0F) === 0) break;
-              if ((er & 0x0F) === 6) {
-                if ((er >> 4) & 0x08) readNudge();
+              const eType = ver === 5 ? er : (er & 0x0F);
+              const eOpt = ver === 5 ? (u8[p++] || 0) : ((er >> 4) & 0x0F);
+              if (eType === 6) {
+                if (eOpt & 0x08) readNudge();
                 const emb = u8[p++];
                 chTex = applyEmbell(chTex, emb);
-              }
+              } else break;
             }
           }
           items.push(chTex);
@@ -2399,19 +2649,21 @@ function parseMtefToLatex(u8, startOffset) {
           if (variation & 0x80) variation = (variation & 0x7F) | (u8[p++] << 7);
           const tmplOpt = u8[p++];
           const slots = [];
-          while (p < u8.length && steps++ < 4000) {
-            const pk = u8[p];
-            if ((pk & 0x0F) === 0) { p++; break; }
+          while (p < u8.length && steps++ < 5000) {
+            if (isEndPeek()) { p++; break; }
             slots.push(readObjList());
           }
           const s0 = slots[0] || '', s1 = slots[1] || '', s2 = slots[2] || '';
-          if (sel === 0 || sel === 1 || sel === 2 || sel === 3 || sel === 4 || sel === 5 || sel === 6 || sel === 7 || sel === 8) {
-            // Fences / Parentheses / Brackets / Braces / Bars
+          if (sel >= 0 && sel <= 8) {
             const lMap = {0:'(',1:'[',2:'\\{',3:'|',4:'\\Vert ',5:'\\langle ',6:'(',7:'\\lfloor ',8:'\\lceil '};
             const rMap = {0:')',1:']',2:'\\}',3:'|',4:'\\Vert ',5:'\\rangle ',6:']',7:'\\rfloor ',8:'\\rceil '};
-            const L = (variation === 2) ? '.' : (lMap[sel] || '(');
-            const R = (variation === 1) ? '.' : (rMap[sel] || ')');
-            items.push(`\\left${L}${s0}\\right${R}`);
+            const L = (variation === 2 || (variation & 0x02)) ? '.' : (lMap[sel] || '(');
+            const R = (variation === 1 || (variation & 0x01) && !(variation & 0x02) && sel === 2) ? '.' : (rMap[sel] || ')');
+            if (sel === 2 && R === '.' && /\\begin\{aligned\}/.test(s0)) {
+              items.push(s0.replace(/\\begin\{aligned\}/, '\\begin{cases}').replace(/\\end\{aligned\}/, '\\end{cases}'));
+            } else {
+              items.push(`\\left${L}${s0}\\right${R}`);
+            }
           } else if (sel === 10) { // Root: [radicand, nth]
             items.push(s1 ? `\\sqrt[${s1}]{${s0}}` : `\\sqrt{${s0}}`);
           } else if (sel === 11) { // Fraction: [num, den]
@@ -2439,10 +2691,13 @@ function parseMtefToLatex(u8, startOffset) {
         } else if (type === 4) { // PILE (system of equations / stack)
           if (opt & 0x08) readNudge();
           p += 2; // halign, valign
-          if (opt & 0x02) { const ns = u8[p++]; p += ns * 3; }
+          if (opt & 0x02) {
+            if (ver === 5 && u8[p] === 7) p++;
+            const ns = u8[p++]; p += ns * 3;
+          }
           const rows = [];
-          while (p < u8.length && steps++ < 4000) {
-            if ((u8[p] & 0x0F) === 0) { p++; break; }
+          while (p < u8.length && steps++ < 5000) {
+            if (isEndPeek()) { p++; break; }
             rows.push(readObjList());
           }
           items.push('\\begin{aligned}' + rows.filter(Boolean).join('\\\\') + '\\end{aligned}');
@@ -2453,8 +2708,8 @@ function parseMtefToLatex(u8, startOffset) {
           const rows = u8[p++], cols = u8[p++];
           p += Math.ceil((rows + 1) / 4) + Math.ceil((cols + 1) / 4);
           const cells = [];
-          while (p < u8.length && steps++ < 4000) {
-            if ((u8[p] & 0x0F) === 0) { p++; break; }
+          while (p < u8.length && steps++ < 5000) {
+            if (isEndPeek()) { p++; break; }
             cells.push(readObjList());
           }
           const mRows = [];
@@ -2464,17 +2719,35 @@ function parseMtefToLatex(u8, startOffset) {
           if (opt & 0x08) readNudge();
           const emb = u8[p++];
           if (items.length) items[items.length - 1] = applyEmbell(items[items.length - 1], emb);
+        } else if (type === 7) { // RULER
+          const ns = u8[p++]; p += ns * 3;
         } else if (type === 8) { // FONT_STYLE_DEF
-          p++; readStr();
+          if (ver === 5) p += 2;
+          else { p++; readStr(); }
         } else if (type === 9) { // SIZE
           const ltype = u8[p++];
           if (ltype === 100) p += 2;
           else if (ltype === 101) p += 3;
           else p += 1;
         } else if (type >= 10 && type <= 14) {
-          // FULL, SUB, SUB2, SYM, SUBSYM size records (no extra bytes)
+          // FULL, SUB, SUB2, SYM, SUBSYM
         } else if (type === 15) { // COLOR
-          p += 2;
+          p += 1;
+        } else if (type === 16) { // COLOR_DEF (MTEF v5)
+          p += (opt & 0x01) ? 8 : 6;
+          if (opt & 0x02) readStr();
+        } else if (type === 17) { // ENCODING_DEF (MTEF v5)
+          readStr();
+        } else if (type === 18) { // FONT_DEF (MTEF v5)
+          p++; readStr();
+        } else if (type === 19) { // EQN_PREFS (MTEF v5)
+          readDimArray();
+          readDimArray();
+          const stCnt = u8[p++] || 0;
+          for (let k = 0; k < stCnt && p < u8.length; k++) {
+            const c = u8[p++];
+            if (c !== 0) p++;
+          }
         } else {
           break;
         }
@@ -2490,8 +2763,8 @@ function parseMtefToLatex(u8, startOffset) {
 
 // Quét tìm luồng MTEF trong file nhị phân OLE (oleObject*.bin) hoặc WMF (image*.wmf)
 function extractMtefFromBytes(u8) {
-  if (!u8 || u8.length < 32) return '';
-  // 1. Kiểm tra nếu có MathML nhúng trực tiếp trong bin/wmf
+  if (!u8 || u8.length < 28) return '';
+  // 1. Kiểm tra nếu có MathML hoặc LaTeX nhúng trực tiếp trong bin/wmf
   try {
     const ascii = new TextDecoder('latin1').decode(u8);
     const mml = /<math[\s\S]*?<\/math>/i.exec(ascii);
@@ -2500,10 +2773,20 @@ function extractMtefFromBytes(u8) {
       const txt = doc.documentElement ? doc.documentElement.textContent.trim() : '';
       if (txt) return txt;
     }
+    // Kiểm tra chữ ký DSMT4 / DSMT5 / DSMT6 / DSMT7 của MathType MTEF v5 (u8[k] === 5, u8[k+5..k+8] === "DSMT")
+    let idxDsmt = ascii.indexOf('DSMT');
+    while (idxDsmt >= 5) {
+      const start = idxDsmt - 5;
+      if (u8[start] === 5) {
+        const tex = parseMtefToLatex(u8, start);
+        if (tex) return tex;
+      }
+      idxDsmt = ascii.indexOf('DSMT', idxDsmt + 4);
+    }
     // Kiểm tra AppsMFCC trong WMF của MathType
     const idxApp = ascii.indexOf('AppsMFCC');
     if (idxApp >= 0 && idxApp + 20 < u8.length) {
-      for (let k = idxApp + 8; k < Math.min(u8.length - 8, idxApp + 120); k++) {
+      for (let k = idxApp + 8; k < Math.min(u8.length - 8, idxApp + 140); k++) {
         if ((u8[k] === 5 || u8[k] === 3) && u8[k + 1] <= 1 && u8[k + 2] <= 2) {
           const tex = parseMtefToLatex(u8, k);
           if (tex) return tex;
@@ -2511,8 +2794,17 @@ function extractMtefFromBytes(u8) {
       }
     }
   } catch (e) {}
-  // 2. Tìm EQNOLEFILEHDR (0x0000001C = 28 byte header, tiếp theo 0x00020000)
-  for (let i = 0; i < u8.length - 34; i++) {
+  // 2. Tìm EQNOLEFILEHDR chuẩn (WORD cbHdr = 0x001C (2 byte), DWORD version = 0x00020000 (4 byte) -> 1C 00 00 00 02 00)
+  for (let i = 0; i < u8.length - 32; i++) {
+    if (u8[i] === 0x1C && u8[i + 1] === 0x00 && u8[i + 2] === 0x00 && u8[i + 3] === 0x00 &&
+        u8[i + 4] === 0x02 && u8[i + 5] === 0x00) {
+      const mtefStart = i + 28;
+      if (mtefStart < u8.length && (u8[mtefStart] === 3 || u8[mtefStart] === 5)) {
+        const tex = parseMtefToLatex(u8, mtefStart);
+        if (tex) return tex;
+      }
+    }
+    // Tương thích cả trường hợp cbHdr lưu dạng 4 byte
     if (u8[i] === 0x1C && u8[i + 1] === 0x00 && u8[i + 2] === 0x00 && u8[i + 3] === 0x00 &&
         u8[i + 4] === 0x00 && u8[i + 5] === 0x00 && u8[i + 6] === 0x02 && u8[i + 7] === 0x00) {
       const mtefStart = i + 28;
@@ -2564,7 +2856,6 @@ function extractWordTableMeta(tblNode) {
       const fill = shd ? V(shd, 'fill') : null;
       const bg = (fill && fill !== 'auto' && !/^f{6}$/i.test(fill) && /^[0-9A-Fa-f]{6}$/.test(fill)) ? '#' + fill : null;
       const vAlign = va ? (V(va, 'val') || 'center') : 'center';
-      // Canh lề đoạn văn đầu tiên trong ô
       let align = 'left';
       const firstP = C(tc, 'p'), pPr = C(firstP, 'pPr'), jc = C(pPr, 'jc');
       if (jc) {
@@ -2623,8 +2914,32 @@ async function pre(buf){
         changed=true;
       }
 
-      // 2. Giải mã công thức MathType nhúng trong <w:object> / oleObject*.bin hoặc ảnh WMF
-      if(x.includes('OLEObject') || x.includes('Equation.')){
+      // 2. Chuyển đổi các trường công thức Word EQ (<w:fldSimple> và <w:instrText>EQ ...) sang LaTeX
+      if(x.includes('fldSimple') || x.includes('instrText')){
+        x=x.replace(/<w:fldSimple\b[^>]*?w:instr="([^"]*?\bEQ\b[^"]*)"[^>]*>([\s\S]*?)<\/w:fldSimple>/gi,(m,instr,inner)=>{
+          const cleanInstr=instr.replace(/&quot;/g,'"').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>');
+          const tex=parseWordEqFieldToLatex(cleanInstr);
+          if(!tex) return m;
+          const u=/<w:u [^>]*w:val="(?!none)/.test(inner);
+          return `<w:r>${u?'<w:rPr><w:u w:val="single"/></w:rPr>':''}<w:t xml:space="preserve">⟪${eq.push({t:tex})-1}⟫</w:t></w:r>`;
+        });
+        // Trường hợp complex field: <w:fldChar w:fldCharType="begin"/> ... <w:instrText> EQ ... </w:instrText> ... <w:fldChar w:fldCharType="end"/>
+        const complexEqRe=/<w:r\b[^>]*>(?:(?!<\/w:r>)[\s\S])*?<w:fldChar\b[^>]*?w:fldCharType="begin"[^>]*?\/>[\s\S]*?<\/w:r>([\s\S]*?)<w:r\b[^>]*>(?:(?!<\/w:r>)[\s\S])*?<w:fldChar\b[^>]*?w:fldCharType="end"[^>]*?\/>[\s\S]*?<\/w:r>/g;
+        x=x.replace(complexEqRe,(m,mid)=>{
+          if(!/<w:instrText\b/i.test(mid)) return m;
+          const instrs=[...mid.matchAll(/<w:instrText\b[^>]*>([\s\S]*?)<\/w:instrText>/gi)].map(k=>k[1]).join('');
+          if(!/^\s*EQ\b/i.test(instrs)) return m;
+          const cleanInstr=instrs.replace(/&quot;/g,'"').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>');
+          const tex=parseWordEqFieldToLatex(cleanInstr);
+          if(!tex) return m;
+          const u=/<w:u [^>]*w:val="(?!none)/.test(mid);
+          return `<w:r>${u?'<w:rPr><w:u w:val="single"/></w:rPr>':''}<w:t xml:space="preserve">⟪${eq.push({t:tex})-1}⟫</w:t></w:r>`;
+        });
+        changed=true;
+      }
+
+      // 3. Giải mã công thức MathType nhúng trong <w:object> / oleObject*.bin hoặc ảnh WMF (<w:pict>)
+      if(x.includes('OLEObject') || x.includes('Equation.') || x.includes('<w:object') || x.includes('<w:pict')){
         const relFile=z.file('word/_rels/document.xml.rels');
         const relMap={};
         if(relFile){
@@ -2649,21 +2964,21 @@ async function pre(buf){
             }
           }
           if(latex){
-            const u=/<w:u [^>]*w:val="(?!none)/.test(block);
-            const rep=`<w:r>${u?'<w:rPr><w:u w:val="single"/></w:rPr>':''}<w:t xml:space="preserve">⟪${eq.push({t:latex})-1}⟫</w:t></w:r>`;
+            // Lưu ý: <w:object> đã nằm bên trong <w:r>, nên thay trực tiếp bằng <w:t> để Mammoth không bỏ qua thẻ <w:r> lồng nhau
+            const rep=`<w:t xml:space="preserve">⟪${eq.push({t:latex})-1}⟫</w:t>`;
             x=x.replace(block,rep);
             changed=true;
           }
         }
       }
 
-      // 3. Chuyển đổi toàn bộ công thức Word Equation (<m:oMath>) sang LaTeX
+      // 4. Chuyển đổi toàn bộ công thức Word Equation (<m:oMath>) sang LaTeX
       if(x.includes('<m:oMath')){
         x=replaceOMathInXml(x,eq);
         changed=true;
       }
 
-      // 4. Trích xuất cấu trúc & định dạng của các bảng biểu (<w:tbl>) để kết xuất sang ảnh sắc nét
+      // 5. Trích xuất cấu trúc & định dạng của các bảng biểu (<w:tbl>) để kết xuất sang ảnh sắc nét
       if(x.includes('<w:tbl')){
         try{
           const doc=new DOMParser().parseFromString(x,'application/xml');
@@ -3058,8 +3373,11 @@ function extractCellParagraphs(td, eq) {
   };
   const walk = (node, style) => {
     if (node.nodeType === 3) {
-      const raw = node.nodeValue.normalize('NFC').replace(/[\r\n\u00a0]+/g, ' ');
+      let raw = node.nodeValue.normalize('NFC').replace(/[\r\n\u00a0]+/g, ' ');
       if (!raw) return;
+      if (!style.sub && !style.sup) {
+        raw = convertPlainTextFormulasToLatex(raw, 'other');
+      }
       // Tách công thức ⟪idx⟫ hoặc \(...\) hoặc $...$ trong văn bản
       let last = 0;
       raw.replace(TK, (m, a, b, c, d, e, f, off) => {
@@ -3466,25 +3784,48 @@ const CHEM_ELEMENTS = new Set([
   'Fr','Ra','Ac','Th','Pa','U','Np','Pu','Am','Cm','Bk','Cf','Me','Et'
 ]);
 const DIATOMIC_SET = new Set(['H2','O2','O3','N2','F2','Cl2','Br2','I2','S8','P4']);
+// Các hợp chất hóa học phổ biến không có chữ số chỉ số (nhưng có từ 2 nguyên tố trở lên)
+const CHEM_NO_DIGIT_SET = new Set([
+  'NaOH','KOH','LiOH','RbOH','CsOH','HCl','HBr','HI','HF','HCN','HClO','NaCl','KCl','LiCl','RbCl','CsCl',
+  'NaBr','KBr','AgCl','AgBr','AgI','AgF','NaI','KI','NaF','KF','CuO','FeO','ZnO','MgO','CaO','BaO','BeO',
+  'CrO','MnO','PbO','SnO','HgO','NiO','CoO','FeS','CuS','ZnS','PbS','HgS','CaS','MgS','BaS','NiS','CoS',
+  'AlN','SiC','AlP','ZnP','NaCN','KCN','AgCN','NaHS','KHS','CuCl','CuBr','CuI','HCHO','HCOOH','HCOONa','HCOOK','HCOOAg',
+  'NaClO','KClO','CaOCl2'
+]);
+// Các ion hóa học viết liền không có dấu ^ (thường gặp khi sao chép từ PDF/Word mất định dạng chỉ số trên)
+const FLAT_ION_MAP = {
+  'SO42-':'\\mathrm{SO_4^{2-}}','SO32-':'\\mathrm{SO_3^{2-}}','CO32-':'\\mathrm{CO_3^{2-}}','SiO32-':'\\mathrm{SiO_3^{2-}}',
+  'CrO42-':'\\mathrm{CrO_4^{2-}}','Cr2O72-':'\\mathrm{Cr_2O_7^{2-}}','HPO42-':'\\mathrm{HPO_4^{2-}}','ZnO22-':'\\mathrm{ZnO_2^{2-}}',
+  'PO43-':'\\mathrm{PO_4^{3-}}','NO3-':'\\mathrm{NO_3^-}','NO2-':'\\mathrm{NO_2^-}','HCO3-':'\\mathrm{HCO_3^-}',
+  'HSO4-':'\\mathrm{HSO_4^-}','HSO3-':'\\mathrm{HSO_3^-}','H2PO4-':'\\mathrm{H_2PO_4^-}','AlO2-':'\\mathrm{AlO_2^-}',
+  'MnO4-':'\\mathrm{MnO_4^-}','ClO4-':'\\mathrm{ClO_4^-}','ClO3-':'\\mathrm{ClO_3^-}','ClO-':'\\mathrm{ClO^-}',
+  'CH3COO-':'\\mathrm{CH_3COO^-}','HCOO-':'\\mathrm{HCOO^-}','NH4+':'\\mathrm{NH_4^+}','H3O+':'\\mathrm{H_3O^+}',
+  'Fe2+':'\\mathrm{Fe^{2+}}','Fe3+':'\\mathrm{Fe^{3+}}','Cu2+':'\\mathrm{Cu^{2+}}','Ba2+':'\\mathrm{Ba^{2+}}',
+  'Ca2+':'\\mathrm{Ca^{2+}}','Mg2+':'\\mathrm{Mg^{2+}}','Zn2+':'\\mathrm{Zn^{2+}}','Pb2+':'\\mathrm{Pb^{2+}}',
+  'Ni2+':'\\mathrm{Ni^{2+}}','Sn2+':'\\mathrm{Sn^{2+}}','Hg2+':'\\mathrm{Hg^{2+}}','Sr2+':'\\mathrm{Sr^{2+}}',
+  'Al3+':'\\mathrm{Al^{3+}}','Cr3+':'\\mathrm{Cr^{3+}}','Au3+':'\\mathrm{Au^{3+}}','Ag+':'\\mathrm{Ag^+}',
+  'Na+':'\\mathrm{Na^+}','K+':'\\mathrm{K^+}','Li+':'\\mathrm{Li^+}','S2-':'\\mathrm{S^{2-}}'
+};
 
-// Kiểm tra một chuỗi có phải là công thức hóa học hợp lệ hay không (ví dụ H2SO4, Fe2(SO4)3, Ca(OH)2, C6H12O6, CH3COOH, CuSO4.5H2O)
+// Kiểm tra một chuỗi có phải là công thức hóa học hợp lệ hay không (ví dụ H2SO4, Fe2(SO4)3, Ca(OH)2, NaOH, HCl, C6H12O6, CH3COOH, (-CH2-CH2-)n)
 function isChemFormulaToken(tok) {
-  if (!tok || tok.length < 2 || tok.length > 45) return false;
+  if (!tok || tok.length < 2 || tok.length > 52) return false;
   const noArrow = tok.replace(/[↑↓]$/, '');
+  if (FLAT_ION_MAP[noArrow]) return true;
   const body = noArrow.replace(/^\d+/, '');
   if (!body) return false;
-  if (DIATOMIC_SET.has(body)) return true;
-  // Loại trừ tên lớp học (10A1, 12A18, 9B2), khổ giấy (A4, B5), định dạng (MP3, MP4, 3D, 4G, 5G)
-  if (/^(?:[6-9]|1[0-2])[A-Z]\d+$/.test(noArrow) || /^(?:A[0-6]|B[0-6]|C[0-6]|MP[34]|3D|4G|5G|F[1-4]|P[12]|I[12]|U[12]|V[12])$/i.test(noArrow)) return false;
-  if (!/\d/.test(body)) return false;
+  if (DIATOMIC_SET.has(body) || CHEM_NO_DIGIT_SET.has(body)) return true;
+  // Loại trừ tên lớp học (10A1, 12A18, 9B2), khổ giấy (A4, B5), định dạng (MP3, MP4, 3D, 4G, 5G) và từ viết tắt
+  if (/^(?:[6-9]|1[0-2])[A-Z]\d+$/.test(noArrow) || /^(?:A[0-6]|B[0-6]|C[0-6]|MP[34]|3D|4G|5G|F[1-4]|P[12]|I[12]|U[12]|V[12]|S[123]|M[123]|R[123])$/i.test(noArrow)) return false;
+  if (!/\d/.test(body) && !/\)[nm]$/.test(body) && !/[↑↓]$/.test(tok)) return false;
 
   // Tách thử thành các nguyên tố hóa học, dấu ngoặc, liên kết và chỉ số
-  const clean = body.replace(/[()[\]·.\-=≡^]/g, '');
-  const m = clean.match(/[A-Z][a-z]?|\d+[+-]?|[+-]|\b[nm]\b/g);
+  const clean = body.replace(/[()\[\]·.\-=≡^]/g, '');
+  const m = clean.match(/[A-Z][a-z]?|\d+[+-]?|[+-]|[nm]/g);
   if (!m || m.join('') !== clean) return false;
   const els = m.filter(x => /^[A-Z][a-z]?$/.test(x));
   if (!els.length || !els.every(e => CHEM_ELEMENTS.has(e))) return false;
-  return els.length >= 2 || DIATOMIC_SET.has(body) || /\d*[+-]$/.test(body);
+  return els.length >= 2 || DIATOMIC_SET.has(body) || /\d*[+-]$/.test(body) || (/[↑↓]$/.test(tok) && els.length >= 1);
 }
 
 // Chuyển chuỗi công thức hóa học thuần sang mã LaTeX (\mathrm{...})
@@ -3494,33 +3835,57 @@ function chemTokenToLatex(tok) {
     trail = tok.endsWith('↑') ? '\\uparrow' : '\\downarrow';
     tok = tok.slice(0, -1);
   }
+  if (FLAT_ION_MAP[tok]) return FLAT_ION_MAP[tok] + trail;
   const leadMatch = /^(\d+)(?=[A-Z(\[])/.exec(tok);
   const lead = leadMatch ? leadMatch[1] : '';
   let rest = lead ? tok.slice(lead.length) : tok;
+  if (FLAT_ION_MAP[rest]) return lead + FLAT_ION_MAP[rest] + trail;
 
   // Chuyển điện tích ion ở cuối (VD: ^2+, ^3-, ^+, ^-)
-  rest = rest.replace(/\^(\d*[+-])$/, '^{$1}');
+  rest = rest.replace(/\^(\{?\d*[+-]\}?)$/, (_, c) => `^{${c.replace(/[{}]/g, '')}}`);
+  // Chuyển chỉ số polime ở ngoài ngoặc: (-CH2-CH2-)n hoặc (C6H10O5)n
+  rest = rest.replace(/([)\]])([nm])(?=$|[^A-Za-z])/g, '$1_{$2}');
   // Chuyển các chỉ số nguyên tử sau nguyên tố hoặc dấu đóng ngoặc (không chạm vào số đứng ngay sau dấu chấm hidrat .5H2O)
-  rest = rest.replace(/([A-Za-z)\]])(\d+(?:n(?:\+\d+|-\d+)?)?|2n(?:\+2|-2|-6)?)/g, '$1_{$2}');
+  rest = rest.replace(/([A-Za-z)\]])(\d+(?:[nm](?:\+\d+|-\d+)?)?|2n(?:\+2|-2|-6)?)/g, '$1_{$2}');
   rest = rest.replace(/≡/g, '{\\equiv}').replace(/·/g, '\\cdot ');
   return (lead ? lead : '') + `\\mathrm{${rest}}` + trail;
+}
+
+// Mở rộng lệnh \ce{...} (mhchem) sang chuẩn LaTeX tương thích cả KaTeX, MathJax và Native Browser Renderer
+function expandCeToLatex(ceStr) {
+  let s = String(ceStr || '').trim();
+  if (!s) return '';
+  s = s.replace(/<=>|<-->|⇌|⇄/g, ' \\rightleftharpoons ');
+  s = s.replace(/->\s*\[([^\]]*)\]\s*\[([^\]]*)\]/g, (_, up, lo) => ` \\xrightarrow[${lo}]{${up}} `);
+  s = s.replace(/->\s*\[([^\]]*)\]/g, (_, up) => ` \\xrightarrow{${up}} `);
+  s = s.replace(/-->|->|⟶/g, ' \\rightarrow ');
+  s = s.replace(/\s+\^(\s|$)/g, '\\uparrow$1').replace(/\s+v(\s|$)/g, '\\downarrow$1');
+  s = s.replace(/\b([A-Za-z0-9()\[\]·.\-=≡^+-]+)\b/g, m => isChemFormulaToken(m) ? chemTokenToLatex(m) : m);
+  return s;
 }
 
 // Chuyển đổi một đoạn văn bản tự do (có chứa công thức Toán, Lý, Hóa, Sinh) sang chuỗi có đánh dấu LaTeX \( ... \)
 function convertPlainTextFormulasToLatex(str, scale) {
   if (!str) return str;
-  const isPureEn = scale === 'english' || scale === 'hsg';
+  const isPureEn = scale === 'hsg';
 
   // Bảo vệ các vùng đã là công thức ⟪n⟫, ảnh ⟦n⟧, hoặc LaTeX $...$, \(...\)
   const slots = [];
   const hold = tex => `⧺${slots.push(tex) - 1}⧻`;
   let s = str.replace(TK, m => hold(m));
 
-  // 1. Chuyển chữ số mũ / chỉ số dưới Unicode (x², 10⁻⁶, H₂SO₄, u₁)
-  s = s.replace(/([A-Za-z0-9)\]])([⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾ⁿⁱ₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎ₐₑₒₓₕₖₗₘₙₚₛₜ]+)/g, (m, base, sc) => {
-    const conv = normMathUnicode(base + sc);
-    if (isChemFormulaToken(conv.replace(/[_^{}]/g, ''))) {
-      return hold(`\\(\\mathrm{${conv}}\\)`);
+  // 0. Nếu văn bản có chứa cụm lệnh LaTeX trần (chưa bọc trong \(...\) hay $...$, ví dụ \frac{...}{...}, \sqrt{...}, \xrightarrow{...}, \overrightarrow{...})
+  s = s.replace(/\\(?:d|t)?frac\s*\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}\s*\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}|\\sqrt(?:\[[^\]]*\])?\s*\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}|\\(?:overrightarrow|overleftrightarrow|vec|widehat|overline|underline|boxed|cancel|mathrm)\s*\{[^{}]*\}|\\x(?:right|left)arrow(?:\[[^\]]*\])?\s*\{[^{}]*\}|\\begin\{(?:cases|aligned|matrix|pmatrix|bmatrix|vmatrix)\}[\s\S]*?\\end\{(?:cases|aligned|matrix|pmatrix|bmatrix|vmatrix)\}/g, m => hold(`\\(${m}\\)`));
+
+  // 1. Chuyển chữ số mũ / chỉ số dưới Unicode (x², 10⁻⁶, H₂SO₄, Fe₂(SO₄)₃, u₁)
+  s = s.replace(/([A-Za-z0-9()\[\]·.\-=≡]*[A-Za-z0-9)\]]|[⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾ⁿⁱ₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎ₐₑₒₓₕₖₗₘₙₚₛₜ]+)([⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾ⁿⁱ₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎ₐₑₒₓₕₖₗₘₙₚₛₜ]+[A-Za-z0-9()\[\]·.\-=≡⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾ⁿⁱ₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎ₐₑₒₓₕₖₗₘₙₚₛₜ↑↓]*)/g, (m) => {
+    const conv = normMathUnicode(m);
+    const plain = conv.replace(/[_^{}↑↓]/g, '');
+    if (isChemFormulaToken(plain)) {
+      let trail = '';
+      let body = conv;
+      if (/[↑↓]$/.test(body)) { trail = body.endsWith('↑') ? '\\uparrow' : '\\downarrow'; body = body.slice(0, -1); }
+      return hold(`\\(\\mathrm{${body}}${trail}\\)`);
     }
     return hold(`\\(${conv}\\)`);
   });
@@ -3529,9 +3894,9 @@ function convertPlainTextFormulasToLatex(str, scale) {
     return s.replace(/⧺(\d+)⧻/g, (_, k) => slots[+k]);
   }
 
-  // 2. Mũi tên phản ứng hóa học có điều kiện: --(t°, xt)--> hoặc -t°->
-  s = s.replace(/--+[\(\[]\s*([^)\]\n]{1,25}?)\s*[\)\]]--+>/g, (m, cond) => {
-    const cTex = cond.replace(/t\s*[°o0]/gi, 't^\\circ').replace(/đpnc/gi, '\\text{đpnc}').replace(/đpdd/gi, '\\text{đpdd}');
+  // 2. Mũi tên phản ứng hóa học có điều kiện: --(t°, xt)--> hoặc -t°-> hoặc --[xt]-->
+  s = s.replace(/--+[\(\[]\s*([^)\]\n]{1,30}?)\s*[\)\]]--+>/g, (m, cond) => {
+    const cTex = cond.replace(/t\s*[°o0]/gi, 't^\\circ').replace(/đpnc/gi, '\\text{đpnc}').replace(/đpdd/gi, '\\text{đpdd}').replace(/xt/gi, '\\text{xt}').replace(/as/gi, '\\text{as}');
     return hold(`\\(\\xrightarrow{${cTex}}\\)`);
   });
   s = s.replace(/<=>|<-->|⇌|⇄/g, () => hold('\\(\\rightleftharpoons\\)'));
@@ -3546,7 +3911,7 @@ function convertPlainTextFormulasToLatex(str, scale) {
     return hold(`\\({}_{${sub}}^{${sup}}\\mathrm{${el}}\\)`);
   });
 
-  // 4. Ion hóa học có điện tích gõ bằng ^ (VD: SO4^2-, Ba^2+, Fe^3+, NH4^+, NO3^-, PO4^3-)
+  // 4. Ion hóa học có điện tích gõ bằng ^ (VD: SO4^2-, Ba^2+, Fe^3+, NH4^+, NO3^-, PO4^3-, OH^-, H^+) hoặc viết liền (SO42-, CO32-, PO43-, Fe3+, Ba2+)
   s = s.replace(/(?<![\p{L}\d_])([A-Z][A-Za-z0-9()]*)\^(\{?\d*[+-]\}?)/gu, (m, body, chg) => {
     const cleanChg = chg.replace(/[{}]/g, '');
     const els = (body.match(/[A-Z][a-z]?/g) || []);
@@ -3556,16 +3921,39 @@ function convertPlainTextFormulasToLatex(str, scale) {
     }
     return m;
   });
+  s = s.replace(/(?<![\p{L}\d_])(SO42-|SO32-|CO32-|SiO32-|CrO42-|Cr2O72-|HPO42-|ZnO22-|PO43-|NO3-|NO2-|HCO3-|HSO4-|HSO3-|H2PO4-|AlO2-|MnO4-|ClO4-|ClO3-|CH3COO-|NH4\+|H3O\+|Fe2\+|Fe3\+|Cu2\+|Ba2\+|Ca2\+|Mg2\+|Zn2\+|Pb2\+|Ni2\+|Sn2\+|Hg2\+|Al3\+|Cr3\+|Ag\+)(?![\p{L}\d_])/gu, m => {
+    return FLAT_ION_MAP[m] ? hold(`\\(${FLAT_ION_MAP[m]}\\)`) : m;
+  });
 
-  // 5. Biểu thức lượng giác / dao động Vật lí - Toán học (VD: 4cos(100πt - π/3), U0 cos(ωt + φ))
-  s = s.replace(/(\d*(?:[A-Za-z]_\{?[0-9A-Za-z]+\}?\s*)?(?:sin|cos|tan|cot)\s*\([^()\n]*?[πωφΦαβθ][^()\n]*?\))/g, m => {
-    let tex = m.replace(/\b(sin|cos|tan|cot)\b/g, '\\$1')
+  // 4b. Kiểu gen liên kết Sinh học viết dạng phân số: (P): AB/ab × ab/ab hoặc Ab/aB
+  s = s.replace(/(?<![\p{L}\d_])([A-Z][a-z]|[a-z][A-Z]|[A-Z]{2}|[a-z]{2})\/([A-Z][a-z]|[a-z][A-Z]|[A-Z]{2}|[a-z]{2})(?![\p{L}\d_])/gu, (m, g1, g2) => {
+    if (g1.toLowerCase() === g2.toLowerCase() && g1.length >= 2) {
+      return hold(`\\(\\frac{\\underline{\\mathrm{${g1}}}}{\\mathrm{${g2}}}\\)`);
+    }
+    return m;
+  });
+
+  // 5. Tích phân, Tổng, Giới hạn viết dạng văn bản: ∫_0^1, lim_{x->+∞}
+  s = s.replace(/∫_(\{[^{}]+\}|[^\s^]+)\^(\{[^{}]+\}|[^\s]+)/g, (_, a, b) => {
+    const ca = a.replace(/^[{}]|[{}]$/g, ''), cb = b.replace(/^[{}]|[{}]$/g, '');
+    return hold(`\\(\\int_{${ca}}^{${cb}}\\)`);
+  });
+  s = s.replace(/\blim_(\{[^{}]+\}|[^\s]+)/g, (_, lim) => {
+    let cl = lim.replace(/^[{}]|[{}]$/g, '').replace(/->|→/g, '\\to ').replace(/\+∞|\+oo/g, '+\\infty').replace(/-∞|-oo/g, '-\\infty').replace(/∞/g, '\\infty');
+    return hold(`\\(\\lim_{${cl}}\\)`);
+  });
+
+  // 6. Biểu thức lượng giác / dao động Vật lí - Toán học (VD: 4cos(100πt - π/3), U0 cos(ωt + φ))
+  s = s.replace(/(\d*(?:[A-Za-z]_\{?[0-9A-Za-z]+\}?\s*)?(?:sin|cos|tan|cot)(?:\^\{?[0-9]+\}?)?\s*\([^()\n]*?[πωφΦαβθx][^()\n]*?\))/g, m => {
+    let tex = m.replace(/(?<![A-Za-z])(sin|cos|tan|cot)\b/g, '\\$1')
+               .replace(/\^([0-9]+)/g, '^{$1}')
                .replace(/([A-Za-z])_([0-9A-Za-z]+)/g, '$1_{$2}')
+               .replace(/(\d*\s*π)\s*\/\s*(\d+)/g, '\\frac{$1}{$2}')
                .replace(SYR, c => SYM[c] || c);
     return hold(`\\(${tex}\\)`);
   });
 
-  // 6. Căn bậc hai / bậc ba Unicode: √(x^2 + 1), √2, ∛x
+  // 7. Căn bậc hai / bậc ba Unicode: √(x^2 + 1), √2, ∛x
   s = s.replace(/([√∛∜])\s*\(([^()\n]+)\)/g, (m, r, body) => {
     const deg = r === '∛' ? '[3]' : (r === '∜' ? '[4]' : '');
     const inner = body.replace(/\^([+-]?\d+|[A-Za-z])/g, '^{$1}').replace(/_([+-]?\d+|[A-Za-z])/g, '_{$1}');
@@ -3576,35 +3964,101 @@ function convertPlainTextFormulasToLatex(str, scale) {
     return hold(`\\(\\sqrt${deg}{${body}}\\)`);
   });
 
-  // 7. Ký hiệu biến thiên Δ (VD: Δl_0, Δt, Δφ, ΔH)
+  // 8. Ký hiệu biến thiên Δ (VD: Δl_0, Δt, Δφ, ΔH)
   s = s.replace(/(?:∆|Δ)\s*([A-Za-z0-9]+(?:_(?:\{[^{}\n]+\}|[0-9A-Za-z]+))?)/g, (_, v) => {
     const vv = v.replace(/_([0-9A-Za-z]+)/g, '_{$1}');
     return hold(`\\(\\Delta ${vv}\\)`);
   });
 
-  // 8. Biểu thức lũy thừa / chỉ số dưới gõ bằng ký tự ^ hoặc _ (VD: x^2, 10^{-6}, u_0, F_{đh}, X^A X^a)
-  s = s.replace(/\b([A-Za-z0-9]+)((?:(?:\^|_)(?:\{[^{}\n]+\}|[+-]?\d+|\d+[+-]|[A-Za-z]))+)/g, (m, base, scripts) => {
+  // 9. Biểu thức lũy thừa / chỉ số dưới gõ bằng ký tự ^ hoặc _ (VD: x^2, (x+1)^2, 10^{-6}, u_0, F_{đh}, X^A X^a)
+  s = s.replace(/(\([A-Za-z0-9+\-*/\s]+\)|\b[A-Za-z0-9]+)((?:(?:\^|_)(?:\{[^{}\n]+\}|[+-]?\d+|\d+[+-]|[A-Za-z]))+)/g, (m, base, scripts) => {
     let sc = scripts.replace(/\^([+-]?\d+|\d+[+-]|[A-Za-z])/g, '^{$1}').replace(/_([+-]?\d+|[A-Za-z])/g, '_{$1}');
     return hold(`\\(${base}${sc}\\)`);
   });
 
-  // 9. Công thức hóa học viết liền trong văn bản (VD: Fe2(SO4)3, H2SO4, Ca(OH)2, KMnO4, CH3COOH, C2H5OH, CuSO4.5H2O, 3H2, O2, Cl2)
-  s = s.replace(/(?<![\p{L}\d_])(\d*[A-Z][A-Za-z0-9()[\]·.\-=≡]*\d[A-Za-z0-9()[\]·.\-=≡]*[↑↓]?)(?![\p{L}\d_])/gu, (m) => {
+  // 10. Công thức hóa học viết liền trong văn bản (VD: Fe2(SO4)3, H2SO4, Ca(OH)2, NaOH, HCl, AgCl↓, CH3COOH, (-CH2-CH2-)n, CuSO4.5H2O, 3H2, O2)
+  s = s.replace(/(?<![\p{L}\d_])(\d*(?:[A-Z][A-Za-z0-9()\[\]·.\-=≡]*\d[A-Za-z0-9()\[\]·.\-=≡]*|\([A-Za-z0-9()\[\]·.\-=≡]+\)[nm]|[A-Z][A-Za-z]{1,8})[↑↓]?)(?![\p{L}\d_])/gu, (m) => {
     if (isChemFormulaToken(m)) return hold(`\\(${chemTokenToLatex(m)}\\)`);
     return m;
   });
 
-  // 10. Các ký hiệu Toán - Lý - Sinh đặc trưng (λ, ω, φ, Ω, π, ±, ×, ≤, ≥, ≠, ≈, ∞, ∈, ∉, ⊂, ⊆, ∪, ∩, ∅, ∀, ∃, ⇒, ⇔, ⊥, ℝ, ℤ, ℕ, ℚ, ℂ)
+  // 11. Các ký hiệu Toán - Lý - Sinh đặc trưng (λ, ω, φ, Ω, π, ±, ×, ≤, ≥, ≠, ≈, ∞, ∈, ∉, ⊂, ⊆, ∪, ∩, ∅, ∀, ∃, ⇒, ⇔, ⊥, ℝ, ℤ, ℕ, ℚ, ℂ)
   s = s.replace(/[±×÷≤⩽≥⩾≠≈≡∞∈∉⊂⊆∪∩∅∀∃⇒⇔⊥∠△ℝℤℕℚℂπλωφΦΩ]/g, ch => SYM[ch] ? hold(`\\(${SYM[ch].trim()}\\)`) : ch);
 
   return s.replace(/⧺(\d+)⧻/g, (_, k) => slots[+k]);
 }
 
+// Gom các run bị Word tách lẻ bên trong cặp dấu $...$, $$...$$, \(...\), \[...\] thành một công thức ⟪eqIdx⟫ hoàn chỉnh
+function coalesceDelimitedMathRuns(runs, eq) {
+  if (!Array.isArray(runs) || runs.length < 2) return { runs, count: 0 };
+  let full = '';
+  const map = [];
+  runs.forEach((r, ri) => {
+    const isSub = !!(r.f & 8), isSup = !!(r.f & 16);
+    const segTxt = isSub ? `_{${r.t}}` : (isSup ? `^{${r.t}}` : r.t);
+    for (let k = 0; k < segTxt.length; k++) {
+      map.push({ ri, f: r.f & ~24 });
+      full += segTxt[k];
+    }
+  });
+  const delimRe = /\$\$([\s\S]+?)\$\$|\\\[([\s\S]+?)\\\]|\\\(([\s\S]+?)\\\)|\$([^\s$](?:[^$\n]*?[^\s$])?)\$/g;
+  if (!delimRe.test(full)) return { runs, count: 0 };
+  let count = 0, last = 0;
+  const out = [];
+  const pushSlice = (a, b) => {
+    for (let k = a; k < b; k++) {
+      const f = map[k].f, ch = full[k];
+      const prev = out[out.length - 1];
+      if (prev && prev.f === f) prev.t += ch;
+      else out.push({ t: ch, f });
+    }
+  };
+  delimRe.lastIndex = 0;
+  let m;
+  while ((m = delimRe.exec(full))) {
+    if (m.index > last) pushSlice(last, m.index);
+    const tex = (m[1] || m[2] || m[3] || m[4] || '').trim();
+    const f = map[m.index] ? (map[m.index].f & ~4) : 0;
+    const eqIdx = eq.push({ t: tex }) - 1;
+    count++;
+    out.push({ t: `⟪${eqIdx}⟫`, f });
+    last = m.index + m[0].length;
+  }
+  if (last < full.length) pushSlice(last, full.length);
+  return { runs: out, count };
+}
+
+// Tách phần hậu tố thuộc về công thức (bao gồm cả dấu ngoặc đơn/vuông cân bằng và tiền tố hóa học như Ca(OH, Cu(NO, Fe2(SO4, (x+1)) ở cuối run đứng trước chỉ số trên/dưới
+function extractFormulaBasePrefix(str) {
+  if (!str) return '';
+  // Trường hợp kết thúc bằng dấu đóng ngoặc ) hoặc ] -> tìm dấu mở ngoặc tương ứng + phần tên hàm/nguyên tố đứng trước
+  if (/[)\]]$/.test(str)) {
+    let depth = 0, i = str.length - 1;
+    for (; i >= 0; i--) {
+      const c = str[i];
+      if (c === ')' || c === ']') depth++;
+      else if (c === '(' || c === '[') {
+        depth--;
+        if (depth === 0) break;
+      }
+    }
+    if (i >= 0 && depth === 0) {
+      let k = i - 1;
+      while (k >= 0 && /[A-Za-z0-9()\[\]·.\-=≡]/.test(str[k])) k--;
+      return str.slice(k + 1);
+    }
+  }
+  const m = /((?:log|ln|lg|lim|sin|cos|tan|cot)|\d*[A-Za-z0-9()\[\]·.\-=≡]+)$/i.exec(str);
+  return m ? m[1] : '';
+}
+
 // Chuyển đổi mảng runs (có chứa định dạng chỉ số dưới f&8, chỉ số trên f&16, gạch chân kiểu gen liên kết Sinh học f&1) sang công thức LaTeX trong mảng eq
 function convertRunsArrayToLatex(runs, eq, scale) {
   if (!Array.isArray(runs) || !runs.length) return { runs, count: 0 };
-  const isPureEn = scale === 'english' || scale === 'hsg';
-  let count = 0;
+  const isPureEn = scale === 'hsg';
+  const coal = coalesceDelimitedMathRuns(runs, eq);
+  runs = coal.runs;
+  let count = coal.count;
 
   // Bước 1: Gộp các run có chỉ số dưới (f & 8) hoặc chỉ số trên (f & 16) liền kề với ký hiệu cơ sở đứng trước/sau
   const merged = [];
@@ -3619,22 +4073,22 @@ function convertRunsArrayToLatex(runs, eq, scale) {
     }
 
     if (isSub || isSup) {
-      const styleMask = r.f & ~24;
-      // Lấy phần hậu tố ký hiệu cơ sở ở cuối run ngay trước (nếu có, ví dụ "Cho H" -> tách "Cho " và "H")
+      const styleMask = r.f & ~28; // Bỏ cờ sub/sup và in nghiêng của biến đơn lẻ
+      // Lấy phần hậu tố ký hiệu cơ sở ở cuối run ngay trước (ví dụ "Cho Ca(OH)" -> tách "Cho " và "Ca(OH)", "Cu(NO" -> "Cu(NO")
       let prefixBase = '';
       if (merged.length && !(merged[merged.length - 1].f & 24)) {
         const prev = merged[merged.length - 1];
-        const m = /((?:log|ln|lg|lim|sin|cos|tan|cot)|[A-Za-z0-9)\]]+)$/i.exec(prev.t);
-        if (m) {
-          prefixBase = m[1];
+        const pfx = extractFormulaBasePrefix(prev.t);
+        if (pfx) {
+          prefixBase = pfx;
           prev.t = prev.t.slice(0, prev.t.length - prefixBase.length);
           if (!prev.t) merged.pop();
         }
       }
 
-      // Gom liên tiếp các cụm cơ sở + sub/sup (ví dụ H_2 SO_4^{2-} hoặc {}_{92}^{235}U hoặc C_n^k)
+      // Gom liên tiếp các cụm cơ sở + sub/sup (ví dụ H_2 SO_4^{2-} hoặc Cu(NO_3)_2 hoặc CH_3COOH hoặc {}_{92}^{235}U)
       let texParts = prefixBase ? [prefixBase] : ['{}'];
-      let hasChem = /^[A-Z]/.test(prefixBase);
+      let hasChem = /[A-Z]/.test(prefixBase);
       while (i < runs.length) {
         const cur = runs[i];
         const cSub = !!(cur.f & 8), cSup = !!(cur.f & 16);
@@ -3642,9 +4096,9 @@ function convertRunsArrayToLatex(runs, eq, scale) {
           const val = normMathUnicode(cur.t.trim()).replace(/([#$%&_])/g, '\\$1');
           if (val) texParts.push(cSub ? `_{${val}}` : `^{${val}}`);
           i++;
-          // Kiểm tra nếu run ngay sau bắt đầu bằng phần tiếp của cùng công thức (VD: "SO" trong H_2 SO_4 hoặc "(SO" hoặc ")_3")
+          // Kiểm tra nếu run ngay sau bắt đầu bằng phần nối tiếp của cùng công thức (VD: "SO" trong H_2 SO_4 hoặc ")" trong Cu(NO_3)_2)
           if (i < runs.length && !(runs[i].f & 24) && i + 1 < runs.length && ((runs[i + 1].f & 8) || (runs[i + 1].f & 16))) {
-            const mMid = /^([A-Za-z0-9()[\]·.\-=≡]{1,12})$/.exec(runs[i].t);
+            const mMid = /^([A-Za-z0-9()\[\]·.\-=≡]{1,20})$/.exec(runs[i].t);
             if (mMid) {
               texParts.push(mMid[1]);
               if (/[A-Z]/.test(mMid[1])) hasChem = true;
@@ -3659,6 +4113,24 @@ function convertRunsArrayToLatex(runs, eq, scale) {
               texParts.push(`\\mathrm{${mEl[1]}}`);
               runs[i] = Object.assign({}, runs[i], { t: runs[i].t.slice(mEl[1].length) });
               if (!runs[i].t) i++;
+              continue;
+            }
+          }
+          // Trường hợp có hậu tố hóa học đứng ngay sau chỉ số (VD: "O" trong H_2O, "COOH" trong CH_3COOH, "OH" trong C_2H_5OH, "↓" trong Fe(OH)_3↓)
+          if (i < runs.length && !(runs[i].f & 24)) {
+            const mTrail = /^([A-Za-z0-9)\]·.\-=≡]*[↑↓]?)(?=$|[\s,.;:!?)/+\-])/.exec(runs[i].t);
+            if (mTrail && mTrail[1]) {
+              const cand = texParts.join('').replace(/[_^{}\\]|mathrm/g, '') + mTrail[1];
+              if (mTrail[1] === '↑' || mTrail[1] === '↓' || (hasChem && isChemFormulaToken(cand))) {
+                let tail = mTrail[1];
+                if (/[↑↓]$/.test(tail)) {
+                  const arr = tail.endsWith('↑') ? '\\uparrow' : '\\downarrow';
+                  tail = tail.slice(0, -1) + arr;
+                }
+                texParts.push(tail);
+                runs[i] = Object.assign({}, runs[i], { t: runs[i].t.slice(mTrail[1].length) });
+                if (!runs[i].t) i++;
+              }
             }
           }
         } else {
@@ -3667,12 +4139,21 @@ function convertRunsArrayToLatex(runs, eq, scale) {
       }
 
       let rawTex = texParts.join('');
+      let trailArrow = '';
+      if (/\\(uparrow|downarrow)$/.test(rawTex)) {
+        const mArr = /(\\(?:uparrow|downarrow))$/.exec(rawTex);
+        trailArrow = mArr[1];
+        rawTex = rawTex.slice(0, rawTex.length - trailArrow.length);
+      }
       const plainCheck = rawTex.replace(/[_^{}\\]|mathrm/g, '');
       if (hasChem && isChemFormulaToken(plainCheck)) {
-        rawTex = `\\mathrm{${rawTex}}`;
+        const leadM = /^(\d+)(?=[A-Z(\[])/.exec(rawTex);
+        if (leadM) rawTex = leadM[1] + `\\mathrm{${rawTex.slice(leadM[1].length)}}`;
+        else rawTex = `\\mathrm{${rawTex}}`;
       } else if (/^(?:log|ln|lg|lim|sin|cos|tan|cot)/i.test(prefixBase)) {
         rawTex = '\\' + rawTex;
       }
+      rawTex += trailArrow;
       const eqIdx = eq.push({ t: rawTex }) - 1;
       count++;
       merged.push({ t: `⟪${eqIdx}⟫`, f: styleMask });
@@ -4033,16 +4514,18 @@ $('file').onchange = async e => {
     if(!qs.length){alert('Không nhận diện được câu hỏi nào.'); $('loading').classList.add('hide'); return}
     await Promise.all(IM.map(prep));
 
-    // Tự động nhận diện môn học gợi ý từ tên file (Toán, Lý, Hóa, Sinh, Anh)
+    // Tự động nhận diện môn học gợi ý từ tên file và nội dung đề (Toán, Lý, Hóa, Sinh, Anh)
     const fname = f.name.replace(/\.docx$/i,'');
     let defScale = 'english';
     if (/\b(toán|toan|math|đại số|hình học|giải tích)\b/i.test(fname)) defScale = 'math';
     else if (/\b(lý|lí|vật lí|vat li|hóa|hoa|sinh|sử|địa|gdcd|ktpl|khtn|tin)\b/i.test(fname)) defScale = 'other';
-    else if (qs.some(q => q.qtype === 'tf' || q.qtype === 'sa') || eq.length > 3) defScale = 'other';
+    else if (/\b(hàm số|đạo hàm|nguyên hàm|tích phân|tiệm cận|cực trị|khối chóp|lăng trụ|mặt cầu|tọa độ)\b/i.test(T)) defScale = 'math';
+    else if (qs.some(q => q.qtype === 'tf' || q.qtype === 'sa') || eq.length > 0 || /\b(dung dịch|phản ứng|kết tủa|nguyên tử|phân tử|kim loại|este|dao động|bước sóng|tần số|điện xoay chiều|kiểu gen|nhiễm sắc thể|phép lai)\b/i.test(T)) defScale = 'other';
 
     let inlineEqCount = 0;
     if (autoLatex) {
-      inlineEqCount = convertExamFormulasToLatex(items, eq, defScale === 'english' && eq.length > 0 ? 'other' : defScale);
+      // Khi bật "Tự động chuyển công thức sang LaTeX", luôn quét chuyển đổi công thức Toán/Lý/Hóa/Sinh (trừ đề HSG Tiếng Anh chuyên biệt)
+      inlineEqCount = convertExamFormulasToLatex(items, eq, defScale === 'hsg' ? 'hsg' : 'other');
     }
     
     const nextKey = nextFileKey();
@@ -4075,13 +4558,227 @@ $('file').onchange = async e => {
 
 const TK=/⟪(\d+)⟫|⟦(\d+)⟧|\$\$([\s\S]+?)\$\$|\\\(([\s\S]+?)\\\)|\\\[([\s\S]+?)\\\]|\$([^\s$](?:[^$\n]*?[^\s$])?)\$/g;
 
+// Chuẩn hóa chuỗi LaTeX trước khi đưa vào bộ kết xuất trình duyệt (KaTeX / Native HTML5)
+function preprocessLatexForBrowser(tex) {
+  let s = String(tex || '').trim();
+  if (!s) return '';
+  // Mở rộng \ce{...} sang LaTeX chuẩn để hiển thị được ngay cả khi offline
+  s = s.replace(/\\ce\s*\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}/g, (_, body) => expandCeToLatex(body));
+  // Chuẩn hóa hàm lượng giác viết tắt tiếng Việt cũ
+  s = s.replace(/\\cotg\b/g, '\\cot ').replace(/\\tg\b/g, '\\tan ');
+  // Bọc các chữ cái có dấu tiếng Việt nằm trần trong chỉ số (VD: F_{đh}, v_{tb}, t_{đp}) vào \text{...} để KaTeX không báo lỗi
+  s = s.replace(/([_^]\{)([^{}]*?[À-ỹđĐ][^{}]*)(\})/g, (m, p1, mid, p3) => {
+    if (/\\text|\\mathrm/.test(mid)) return m;
+    return p1 + `\\text{${mid}}` + p3;
+  });
+  return s;
+}
+
+// Bộ kết xuất công thức Toán - Lý - Hóa - Sinh trực tiếp ra HTML5 + CSS + SVG thuần (chạy trên mọi trình duyệt không cần thư viện ngoài)
+function renderLatexToBrowserHtml(tex, displayMode, rawAttr) {
+  const src = preprocessLatexForBrowser(tex);
+  if (!src) return '<span style="color:var(--bad)">[công thức]</span>';
+
+  const renderAst = (str, upright) => {
+    let out = '', i = 0;
+    str = String(str || '').trim();
+    while (i < str.length) {
+      if (str[i] === ' ') { i++; continue; }
+      if (str[i] === '{') {
+        const g = parseBraceArg(str, i);
+        i = g.end;
+        // Kiểm tra nếu ngay sau {base} là ^ hoặc _
+        if (i < str.length && (str[i] === '^' || str[i] === '_')) {
+          const baseHtml = renderAst(g.val, upright);
+          let supVal = null, subVal = null;
+          while (i < str.length && (str[i] === '^' || str[i] === '_')) {
+            const k = str[i++];
+            const sg = parseBraceArg(str, i); i = sg.end;
+            if (k === '^') supVal = sg.val; else subVal = sg.val;
+            while (i < str.length && str[i] === ' ') i++;
+          }
+          const isPre = !g.val.trim();
+          if (supVal !== null && subVal !== null) {
+            out += `${baseHtml}<span class="bm-subsup${isPre ? ' bm-pre' : ''}"><span class="bm-sup">${renderAst(supVal, true)}</span><span class="bm-sub">${renderAst(subVal, true)}</span></span>`;
+          } else if (supVal !== null) {
+            out += `${baseHtml}<sup class="bm-sup-only">${renderAst(supVal, true)}</sup>`;
+          } else if (subVal !== null) {
+            out += `${baseHtml}<sub class="bm-sub-only">${renderAst(subVal, true)}</sub>`;
+          }
+        } else {
+          out += renderAst(g.val, upright);
+        }
+      } else if (str[i] === '\\') {
+        const m = /^\\([a-zA-Z]+|.)/.exec(str.slice(i));
+        const cmd = m ? m[0] : '\\';
+        i += cmd.length;
+        if (cmd === '\\left' || cmd === '\\right' || cmd === '\\middle') {
+          while (i < str.length && str[i] === ' ') i++;
+          let d = '';
+          if (str.slice(i).startsWith('\\{') || str.slice(i).startsWith('\\}') || str.slice(i).startsWith('\\|')) {
+            d = str.slice(i + 1, i + 2); i += 2;
+          } else if (str.slice(i).startsWith('\\Vert')) { d = '‖'; i += 5; }
+          else if (str.slice(i).startsWith('\\langle')) { d = '⟨'; i += 7; }
+          else if (str.slice(i).startsWith('\\rangle')) { d = '⟩'; i += 7; }
+          else if (str.slice(i).startsWith('\\lfloor')) { d = '⌊'; i += 7; }
+          else if (str.slice(i).startsWith('\\rfloor')) { d = '⌋'; i += 7; }
+          else if (str.slice(i).startsWith('\\lceil')) { d = '⌈'; i += 6; }
+          else if (str.slice(i).startsWith('\\rceil')) { d = '⌉'; i += 6; }
+          else if (i < str.length) { d = str[i++]; }
+          if (d && d !== '.') out += `<span class="bm-rom">${esc(d)}</span>`;
+        } else if (cmd === '\\frac' || cmd === '\\dfrac' || cmd === '\\tfrac' || cmd === '\\binom') {
+          const isBin = cmd === '\\binom';
+          const numG = parseBraceArg(str, i); i = numG.end;
+          const denG = parseBraceArg(str, i); i = denG.end;
+          const fracHtml = `<span class="bm-frac${isBin ? ' bm-nobar' : ''}"><span class="bm-num">${renderAst(numG.val, upright)}</span><span class="bm-den">${renderAst(denG.val, upright)}</span></span>`;
+          out += isBin ? `<span class="bm-rom">(</span>${fracHtml}<span class="bm-rom">)</span>` : fracHtml;
+        } else if (cmd === '\\sqrt') {
+          const optG = parseBracketArg(str, i); if (optG) i = optG.end;
+          const radG = parseBraceArg(str, i); i = radG.end;
+          const degHtml = (optG && optG.val) ? `<sup class="bm-sqrt-deg">${renderAst(optG.val, true)}</sup>` : '';
+          out += `<span class="bm-sqrt">${degHtml}<span class="bm-sqrt-sign">&radic;</span><span class="bm-sqrt-body">${renderAst(radG.val, upright)}</span></span>`;
+        } else if (cmd === '\\xrightarrow' || cmd === '\\xleftarrow') {
+          const isLeft = cmd === '\\xleftarrow';
+          const optG = parseBracketArg(str, i); if (optG) i = optG.end;
+          const upG = parseBraceArg(str, i); i = upG.end;
+          const topHtml = upG.val ? `<span class="bm-xa-top">${renderAst(upG.val, true)}</span>` : '<span class="bm-xa-top"></span>';
+          const botHtml = (optG && optG.val) ? `<span class="bm-xa-bot">${renderAst(optG.val, true)}</span>` : '';
+          out += `<span class="bm-xarrow">${topHtml}<span class="bm-xa-mid ${isLeft ? 'bm-line-l' : 'bm-line-r'}"></span>${botHtml}</span>`;
+        } else if (cmd === '\\overset' || cmd === '\\underset') {
+          const g1 = parseBraceArg(str, i); i = g1.end;
+          const g2 = parseBraceArg(str, i); i = g2.end;
+          if (cmd === '\\overset' && g1.val.trim() === '\\frown') {
+            out += `<span class="bm-arc"><svg class="bm-arc-svg" viewBox="0 0 24 6" preserveAspectRatio="none"><path d="M1,5 Q12,0 23,5" fill="none" stroke="currentColor" stroke-width="1.4"/></svg><span>${renderAst(g2.val, upright)}</span></span>`;
+          } else if (cmd === '\\overset') {
+            out += `<span class="bm-over"><span class="bm-ov-top">${renderAst(g1.val, true)}</span><span>${renderAst(g2.val, upright)}</span></span>`;
+          } else {
+            out += `<span class="bm-under"><span>${renderAst(g2.val, upright)}</span><span class="bm-un-bot">${renderAst(g1.val, true)}</span></span>`;
+          }
+        } else if (cmd === '\\overrightarrow' || cmd === '\\vec') {
+          const g = parseBraceArg(str, i); i = g.end;
+          out += `<span class="bm-vec">${renderAst(g.val, upright)}</span>`;
+        } else if (cmd === '\\overline' || cmd === '\\bar') {
+          const g = parseBraceArg(str, i); i = g.end;
+          out += `<span class="bm-bar">${renderAst(g.val, upright)}</span>`;
+        } else if (cmd === '\\underline') {
+          const g = parseBraceArg(str, i); i = g.end;
+          out += `<span class="bm-ul">${renderAst(g.val, upright)}</span>`;
+        } else if (cmd === '\\widehat' || cmd === '\\hat') {
+          const g = parseBraceArg(str, i); i = g.end;
+          out += `<span class="bm-hat"><svg class="bm-hat-svg" viewBox="0 0 24 6" preserveAspectRatio="none"><path d="M1,5 L12,1 L23,5" fill="none" stroke="currentColor" stroke-width="1.4"/></svg><span>${renderAst(g.val, upright)}</span></span>`;
+        } else if (cmd === '\\widetilde' || cmd === '\\tilde') {
+          const g = parseBraceArg(str, i); i = g.end;
+          out += `<span class="bm-over"><span class="bm-ov-top">~</span><span>${renderAst(g.val, upright)}</span></span>`;
+        } else if (cmd === '\\boxed') {
+          const g = parseBraceArg(str, i); i = g.end;
+          out += `<span class="bm-box">${renderAst(g.val, upright)}</span>`;
+        } else if (cmd === '\\cancel') {
+          const g = parseBraceArg(str, i); i = g.end;
+          out += `<span class="bm-cancel">${renderAst(g.val, upright)}</span>`;
+        } else if (cmd === '\\mathrm' || cmd === '\\text' || cmd === '\\textbf' || cmd === '\\mathbf' || cmd === '\\operatorname') {
+          const g = parseBraceArg(str, i); i = g.end;
+          const bld = (cmd === '\\textbf' || cmd === '\\mathbf') ? ' style="font-weight:700"' : '';
+          out += `<span class="bm-rom"${bld}>${renderAst(g.val, true)}</span>`;
+        } else if (cmd === '\\mathit') {
+          const g = parseBraceArg(str, i); i = g.end;
+          out += renderAst(g.val, false);
+        } else if (cmd === '\\mathbb') {
+          const g = parseBraceArg(str, i); i = g.end;
+          const bbMap = { N: 'ℕ', Z: 'ℤ', Q: 'ℚ', R: 'ℝ', C: 'ℂ' };
+          out += `<span class="bm-bb">${esc(bbMap[g.val.trim()] || g.val)}</span>`;
+        } else if (cmd === '\\mathop') {
+          const g = parseBraceArg(str, i); i = g.end;
+          while (i < str.length && str.slice(i).startsWith('\\limits')) i += 7;
+          let subVal = null, supVal = null;
+          while (i < str.length && (str[i] === '_' || str[i] === '^')) {
+            const k = str[i++]; const sg = parseBraceArg(str, i); i = sg.end;
+            if (k === '_') subVal = sg.val; else supVal = sg.val;
+          }
+          out += `<span class="bm-lim">${supVal ? `<span class="bm-lim-sub">${renderAst(supVal, true)}</span>` : ''}<span class="bm-lim-op">${renderAst(g.val, true)}</span>${subVal ? `<span class="bm-lim-sub">${renderAst(subVal, true)}</span>` : ''}</span>`;
+        } else if (cmd === '\\begin') {
+          const envG = parseBraceArg(str, i); i = envG.end;
+          const env = envG.val.trim();
+          const endTag = `\\end{${env}}`;
+          const endIdx = str.indexOf(endTag, i);
+          const body = endIdx >= 0 ? str.slice(i, endIdx) : str.slice(i);
+          i = endIdx >= 0 ? endIdx + endTag.length : str.length;
+          const rows = body.split(/\\\\/).map(r => r.trim()).filter(Boolean);
+          const trs = rows.map(r => '<tr>' + r.split('&').map(c => `<td>${renderAst(c.trim(), upright)}</td>`).join('') + '</tr>').join('');
+          const tbl = `<table class="bm-matrix"><tbody>${trs}</tbody></table>`;
+          if (env === 'cases') out += `<span class="bm-cases"><span class="bm-brace-l">{</span>${tbl}</span>`;
+          else if (env === 'pmatrix') out += `<span class="bm-cases"><span class="bm-rom">(</span>${tbl}<span class="bm-rom">)</span></span>`;
+          else if (env === 'bmatrix') out += `<span class="bm-cases"><span class="bm-rom">[</span>${tbl}<span class="bm-rom">]</span></span>`;
+          else if (env === 'vmatrix') out += `<span class="bm-cases"><span class="bm-rom">|</span>${tbl}<span class="bm-rom">|</span></span>`;
+          else out += tbl;
+        } else if (cmd === '\\limits' || cmd === '\\nolimits' || cmd === '\\displaystyle' || cmd === '\\textstyle') {
+          // ignore
+        } else if (/^\\(lim|max|min|sup|inf)$/i.test(cmd)) {
+          const fnName = cmd.slice(1);
+          while (i < str.length && str.slice(i).startsWith('\\limits')) i += 7;
+          if (i < str.length && str[i] === '_') {
+            i++; const sg = parseBraceArg(str, i); i = sg.end;
+            out += `<span class="bm-lim"><span class="bm-lim-op">${esc(fnName)}</span><span class="bm-lim-sub">${renderAst(sg.val, true)}</span></span>`;
+          } else {
+            out += `<span class="bm-fn">${esc(fnName)}</span>`;
+          }
+        } else {
+          const sym = TEX_DISPLAY_MAP[cmd] ?? cmd.replace(/^\\/, '');
+          const isFn = /^\\(sin|cos|tan|cot|arcsin|arccos|arctan|log|ln|lg|exp|det|gcd|lcm)$/i.test(cmd);
+          const isOp = /^[+\-=<>±∓×÷·∘•≤≥≠≈≃≅≡∼∝∈∉∋⊂⊃⊆⊇∪∩∧∨→⟶←⟵↔⟷⇒⟹⇐⇔⇌↑↓↗↘↦]$/.test(sym);
+          out += `<span class="${isFn ? 'bm-fn' : (isOp ? 'bm-op' : 'bm-rom')}">${esc(sym)}</span>`;
+        }
+      } else if (str[i] === '^' || str[i] === '_') {
+        let supVal = null, subVal = null;
+        while (i < str.length && (str[i] === '^' || str[i] === '_')) {
+          const k = str[i++];
+          const sg = parseBraceArg(str, i); i = sg.end;
+          if (k === '^') supVal = sg.val; else subVal = sg.val;
+          while (i < str.length && str[i] === ' ') i++;
+        }
+        if (supVal !== null && subVal !== null) {
+          out += `<span class="bm-subsup"><span class="bm-sup">${renderAst(supVal, true)}</span><span class="bm-sub">${renderAst(subVal, true)}</span></span>`;
+        } else if (supVal !== null) {
+          out += `<sup class="bm-sup-only">${renderAst(supVal, true)}</sup>`;
+        } else if (subVal !== null) {
+          out += `<sub class="bm-sub-only">${renderAst(subVal, true)}</sub>`;
+        }
+      } else {
+        const ch = str[i++];
+        if (/[A-Za-z]/.test(ch)) {
+          out += upright ? `<span class="bm-rom">${esc(ch)}</span>` : `<i class="bm-var">${esc(ch)}</i>`;
+        } else if (/^[+\-=<>±×÷→⟶⇌⇒⇔]$/.test(ch)) {
+          out += `<span class="bm-op">${esc(ch)}</span>`;
+        } else {
+          out += `<span class="bm-rom">${esc(ch)}</span>`;
+        }
+      }
+    }
+    return out;
+  };
+
+  return `<span class="bmath${displayMode ? ' bmath-block' : ''}" data-latex="${esc(rawAttr || tex)}">${renderAst(src, false)}</span>`;
+}
+
 function kx(l,d){
-  if(!l||!l.trim())return'<span style="color:red">[công thức]</span>';
-  return d ? `\\[${esc(l)}\\]` : `\\(${esc(l)}\\)`;
+  if(!l||!String(l).trim())return'<span style="color:red">[công thức]</span>';
+  const raw = String(l).trim();
+  const norm = preprocessLatexForBrowser(raw);
+  if (window.katex && typeof window.katex.renderToString === 'function') {
+    try {
+      const h = window.katex.renderToString(norm, {
+        displayMode: !!d,
+        throwOnError: true,
+        strict: false,
+        trust: true
+      });
+      return `<span class="math-render${d ? ' math-block' : ''}" data-latex="${esc(raw)}">${h}</span>`;
+    } catch (e) {}
+  }
+  return renderLatexToBrowserHtml(norm, !!d, raw);
 }
 
 const imH = k => {
-    const m = (exam.img||[])[k];
+    const m = ((exam && exam.img) || [])[k];
     if(!m) return '';
     if(m.latex) return kx(m.latex, false);
     if(m.isMathType) return `<span style="background:#fee2e2;color:#dc2626;padding:4px 8px;border-radius:6px;font-size:13px;font-weight:600;display:inline-block;margin:4px 0;line-height:1.4;">Lỗi MathType: Ảnh WMF/EMF không hỗ trợ trên Web tĩnh.<br>Giải pháp: Mở file Word &rarr; Tab MathType &rarr; Chọn Convert Equations (thành OMML) rồi tải lên lại.</span>`;
@@ -4093,9 +4790,10 @@ const imH = k => {
 
 function seg(t){
   let o='',i=0;
+  t = String(t == null ? '' : t);
   t.replace(TK,(m,a,b,c,d,e,f,off)=>{
     o+=esc(t.slice(i,off));i=off+m.length;
-    o+=a!=null?kx(((exam.eq||[])[a]||{}).t):b!=null?imH(b):kx(c||d||e||f,c||e);
+    o+=a!=null?kx((((exam && exam.eq)||[])[a]||{}).t):b!=null?imH(b):kx(c||d||e||f,c||e);
     return m;
   });
   return o+esc(t.slice(i));
@@ -4110,6 +4808,15 @@ function seg(t){
   const openStudio = (tabName) => {
     modal.classList.remove('hide');
     if (tabName) switchStudioTab(tabName);
+    if (!$('st-f-in').value.trim()) {
+      $('st-f-in').value = [
+        '• Toán học: y = x^3 - 3x^2 + 2; √(x^2 + 3) = 2x - 1; ∫_0^1 (2x + 1)dx; ∀x ∈ ℝ, x ≥ 1/2.',
+        '• Hóa học: Fe2(SO4)3 + 6NaOH -> 2Fe(OH)3↓ + 3Na2SO4; N2 + 3H2 --(t°, xt)--> 2NH3↑; SO4^2- + Ba^2+ -> BaSO4↓.',
+        '• Vật lí: x = 4cos(100πt - π/3) (cm); T = 2π/ω; λ = v/f; hạt nhân ^{235}_{92}U; Δl_0 = mg/k.',
+        '• Sinh học: (P): AB/ab × ab/ab (2n = 24); X^A X^a × X^a Y → F_1.'
+      ].join('\n');
+      runStudioFormulaConvert();
+    }
     refreshExamEqTab();
   };
   const closeStudio = () => modal.classList.add('hide');
@@ -4130,7 +4837,7 @@ function seg(t){
   $('btn-close-studio').onclick = closeStudio;
   modal.addEventListener('click', e => { if (e.target === modal) closeStudio(); });
 
-  // Tab 1: Chuyển đổi văn bản Công thức Toán - Lý - Hóa - Sinh sang LaTeX
+  // Tab 1: Chuyển đổi văn bản Công thức Toán - Lý - Hóa - Sinh sang LaTeX & Hiển thị trực tiếp trên trình duyệt
   function runStudioFormulaConvert() {
     const raw = $('st-f-in').value;
     if (!raw.trim()) {
@@ -4140,13 +4847,14 @@ function seg(t){
     }
     const converted = convertPlainTextFormulasToLatex(raw, 'other');
     $('st-f-out').value = converted;
-    $('st-f-prev').innerHTML = esc(converted).replace(/\n/g, '<br>');
+    $('st-f-prev').innerHTML = seg(converted).replace(/\n/g, '<br>');
     triggerMathJax();
   }
 
   $('btn-st-convert-f').onclick = runStudioFormulaConvert;
+  $('st-f-in').addEventListener('input', runStudioFormulaConvert);
   $('st-f-out').addEventListener('input', () => {
-    $('st-f-prev').innerHTML = esc($('st-f-out').value).replace(/\n/g, '<br>');
+    $('st-f-prev').innerHTML = seg($('st-f-out').value).replace(/\n/g, '<br>');
     triggerMathJax();
   });
   $('btn-st-copy-f').onclick = () => {
@@ -4298,7 +5006,7 @@ function seg(t){
       h += `<div class="eq-chip-row">
         <span class="no">${idx + 1}</span>
         <input type="text" data-eq-idx="${idx}" value="${esc(val)}" title="Sửa mã LaTeX của công thức này">
-        <div class="eq-chip-prev" id="eq-prev-${idx}">\\(${esc(val)}\\)</div>
+        <div class="eq-chip-prev" id="eq-prev-${idx}">${kx(val, false)}</div>
       </div>`;
     });
     listEl.innerHTML = h;
@@ -4308,7 +5016,7 @@ function seg(t){
         if (exam && exam.eq && exam.eq[k]) {
           exam.eq[k].t = inp.value;
           const pv = $('eq-prev-' + k);
-          if (pv) { pv.innerHTML = `\\(${esc(inp.value)}\\)`; triggerMathJax(); }
+          if (pv) { pv.innerHTML = kx(inp.value, false); triggerMathJax(); }
           cur = JSON.parse(JSON.stringify(exam.items));
           renderTeacherPreview();
           saveLib(true);
@@ -4875,6 +5583,10 @@ function startStudentExam(sv) {
     $('student-login').classList.add('hide');
     $('app-student').classList.remove('hide');$('sh-exam-name').textContent = exam.name;
 
+    if (!Array.isArray(exam.eq)) exam.eq = [];
+    if (exam.scale !== 'hsg') {
+        try { convertExamFormulasToLatex(exam.items, exam.eq, 'other'); } catch(e) {}
+    }
     if(sv) { studentData = sv.studentData; cur = sv.cur; }
     else { studentData.startTime = Date.now(); cur = shuffleExamItems(exam.items, exam); }
     $('student-info-bar').textContent = `Học sinh: ${studentData.name} - Lớp: ${studentData.class}`;
