@@ -1,0 +1,12 @@
+{
+  "name": "english-grammar-pro-vercel",
+  "version": "2.0.0",
+  "private": true,
+  "description": "English Grammar Pro - Thầy Phạm Tiến - THPT Bỉm Sơn (Bảo mật mật khẩu Vercel Serverless + Obfuscator)",
+  "scripts": {
+    "build": "node build.js"
+  },
+  "devDependencies": {
+    "javascript-obfuscator": "^4.1.1"
+  }
+}
