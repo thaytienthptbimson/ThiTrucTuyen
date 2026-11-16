@@ -5498,12 +5498,15 @@ async function initStudentFlow(id, deParam) {
         const nm = nv.name, cl = cv.cls;
         const lim = attemptLimit(exam), key = attId(nm, cl), btn = $('btn-start-exam'), btnTxt = btn.textContent;
         startBusy = true;
+        // Xin toàn màn hình NGAY trong lúc bấm nút, trước mọi bước chờ mạng: trình duyệt chỉ cho phép trong ~5 giây sau thao tác bấm,
+        // nên nếu chờ kiểm tra lượt thi (Google Sheet chậm) rồi mới xin thì bị từ chối và học sinh không vào thi được.
+        const fsEarly = exam.proctor ? pgFsReq() : null;
         try {
             if(lim) {
                 renderAttemptInfo();
                 btn.disabled = true; btn.textContent = 'Đang kiểm tra lượt thi...';
                 const used = await usedAttempts(key, nm, cl);
-                if(used >= lim) { showAttemptBlock(used, lim); return; }
+                if(used >= lim) { showAttemptBlock(used, lim); if(fsEarly) fsEarly.then(() => pgStop(true)); return; }
             }
             studentData.name = nm;
             studentData.class = cl;
@@ -5688,7 +5691,7 @@ function checkAnswered(i) {
     if (!btn) return;
     let answered = false;
     if (q.qtype === 'sa') answered = !!q.studentAns && q.studentAns.trim() !== '';
-    else if (q.qtype === 'tf') answered = q.studentAns && Object.keys(q.studentAns).length > 0;
+    else if (q.qtype === 'tf') answered = !!q.studentAns && Object.keys(q.studentAns).length > 0;
     else answered = q.studentAns !== undefined;
     
     btn.classList.toggle('done', answered);
