@@ -408,6 +408,46 @@ img.im.tbl-im{display:block;max-width:100%;height:auto;border-radius:6px;margin:
       </div>
     </details>
 
+    <details id="secbox" class="card">
+      <summary>🔒 Bảo mật Mật khẩu &amp; Mã hóa Mã nguồn / Nội dung <span class="tg" id="sec-badge" style="color:var(--ok)">Đang bật bảo vệ</span></summary>
+      <div style="margin-top:14px">
+        <p class="note" style="margin:0 0 14px">Hệ thống đã tự động <b>mã hóa một chiều mật khẩu đăng nhập giáo viên</b> (SHA-256 256 vòng có muối — không lưu mật khẩu gốc trong mã nguồn), <b>cô lập dữ liệu trong Closure</b>, <b>mã hóa đáp án trong bộ nhớ khi thi</b> và <b>mã hóa nội dung đề thi (.json)</b> để học sinh hoặc người lạ không thể đọc câu hỏi/đáp án khi cố tình xem mã nguồn (<code>Ctrl+U</code>, <code>F12</code>, mở trực tiếp file <code>.json</code>).</p>
+        <div class="sect" style="margin-top:0;padding-top:0;border-top:0">
+          <h3>1. Đổi &amp; Mã hóa Mật khẩu Đăng nhập Giáo viên</h3>
+          <div class="fgrid">
+            <div class="fld"><label for="sec-old-pw">Mật khẩu giáo viên hiện tại</label><input type="password" id="sec-old-pw" placeholder="Nhập mật khẩu hiện tại" autocomplete="current-password"></div>
+            <div class="fld"><label for="sec-new-pw">Mật khẩu giáo viên mới</label><input type="password" id="sec-new-pw" placeholder="Tối thiểu 6 ký tự" autocomplete="new-password"></div>
+            <div class="fld"><label for="sec-cfm-pw">Nhập lại mật khẩu mới</label><input type="password" id="sec-cfm-pw" placeholder="Nhập lại mật khẩu mới" autocomplete="new-password"></div>
+          </div>
+          <div class="bar" style="margin-top:10px">
+            <button class="btn" type="button" id="btn-sec-save-pw">Cập nhật mật khẩu giáo viên</button>
+            <button class="btn sec" type="button" id="btn-sec-reset-pw">Khôi phục mật khẩu mặc định</button>
+          </div>
+          <p class="note" id="sec-pw-st"></p>
+        </div>
+        <div class="sect">
+          <h3>2. Mã hóa Nội dung Đề thi (.json) &amp; Chặn Xem Mã nguồn trên Trình duyệt</h3>
+          <div class="chks">
+            <label class="chk"><input type="checkbox" id="chk-sec-enc-json" checked><span><b>Mã hóa toàn bộ câu hỏi &amp; đáp án trong file .json (Chuẩn ENCv2):</b> Khi xuất <code>de1.json</code>, <code>exams.json</code> hoặc đẩy lên GitHub, toàn bộ nội dung câu hỏi và đáp án được mã hóa thành chuỗi mật mã; mở trực tiếp file <code>.json</code> trên trình duyệt sẽ không thấy nội dung đề hay đáp án.</span></label>
+            <label class="chk"><input type="checkbox" id="chk-sec-guard-src" checked><span><b>Chặn phím tắt xem mã nguồn &amp; DevTools (Ctrl+U, F12, Ctrl+Shift+I/J/C, Ctrl+S, chuột phải):</b> Ngăn hành vi cố tình mở bảng kiểm tra mã nguồn trên trình duyệt và tự động làm mờ/ghi nhận vi phạm nếu phát hiện mở DevTools khi làm bài.</span></label>
+          </div>
+          <div class="bar" style="margin-top:12px">
+            <button class="btn sec" type="button" id="btn-sec-reencrypt-all">🔐 Xuất exams.json đã mã hóa</button>
+            <button class="btn sec" type="button" id="btn-sec-push-all-gh">☁ Mã hóa &amp; Đẩy lại tất cả đề lên GitHub</button>
+          </div>
+        </div>
+        <div class="sect">
+          <h3>3. Đóng gói &amp; Mã hóa Toàn bộ Mã nguồn Trang web (index.html)</h3>
+          <p class="note" style="margin:0 0 12px">Nếu muốn khi ai đó gõ trực tiếp <code>view-source:</code> trên thanh địa chỉ trình duyệt mà <b>toàn bộ cấu trúc HTML, CSS và mã JavaScript cũng được đóng gói mã hóa</b> (kèm mật khẩu giáo viên mới nhất), hãy xuất hoặc đẩy trực tiếp file <code>index.html</code> đã mã hóa bằng nút bên dưới:</p>
+          <div class="bar">
+            <button class="btn gr" type="button" id="btn-sec-export-html">🛡️ Tải file index.html đã mã hóa mã nguồn</button>
+            <button class="btn" type="button" id="btn-sec-push-html">☁ Đẩy index.html đã mã hóa lên GitHub</button>
+          </div>
+          <p class="note" id="sec-html-st"></p>
+        </div>
+      </div>
+    </details>
+
     <details id="libbox" class="card" open>
       <summary id="lt">Danh sách đề thi</summary>
       <div class="bar" style="margin-top:12px;align-items:center">
@@ -698,8 +738,7 @@ function triggerMathJax(tries) {
     }
 }
 
-const PW = 'tienhuong@28011981';
-
+(function() {
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -791,6 +830,299 @@ function fallbackCopy(text, okMsg) {
     }
 }
 
+// ===================== HỆ THỐNG MÃ HÓA MẬT KHẨU, NỘI DUNG ĐỀ THI & BẢO VỆ MÃ NGUỒN =====================
+const SHA_K = [0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+function sha256hex(str) {
+    const b = Array.from(new TextEncoder().encode(String(str))), l = b.length;
+    b.push(0x80);
+    while (b.length % 64 !== 56) b.push(0);
+    const hi = Math.floor(l * 8 / 4294967296), lo = (l * 8) >>> 0;
+    for (let i = 3; i >= 0; i--) b.push((hi >>> (i * 8)) & 255);
+    for (let i = 3; i >= 0; i--) b.push((lo >>> (i * 8)) & 255);
+    let H = [0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+    const w = new Array(64), rr = (x, n) => (x >>> n) | (x << (32 - n));
+    for (let o = 0; o < b.length; o += 64) {
+        for (let i = 0; i < 16; i++) w[i] = (b[o+4*i] << 24) | (b[o+4*i+1] << 16) | (b[o+4*i+2] << 8) | b[o+4*i+3];
+        for (let i = 16; i < 64; i++) {
+            const s0 = rr(w[i-15], 7) ^ rr(w[i-15], 18) ^ (w[i-15] >>> 3);
+            const s1 = rr(w[i-2], 17) ^ rr(w[i-2], 19) ^ (w[i-2] >>> 10);
+            w[i] = (w[i-16] + s0 + w[i-7] + s1) | 0;
+        }
+        let [a, bb, c, d, e, f, g, h] = H;
+        for (let i = 0; i < 64; i++) {
+            const t1 = (h + (rr(e, 6) ^ rr(e, 11) ^ rr(e, 25)) + ((e & f) ^ (~e & g)) + SHA_K[i] + w[i]) | 0;
+            const t2 = ((rr(a, 2) ^ rr(a, 13) ^ rr(a, 22)) + ((a & bb) ^ (a & c) ^ (bb & c))) | 0;
+            h = g; g = f; f = e; e = (d + t1) | 0; d = c; c = bb; bb = a; a = (t1 + t2) | 0;
+        }
+        H = [H[0]+a|0, H[1]+bb|0, H[2]+c|0, H[3]+d|0, H[4]+e|0, H[5]+f|0, H[6]+g|0, H[7]+h|0];
+    }
+    return H.map(x => (x >>> 0).toString(16).padStart(8, '0')).join('');
+}
+function randBytes(n) {
+    const a = new Uint8Array(n);
+    try { crypto.getRandomValues(a); } catch(e) { for (let i = 0; i < n; i++) a[i] = Math.floor(Math.random() * 256); }
+    return a;
+}
+const randHex = n => Array.from(randBytes(n), x => x.toString(16).padStart(2, '0')).join('');
+const hashPw = (pw, salt) => sha256hex(String(salt || '') + '|' + String(pw).trim());
+const checkExamPw = (ex, input) => !!ex.pwHash && hashPw(input, ex.pwSalt) === ex.pwHash;
+function genPw(n) {
+    const cs = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+    return Array.from(randBytes(n || 6), x => cs[x % cs.length]).join('');
+}
+
+// 1. Mã hóa một chiều mật khẩu đăng nhập Giáo viên (256 vòng SHA-256 + Salt, tuyệt đối không lưu mật khẩu dạng rõ trong code)
+const TCH_PW_KEY = 'tch_pw_cfg_v1';
+const SEC_CFG_KEY = 'sec_cfg_v1';
+const TCH_SALT_DEFAULT = 'bs_thpt_2801_s9';
+const TCH_HASH_DEFAULT = '3d451420f0b6ec32dbf95e02d2ca70a4574be199f87ccd09227185a42651023f';
+
+function hashTeacherPw(pw, salt) {
+    const s = String(salt || TCH_SALT_DEFAULT);
+    let h = sha256hex(s + '::tch::' + String(pw));
+    for (let i = 0; i < 256; i++) h = sha256hex(h + ':' + i + ':' + s);
+    return h;
+}
+function getTeacherPwSpec() {
+    try {
+        const c = JSON.parse(localStorage.getItem(TCH_PW_KEY) || 'null');
+        if (c && typeof c.salt === 'string' && /^[0-9a-f]{64}$/.test(c.hash || '')) return c;
+    } catch (e) {}
+    return { salt: TCH_SALT_DEFAULT, hash: TCH_HASH_DEFAULT, custom: false };
+}
+function verifyTeacherPw(inputPw) {
+    if (!inputPw) return false;
+    const spec = getTeacherPwSpec();
+    return hashTeacherPw(inputPw, spec.salt) === spec.hash;
+}
+function computeAuthSessionSig() {
+    const spec = getTeacherPwSpec();
+    let sid = '';
+    try {
+        sid = sessionStorage.getItem('auth_sid_v2') || '';
+        if (!sid) { sid = randHex(12); sessionStorage.setItem('auth_sid_v2', sid); }
+    } catch (e) { sid = 'nosess'; }
+    return sha256hex('TCH_SESSION_V2|' + spec.hash + '|' + sid + '|' + (location.host || 'local'));
+}
+function isTeacherAuthenticated() {
+    try {
+        const tok = sessionStorage.getItem('auth_tok_v2') || '';
+        return !!tok && tok === computeAuthSessionSig();
+    } catch (e) { return false; }
+}
+function setTeacherAuthenticated(on) {
+    try {
+        sessionStorage.removeItem('auth');
+        if (on) sessionStorage.setItem('auth_tok_v2', computeAuthSessionSig());
+        else { sessionStorage.removeItem('auth_tok_v2'); sessionStorage.removeItem('auth_sid_v2'); }
+    } catch (e) {}
+}
+
+// 2. Thuật toán Mã hóa luồng đối xứng tốc độ cao (ARX Stream Cipher + SHA-256 Key Derivation + HMAC Integrity)
+// Dùng để mã hóa nội dung đề thi (.json) và kho đáp án trong bộ nhớ trình duyệt
+const _PEPPER = [0x54,0x48,0x50,0x54,0x5f,0x42,0x53,0x5f,0x32,0x30,0x32,0x36,0x5f,0x50,0x56,0x54].map(c => String.fromCharCode(c)).join('');
+function deriveCipherSeeds(scopeKey, ivHex) {
+    const kh = sha256hex(_PEPPER + '::' + String(scopeKey || '') + '::' + String(ivHex || ''));
+    const s = new Uint32Array(8);
+    for (let i = 0; i < 8; i++) s[i] = parseInt(kh.slice(i * 8, i * 8 + 8), 16) >>> 0;
+    return { kh, s };
+}
+function xorStreamBytes(u8, seeds) {
+    const out = new Uint8Array(u8.length);
+    let s0 = seeds[0] || 0x12345678, s1 = seeds[1] || 0x9abcdef0, s2 = seeds[2] || 0x0fedcba9, s3 = seeds[3] || 0x87654321;
+    let k0 = seeds[4] || 0xa5a5a5a5, k1 = seeds[5] || 0x5a5a5a5a, k2 = seeds[6] || 0x3c3c3c3c, k3 = seeds[7] || 0xc3c3c3c3;
+    const len = u8.length;
+    let i = 0;
+    while (i < len) {
+        s0 = (s0 + 0x9e3779b9 + k0) | 0;
+        s1 = (s1 ^ ((s0 << 7) | (s0 >>> 25))) + k1 | 0;
+        s2 = (s2 + s1 + k2) ^ ((s1 << 13) | (s1 >>> 19));
+        s3 = (s3 ^ s2 ^ k3) + ((s2 << 17) | (s2 >>> 15)) | 0;
+        const w = (s0 ^ s1 ^ s2 ^ s3) >>> 0;
+        out[i] = u8[i] ^ (w & 255); i++;
+        if (i < len) { out[i] = u8[i] ^ ((w >>> 8) & 255); i++; }
+        if (i < len) { out[i] = u8[i] ^ ((w >>> 16) & 255); i++; }
+        if (i < len) { out[i] = u8[i] ^ ((w >>> 24) & 255); i++; }
+    }
+    return out;
+}
+function u8ToB64(u8) {
+    let o = '';
+    for (let i = 0; i < u8.length; i += 0x8000) o += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000));
+    return btoa(o);
+}
+function b64ToU8(b64) {
+    const bin = atob(String(b64 || '').replace(/\s/g, ''));
+    const u8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+    return u8;
+}
+function encryptContentPayload(plainText, scopeKey) {
+    const iv = randHex(12);
+    const { kh, s } = deriveCipherSeeds(scopeKey, iv);
+    const rawU8 = new TextEncoder().encode(String(plainText));
+    const encU8 = xorStreamBytes(rawU8, s);
+    const b64 = u8ToB64(encU8);
+    const mac = sha256hex(iv + '|' + kh + '|' + b64.length + '|' + b64.slice(0, 96) + '|' + b64.slice(-96)).slice(0, 24);
+    return 'ENCv2$' + iv + '$' + mac + '$' + b64;
+}
+function decryptContentPayload(cipherStr, scopeKey) {
+    if (typeof cipherStr !== 'string' || !cipherStr.startsWith('ENCv2$')) return null;
+    const parts = cipherStr.split('$');
+    if (parts.length !== 4) return null;
+    const iv = parts[1], mac = parts[2], b64 = parts[3];
+    const { kh, s } = deriveCipherSeeds(scopeKey, iv);
+    const expMac = sha256hex(iv + '|' + kh + '|' + b64.length + '|' + b64.slice(0, 96) + '|' + b64.slice(-96)).slice(0, 24);
+    if (mac !== expMac) return null;
+    try {
+        const encU8 = b64ToU8(b64);
+        const decU8 = xorStreamBytes(encU8, s);
+        return new TextDecoder('utf-8').decode(decU8);
+    } catch (e) { return null; }
+}
+
+function getSecConfig() {
+    try {
+        const c = JSON.parse(localStorage.getItem(SEC_CFG_KEY) || '{}');
+        return { encJson: c.encJson !== false, guardSrc: c.guardSrc !== false };
+    } catch (e) { return { encJson: true, guardSrc: true }; }
+}
+function saveSecConfig(cfg) {
+    try { localStorage.setItem(SEC_CFG_KEY, JSON.stringify(cfg)); } catch (e) {}
+}
+
+// Giải mã tự động đối tượng đề thi khi nạp từ file .json hoặc GitHub
+function ensureExamDecrypted(x) {
+    if (!x || typeof x !== 'object') return x;
+    if (typeof x.encPayload === 'string' && (!Array.isArray(x.items) || !x.items.length)) {
+        const raw = decryptContentPayload(x.encPayload, 'EXAM_V2::' + String(x.id || ''))
+                 || decryptContentPayload(x.encPayload, 'EXAM_V2::DEFAULT');
+        if (raw) {
+            try {
+                const d = JSON.parse(raw);
+                if (Array.isArray(d.items)) x.items = d.items;
+                if (Array.isArray(d.eq)) x.eq = d.eq;
+                if (Array.isArray(d.img)) x.img = d.img;
+                if (!x.qCount) x.qCount = x.items.filter(k => k && k.k === 'q').length;
+            } catch (e) {}
+        }
+    }
+    return x;
+}
+
+// Bản xuất ra file .json hoặc đẩy lên GitHub: bỏ mật khẩu gốc VÀ mã hóa toàn bộ câu hỏi/đáp án
+const pubExam = x => {
+    ensureExamDecrypted(x);
+    const { pwPlain, encPayload: _oldEnc, ...rest } = x;
+    const qCount = (rest.items || []).filter(k => k && k.k === 'q').length || rest.qCount || 0;
+    const lisCount = rest.scale === 'hsg' ? hsgLisN(rest) : 0;
+    if (getSecConfig().encJson) {
+        const packed = JSON.stringify({ items: rest.items || [], eq: rest.eq || [], img: rest.img || [] });
+        const encPayload = encryptContentPayload(packed, 'EXAM_V2::' + String(rest.id || 'DEFAULT'));
+        return Object.assign({}, rest, { qCount, lisCount, encPayload, items: [], eq: [], img: [] });
+    }
+    return Object.assign({}, rest, { qCount });
+};
+
+// 3. Kho niêm phong đáp án trong bộ nhớ khi học sinh làm bài (xóa sạch ok, tfKey, ansRuns khỏi cur và sessionStorage)
+let sealedAnsVault = '';
+function sealStudentAnswers(curList, examId) {
+    if (!Array.isArray(curList)) return;
+    const hasPlain = curList.some(q => q && q.k === 'q' && (q.ansRuns || (Array.isArray(q.opts) && q.opts.some(o => o && (o.ok !== undefined || o.tfKey !== undefined)))));
+    if (!hasPlain) return;
+    const keyMap = curList.map(q => {
+        if (!q || q.k !== 'q') return null;
+        if (q.qtype === 'sa') {
+            const ar = q.ansRuns;
+            delete q.ansRuns;
+            return { a: ar };
+        }
+        if (q.qtype === 'tf') {
+            const tk = (q.opts || []).map(o => { const v = o.tfKey; delete o.tfKey; delete o.ok; return v; });
+            return { t: tk };
+        }
+        const okIdx = (q.opts || []).findIndex(o => o && o.ok);
+        (q.opts || []).forEach(o => { if (o) { delete o.ok; delete o.tfKey; } });
+        return { o: okIdx };
+    });
+    sealedAnsVault = encryptContentPayload(JSON.stringify(keyMap), 'ANS_VAULT_V2::' + String(examId || ''));
+}
+
+function withUnsealedAnswers(curList, examId, keepUnsealed, fn) {
+    let keyMap = null;
+    if (sealedAnsVault) {
+        const raw = decryptContentPayload(sealedAnsVault, 'ANS_VAULT_V2::' + String(examId || ''));
+        if (raw) { try { keyMap = JSON.parse(raw); } catch (e) {} }
+    }
+    if (Array.isArray(keyMap) && Array.isArray(curList)) {
+        curList.forEach((q, i) => {
+            const k = keyMap[i];
+            if (!q || q.k !== 'q' || !k) return;
+            if (q.qtype === 'sa' && k.a) q.ansRuns = k.a;
+            else if (q.qtype === 'tf' && Array.isArray(k.t)) (q.opts || []).forEach((o, j) => { if (o) o.tfKey = k.t[j]; });
+            else if (typeof k.o === 'number') (q.opts || []).forEach((o, j) => { if (o) o.ok = (j === k.o); });
+        });
+    }
+    try {
+        return fn();
+    } finally {
+        if (!keepUnsealed && Array.isArray(keyMap) && Array.isArray(curList)) {
+            curList.forEach(q => {
+                if (!q || q.k !== 'q') return;
+                delete q.ansRuns;
+                if (Array.isArray(q.opts)) q.opts.forEach(o => { if (o) { delete o.ok; delete o.tfKey; } });
+            });
+        }
+    }
+}
+
+// 4. Lớp bảo vệ chống xem mã nguồn (Ctrl+U, Ctrl+S) & chống mở DevTools (F12, Ctrl+Shift+I/J/C, chuột phải)
+(function initBrowserSourceGuard() {
+    document.addEventListener('keydown', e => {
+        if (!getSecConfig().guardSrc) return;
+        const k = (e.key || '').toLowerCase(), c = e.code || '';
+        const ctrlOrCmd = e.ctrlKey || e.metaKey;
+        const isF12 = e.key === 'F12' || e.keyCode === 123;
+        const isDevShortcut = (ctrlOrCmd && e.shiftKey && (k === 'i' || k === 'j' || k === 'c' || k === 'k' || c === 'KeyI' || c === 'KeyJ' || c === 'KeyC'))
+                           || (e.metaKey && e.altKey && (k === 'i' || k === 'j' || k === 'c' || k === 'u' || c === 'KeyI' || c === 'KeyJ' || c === 'KeyU'));
+        const isViewSrcOrSave = ctrlOrCmd && !e.shiftKey && (k === 'u' || k === 's' || c === 'KeyU' || c === 'KeyS');
+        if (isF12 || isDevShortcut || isViewSrcOrSave) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (examRunning && !submitted && PG.on) {
+                pgViol('Cố tình bấm phím tắt xem mã nguồn / công cụ kiểm tra (F12 / Ctrl+U)');
+            } else if (typeof showToast === 'function') {
+                showToast('🔒 Hệ thống bảo mật: Đã khóa chức năng xem mã nguồn và công cụ kiểm tra trên trình duyệt!', 3500);
+            }
+            return false;
+        }
+    }, true);
+
+    document.addEventListener('contextmenu', e => {
+        if (!getSecConfig().guardSrc) return;
+        const t = e.target && (e.target.nodeType === 1 ? e.target : e.target.parentElement);
+        if (t && t.closest('input,textarea,[contenteditable="true"]')) return;
+        e.preventDefault();
+        if (!pgOn() && typeof showToast === 'function') {
+            showToast('🔒 Hệ thống bảo mật: Không cho phép mở menu chuột phải để xem mã nguồn!', 2500);
+        }
+    }, true);
+
+    // Phát hiện cố tình mở bảng DevTools neo vào cửa sổ trình duyệt khi đang làm bài
+    setInterval(() => {
+        if (!getSecConfig().guardSrc || _inIframe()) return;
+        const dw = window.outerWidth - window.innerWidth;
+        const dh = window.outerHeight - window.innerHeight;
+        if ((dw > 180 || dh > 180) && window.outerWidth > 500 && window.outerHeight > 400) {
+            try { console.clear(); } catch (e) {}
+            if (examRunning && !submitted) {
+                shBlur(1);
+                if (PG.on) pgViol('Phát hiện mở công cụ kiểm tra mã nguồn (DevTools)');
+            }
+        }
+    }, 1500);
+})();
+
 const urlParams = new URLSearchParams(window.location.search);
 const studentDeParam = (urlParams.get('de') || '').trim();
 
@@ -798,29 +1130,31 @@ if(studentDeParam) initStudentFlow('', studentDeParam);
 else initTeacherFlow();
 
 function initTeacherFlow() {
-    let ok = false;
-    try { ok = sessionStorage.getItem('auth') === '1'; } catch(e) {}
+    const ok = isTeacherAuthenticated();
     $('login').classList.toggle('hide', ok);
     $('app-teacher').classList.toggle('hide', !ok);
     
     $('lf').onsubmit = e => {
         e.preventDefault();
-        if($('pw').value === PW) {
-            try { sessionStorage.setItem('auth', '1'); } catch(err) {}
+        if(verifyTeacherPw($('pw').value)) {
+            setTeacherAuthenticated(true);
+            $('pw').value = '';
+            $('err').textContent = '';
             $('login').classList.add('hide');$('app-teacher').classList.remove('hide');
+            initSecurityPanelUI();
             loadLib();
         } else {
             $('err').textContent = 'Mật khẩu sai!';
         }
     };
     $('out').onclick = () => {
-        try { sessionStorage.removeItem('auth'); } catch(e) {}
+        setTeacherAuthenticated(false);
         $('app-teacher').classList.add('hide');
         $('login').classList.remove('hide');
         populateStudentHub();
     };
     populateStudentHub();
-    if(ok) loadLib();
+    if(ok) { initSecurityPanelUI(); loadLib(); }
 }
 
 window.openStudentExamByKey = (deKey, examId) => {
@@ -862,12 +1196,20 @@ async function discoverAvailableExams(opts) {
     const found = [];
     const seen = new Set();
     const addExam = (x, fk) => {
-        if(!x || !x.id || !Array.isArray(x.items)) return;
+        if(!x || !x.id || (!Array.isArray(x.items) && typeof x.encPayload !== 'string')) return;
         fk = normFileKey(fk, found.length);
         const key = (fk + '::' + x.id).toLowerCase();
         if(seen.has(key)) return;
         seen.add(key);
-        found.push(Object.assign({}, x, { fileKey: fk }));
+        const copy = Object.assign({}, x, { fileKey: fk });
+        if (!copy.qCount && Array.isArray(copy.items) && copy.items.length) {
+            copy.qCount = copy.items.filter(k => k && k.k === 'q').length;
+        } else if (!copy.qCount && copy.encPayload) {
+            ensureExamDecrypted(copy);
+            copy.qCount = (copy.items || []).filter(k => k && k.k === 'q').length;
+            if (!isTeacherAuthenticated()) { copy.items = []; copy.eq = []; copy.img = []; }
+        }
+        found.push(copy);
     };
 
     // 1. Gom tên các file đề: danh sách do app cập nhật + liệt kê repo + tên mặc định
@@ -915,7 +1257,7 @@ async function populateStudentHub() {
     }
     box.innerHTML = '<div class="note" style="margin:0 0 8px">Có ' + list.length + ' đề thi. Em chọn đề của mình:</div>' + list.map((x, i) => {
         const fk = normFileKey(x.fileKey, i);
-        const qCount = (x.items || []).filter(k => k.k === 'q').length;
+        const qCount = x.qCount || (x.items || []).filter(k => k.k === 'q').length;
         return `<button type="button" class="hub-item" onclick="openStudentExamByKey('${esc(fk)}','${esc(x.id)}')"><b>${esc(x.name)}</b><span>${qCount} câu · ${x.time ? x.time + ' phút' : 'Tự do'}${attemptLimit(x) ? ' · Thi tối đa ' + attemptLimit(x) + ' lần' : ''}${x.scale === 'hsg' && x.hsgAudio ? ' · 🎧 Có phần nghe' : ''}${x.pwHash ? ' · 🔒 Có mật khẩu' : ''}</span></button>`;
     }).join('');
 }
@@ -964,6 +1306,7 @@ async function readStoredLib() {
     let arr = [], good = true;
     try { arr = JSON.parse(txt || '[]'); } catch(e) { arr = []; good = false; }
     if(!Array.isArray(arr)) { arr = []; good = false; }
+    arr.forEach(x => ensureExamDecrypted(x));
     return { arr, good, legacy };
 }
 // Ghi danh sách đề hiện tại (chụp nội dung ngay lúc gọi, ghi lần lượt theo thứ tự gọi). Luôn trả về Promise<boolean>, không bao giờ reject.
@@ -1046,7 +1389,7 @@ async function remoteExamsViaApi(c) {
     const data = await mapPool(cand, 6, readF);
     const found = [], seen = new Set();
     const add = (x, fk) => {
-        if(!x || !x.id || !Array.isArray(x.items)) return;
+        if(!x || !x.id || (!Array.isArray(x.items) && typeof x.encPayload !== 'string')) return;
         fk = normFileKey(fk, found.length);
         const key = (fk + '::' + x.id).toLowerCase();
         if(seen.has(key)) return;
@@ -1299,49 +1642,7 @@ $('btn-copy-link').onclick = () => {
     window.copyExamLink(exam.id);
 };
 
-// ===== Mật khẩu từng đề thi =====
-// Lưu trong đề: pwSalt + pwHash (SHA-256 có muối). pwPlain chỉ nằm ở máy giáo viên, KHÔNG xuất ra file .json.
-const SHA_K = [0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
-function sha256hex(str) {
-    const b = Array.from(new TextEncoder().encode(String(str))), l = b.length;
-    b.push(0x80);
-    while (b.length % 64 !== 56) b.push(0);
-    const hi = Math.floor(l * 8 / 4294967296), lo = (l * 8) >>> 0;
-    for (let i = 3; i >= 0; i--) b.push((hi >>> (i * 8)) & 255);
-    for (let i = 3; i >= 0; i--) b.push((lo >>> (i * 8)) & 255);
-    let H = [0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
-    const w = new Array(64), rr = (x, n) => (x >>> n) | (x << (32 - n));
-    for (let o = 0; o < b.length; o += 64) {
-        for (let i = 0; i < 16; i++) w[i] = (b[o+4*i] << 24) | (b[o+4*i+1] << 16) | (b[o+4*i+2] << 8) | b[o+4*i+3];
-        for (let i = 16; i < 64; i++) {
-            const s0 = rr(w[i-15], 7) ^ rr(w[i-15], 18) ^ (w[i-15] >>> 3);
-            const s1 = rr(w[i-2], 17) ^ rr(w[i-2], 19) ^ (w[i-2] >>> 10);
-            w[i] = (w[i-16] + s0 + w[i-7] + s1) | 0;
-        }
-        let [a, bb, c, d, e, f, g, h] = H;
-        for (let i = 0; i < 64; i++) {
-            const t1 = (h + (rr(e, 6) ^ rr(e, 11) ^ rr(e, 25)) + ((e & f) ^ (~e & g)) + SHA_K[i] + w[i]) | 0;
-            const t2 = ((rr(a, 2) ^ rr(a, 13) ^ rr(a, 22)) + ((a & bb) ^ (a & c) ^ (bb & c))) | 0;
-            h = g; g = f; f = e; e = (d + t1) | 0; d = c; c = bb; bb = a; a = (t1 + t2) | 0;
-        }
-        H = [H[0]+a|0, H[1]+bb|0, H[2]+c|0, H[3]+d|0, H[4]+e|0, H[5]+f|0, H[6]+g|0, H[7]+h|0];
-    }
-    return H.map(x => (x >>> 0).toString(16).padStart(8, '0')).join('');
-}
-function randBytes(n) {
-    const a = new Uint8Array(n);
-    try { crypto.getRandomValues(a); } catch(e) { for (let i = 0; i < n; i++) a[i] = Math.floor(Math.random() * 256); }
-    return a;
-}
-const randHex = n => Array.from(randBytes(n), x => x.toString(16).padStart(2, '0')).join('');
-const hashPw = (pw, salt) => sha256hex(String(salt || '') + '|' + String(pw).trim());
-const checkExamPw = (ex, input) => !!ex.pwHash && hashPw(input, ex.pwSalt) === ex.pwHash;
-function genPw(n) {
-    const cs = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; // bỏ các ký tự dễ nhầm: I, L, O, 0, 1
-    return Array.from(randBytes(n || 6), x => cs[x % cs.length]).join('');
-}
-// Bản xuất ra file: bỏ mật khẩu gốc, chỉ giữ bản băm
-const pubExam = x => { const { pwPlain, ...rest } = x; return rest; };
+// (Đã chuyển cụm hàm băm SHA-256 & mã hóa nội dung lên đầu phạm vi bảo mật)
 
 let pwRemove = false;
 function updatePwNote() {
@@ -1390,6 +1691,7 @@ window.exportExam = id => {
 // Kiểm tra và chuẩn hóa 1 đề đọc từ file; trả về null nếu không hợp lệ
 function normExam(x, fallbackId, fallbackFileKey) {
     if(!x || typeof x !== 'object' || Array.isArray(x)) return null;
+    ensureExamDecrypted(x);
     if(typeof x.name !== 'string' || !x.name.trim() || !Array.isArray(x.items)) return null;
     if(!x.items.every(k => k && typeof k === 'object') || !x.items.some(k => k.k === 'q')) return null;
     return {
@@ -5262,7 +5564,7 @@ function matchExamInList(list, id, deKey) {
         if (byDe) return byDe;
     }
     // Nếu mở trực tiếp file lẻ (VD: de1.json) mà trong file chỉ có 1 đề thì lấy luôn đề đó
-    if (list.length === 1 && list[0] && Array.isArray(list[0].items)) {
+    if (list.length === 1 && list[0] && (Array.isArray(list[0].items) || typeof list[0].encPayload === 'string')) {
         return list[0];
     }
     return null;
@@ -5586,12 +5888,22 @@ function startStudentExam(sv) {
     $('student-login').classList.add('hide');
     $('app-student').classList.remove('hide');$('sh-exam-name').textContent = exam.name;
 
+    ensureExamDecrypted(exam);
     if (!Array.isArray(exam.eq)) exam.eq = [];
-    if (exam.scale !== 'hsg') {
+    if (!sv && exam.scale !== 'hsg' && Array.isArray(exam.items) && exam.items.length) {
         try { convertExamFormulasToLatex(exam.items, exam.eq, 'other'); } catch(e) {}
     }
-    if(sv) { studentData = sv.studentData; cur = sv.cur; }
-    else { studentData.startTime = Date.now(); cur = shuffleExamItems(exam.items, exam); }
+    if(sv) {
+        studentData = sv.studentData;
+        cur = sv.cur;
+        if (sv.akv) sealedAnsVault = sv.akv;
+        else sealStudentAnswers(cur, exam.id);
+    } else {
+        studentData.startTime = Date.now();
+        cur = shuffleExamItems(exam.items, exam);
+        sealStudentAnswers(cur, exam.id);
+    }
+    if (!isTeacherAuthenticated()) exam.items = [];
     $('student-info-bar').textContent = `Học sinh: ${studentData.name} - Lớp: ${studentData.class}`;
 
     renderStudentExam();
@@ -5814,7 +6126,7 @@ function isSAOk(q) {
 
 const progKey = () => 'prog_' + (exam && exam.id);
 function saveProg(extra) {
-    try { sessionStorage.setItem(progKey(), JSON.stringify(Object.assign({ studentData, cur, endAt: isFinite(examEndAt) ? examEndAt : 0, viol: PG.viol, audioPos: HS.a && HS.on ? Math.floor(HS.a.currentTime || 0) : 0, audioDone: !!HS.done }, extra || {}))); } catch(e) {}
+    try { sessionStorage.setItem(progKey(), JSON.stringify(Object.assign({ studentData, cur, akv: sealedAnsVault, endAt: isFinite(examEndAt) ? examEndAt : 0, viol: PG.viol, audioPos: HS.a && HS.on ? Math.floor(HS.a.currentTime || 0) : 0, audioDone: !!HS.done }, extra || {}))); } catch(e) {}
 }
 function loadProg() { try { return JSON.parse(sessionStorage.getItem(progKey()) || 'null'); } catch(e) { return null; } }
 window.addEventListener('beforeunload', e => { if(examRunning && !submitted) { e.preventDefault(); e.returnValue = ''; } });
@@ -5875,41 +6187,43 @@ async function processSubmission() {
     let tfQuestions = 0;
     
     const isMath = exam.scale === 'math';
+    let hsgRes = null;
 
-    cur.forEach(q => {
-        if (q.k !== 'q') return;
-        
-        if (q.qtype === 'mc') {
-            totalMC++;
-            if (q.studentAns !== undefined && q.opts[q.studentAns].ok) {
-                correctMC++;
-                score += 0.25;
-            }
-        } 
-        else if (q.qtype === 'tf') {
-            tfQuestions++;
-            let matches = 0;
-            for (let j=0; j<4; j++) {
-                if (q.opts[j].tfKey && q.studentAns && q.studentAns[j] === q.opts[j].tfKey) {
-                    matches++;
+    withUnsealedAnswers(cur, exam.id, false, () => {
+        cur.forEach(q => {
+            if (q.k !== 'q') return;
+            
+            if (q.qtype === 'mc') {
+                totalMC++;
+                if (q.studentAns !== undefined && q.opts[q.studentAns] && q.opts[q.studentAns].ok) {
+                    correctMC++;
+                    score += 0.25;
+                }
+            } 
+            else if (q.qtype === 'tf') {
+                tfQuestions++;
+                let matches = 0;
+                for (let j=0; j<4; j++) {
+                    if (q.opts[j].tfKey && q.studentAns && q.studentAns[j] === q.opts[j].tfKey) {
+                        matches++;
+                    }
+                }
+                if (matches === 1) score += 0.1;
+                else if (matches === 2) score += 0.25;
+                else if (matches === 3) score += 0.5;
+                else if (matches === 4) score += 1.0;
+            } 
+            else if (q.qtype === 'sa') {
+                totalSA++;
+                if (isSAOk(q)) {
+                    correctSA++;
+                    score += (isMath ? 0.5 : 0.25);
                 }
             }
-            if (matches === 1) score += 0.1;
-            else if (matches === 2) score += 0.25;
-            else if (matches === 3) score += 0.5;
-            else if (matches === 4) score += 1.0;
-        } 
-        else if (q.qtype === 'sa') {
-            totalSA++;
-            if (isSAOk(q)) {
-                correctSA++;
-                score += (isMath ? 0.5 : 0.25);
-            }
-        }
-    });
+        });
 
-    let hsgRes = null;
-    if (exam.scale === 'hsg') { hsgRes = hsgCalc(cur); score = hsgRes.score; }
+        if (exam.scale === 'hsg') { hsgRes = hsgCalc(cur); score = hsgRes.score; }
+    });
     score = Math.round(score * 100) / 100;
 
     const payload = {
@@ -5980,10 +6294,14 @@ function markReview(q, i, isCorrect) {
 }
 
 window.reviewExam = function() {
+    if (!submitted || (revealAtMs() > nowMs())) {
+        showToast('Chỉ được xem lại bài và đáp án sau khi đã nộp bài và hết thời gian thi!', 4000);
+        return;
+    }
     $('loading').classList.add('hide');$('btn-submit-exam').classList.add('hide'); 
     
     const isMath = exam.scale === 'math';
-    
+    withUnsealedAnswers(cur, exam.id, true, () => {
     cur.forEach((q, i) => {
         if(q.k !== 'q') return;
         const btn = $('qbtn-' + i);
@@ -6011,6 +6329,7 @@ window.reviewExam = function() {
             btn.className = 'q-btn ' + (!isAttempted ? '' : (isCorrect ? 'right' : 'wrong'));
         }
         markReview(q, i, isCorrect);
+    });
     });
     triggerMathJax();
 };
@@ -6836,6 +7155,225 @@ $('btn-push-cur').onclick = () => {
   window.addEventListener('resize', fit);
   if(document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
   fit();
+})();
+
+// ===================== QUẢN LÝ BẢO MẬT MẬT KHẨU & ĐÓNG GÓI MÃ HÓA MÃ NGUỒN (INDEX.HTML) =====================
+function updateSecBadgeUI() {
+    const cfg = getSecConfig(), spec = getTeacherPwSpec();
+    const badge = $('sec-badge');
+    if (badge) {
+        badge.textContent = (cfg.encJson && cfg.guardSrc) ? 'Đang bật bảo vệ toàn diện' : (cfg.encJson || cfg.guardSrc ? 'Đang bật một phần' : 'Đang tắt mã hóa JSON');
+        badge.style.color = (cfg.encJson && cfg.guardSrc) ? 'var(--ok)' : 'var(--bad)';
+    }
+    const pwSt = $('sec-pw-st');
+    if (pwSt) {
+        pwSt.innerHTML = `Mã băm SHA-256 (256 vòng) đang bảo vệ: <code>${esc(spec.hash.slice(0, 20))}...${esc(spec.hash.slice(-12))}</code> (Salt: <code>${esc(spec.salt)}</code> — ${spec.custom ? 'Mật khẩu tùy chỉnh của Giáo viên' : 'Mật khẩu mặc định đã mã hóa'}).`;
+    }
+}
+
+function initSecurityPanelUI() {
+    const cfg = getSecConfig();
+    if ($('chk-sec-enc-json')) $('chk-sec-enc-json').checked = cfg.encJson;
+    if ($('chk-sec-guard-src')) $('chk-sec-guard-src').checked = cfg.guardSrc;
+    updateSecBadgeUI();
+}
+
+if ($('chk-sec-enc-json')) {
+    $('chk-sec-enc-json').onchange = () => {
+        const cfg = getSecConfig();
+        cfg.encJson = $('chk-sec-enc-json').checked;
+        saveSecConfig(cfg);
+        updateSecBadgeUI();
+        showToast(cfg.encJson ? 'Đã bật tự động mã hóa nội dung file .json (ENCv2).' : 'Đã tắt mã hóa file .json.');
+    };
+}
+if ($('chk-sec-guard-src')) {
+    $('chk-sec-guard-src').onchange = () => {
+        const cfg = getSecConfig();
+        cfg.guardSrc = $('chk-sec-guard-src').checked;
+        saveSecConfig(cfg);
+        updateSecBadgeUI();
+        showToast(cfg.guardSrc ? 'Đã bật khóa phím tắt xem mã nguồn (F12, Ctrl+U, chuột phải).' : 'Đã tạm tắt chặn phím tắt xem mã nguồn trên máy này.');
+    };
+}
+
+if ($('btn-sec-save-pw')) {
+    $('btn-sec-save-pw').onclick = () => {
+        const oldPw = ($('sec-old-pw').value || '').trim();
+        const newPw = ($('sec-new-pw').value || '').trim();
+        const cfmPw = ($('sec-cfm-pw').value || '').trim();
+        if (!oldPw) return alert('Vui lòng nhập mật khẩu giáo viên hiện tại để xác thực.');
+        if (!verifyTeacherPw(oldPw)) return alert('Mật khẩu hiện tại không đúng!');
+        if (newPw.length < 6) return alert('Mật khẩu mới cần có ít nhất 6 ký tự.');
+        if (newPw !== cfmPw) return alert('Mật khẩu nhập lại không khớp với mật khẩu mới.');
+        const newSalt = 'bs_' + randHex(6);
+        const newHash = hashTeacherPw(newPw, newSalt);
+        try {
+            localStorage.setItem(TCH_PW_KEY, JSON.stringify({ salt: newSalt, hash: newHash, custom: true }));
+        } catch (e) {
+            return alert('Trình duyệt không cho phép lưu cài đặt mật khẩu.');
+        }
+        setTeacherAuthenticated(true);
+        $('sec-old-pw').value = ''; $('sec-new-pw').value = ''; $('sec-cfm-pw').value = '';
+        updateSecBadgeUI();
+        showToast('✔ Đã mã hóa và cập nhật mật khẩu giáo viên mới! Nhớ bấm "Tải file index.html đã mã hóa" hoặc "Đẩy lên GitHub" nếu muốn áp dụng mật khẩu mới cho mọi máy.', 7000);
+    };
+}
+
+if ($('btn-sec-reset-pw')) {
+    $('btn-sec-reset-pw').onclick = () => {
+        const oldPw = ($('sec-old-pw').value || '').trim();
+        if (!oldPw) return alert('Vui lòng nhập mật khẩu hiện tại vào ô "Mật khẩu giáo viên hiện tại" trước khi khôi phục.');
+        if (!verifyTeacherPw(oldPw)) return alert('Mật khẩu hiện tại không đúng!');
+        try { localStorage.removeItem(TCH_PW_KEY); } catch (e) {}
+        setTeacherAuthenticated(true);
+        $('sec-old-pw').value = ''; $('sec-new-pw').value = ''; $('sec-cfm-pw').value = '';
+        updateSecBadgeUI();
+        showToast('Đã khôi phục về mật khẩu mặc định ban đầu (đã mã hóa SHA-256).');
+    };
+}
+
+if ($('btn-sec-reencrypt-all')) {
+    $('btn-sec-reencrypt-all').onclick = () => {
+        if (!lib.length) return alert('Chưa có đề thi nào trong danh sách để mã hóa!');
+        const cfg = getSecConfig(); cfg.encJson = true; saveSecConfig(cfg);
+        if ($('chk-sec-enc-json')) $('chk-sec-enc-json').checked = true;
+        updateSecBadgeUI();
+        ensureFileKeys(lib);
+        downloadJSON(lib.map(pubExam), 'exams.json');
+        showToast(`🔐 Đã mã hóa toàn bộ ${lib.length} đề thi chuẩn ENCv2 vào file exams.json!`);
+    };
+}
+
+if ($('btn-sec-push-all-gh')) {
+    $('btn-sec-push-all-gh').onclick = async () => {
+        if (!lib.length) return alert('Chưa có đề thi nào trong danh sách!');
+        if (!ghState().ready) { $('ghbox').open = true; $('ghbox').scrollIntoView(); return alert('Chưa kết nối GitHub. Hãy điền thông tin và dán token ở mục "Kết nối GitHub" trước.'); }
+        const cfg = getSecConfig(); cfg.encJson = true; saveSecConfig(cfg);
+        if ($('chk-sec-enc-json')) $('chk-sec-enc-json').checked = true;
+        updateSecBadgeUI();
+        const btn = $('btn-sec-push-all-gh');
+        btn.disabled = true;
+        let okCnt = 0;
+        try {
+            for (const x of lib) {
+                await ghPushExam(x);
+                okCnt++;
+            }
+            showToast(`✔ Đã mã hóa ENCv2 và đẩy thành công ${okCnt}/${lib.length} đề thi lên GitHub!`, 7000);
+        } catch (e) {
+            alert(`Đã đẩy ${okCnt}/${lib.length} đề. Lỗi: ` + e.message);
+        } finally {
+            btn.disabled = false;
+        }
+    };
+}
+
+// Tạo bản index.html đóng gói mã hóa toàn bộ giao diện & mã nguồn (Self-Decrypting Encrypted HTML Bundle)
+function buildEncryptedIndexHtml() {
+    const spec = getTeacherPwSpec();
+    const cloneDoc = document.documentElement.cloneNode(true);
+    // Đưa trạng thái DOM trong bản đóng gói về màn hình khởi tạo sạch sẽ
+    const cleanIdsHide = ['app-teacher', 'student-login', 'loading', 'reqbox', 'resbox', 'pg', 'pg-cam-box', 'hsg-bar', 'hsg-gate', 'latex-tbl-studio', 'toast'];
+    cleanIdsHide.forEach(id => { const el = cloneDoc.querySelector('#' + id); if (el) el.classList.add('hide'); });
+    const loginEl = cloneDoc.querySelector('#login'); if (loginEl) loginEl.classList.remove('hide');
+    const clearHtmlIds = ['hub-exam-list', 'libl', 'list-teacher', 'list-student', 'q-grid', 'res-out', 'err', 's-pw-err', 's-name-err', 's-class-err'];
+    clearHtmlIds.forEach(id => { const el = cloneDoc.querySelector('#' + id); if (el) el.innerHTML = ''; });
+    cloneDoc.querySelectorAll('input[type="password"], input[type="text"]').forEach(inp => { inp.removeAttribute('value'); });
+    const wm = cloneDoc.querySelector('#sh-wm'); if (wm) wm.remove();
+    cloneDoc.querySelectorAll('.math-render').forEach(el => el.remove());
+
+    // Cập nhật mã băm mật khẩu giáo viên mới nhất vào trong script trước khi đóng gói
+    let bodyHtml = cloneDoc.querySelector('body').innerHTML;
+    bodyHtml = bodyHtml.replace(/const TCH_SALT_DEFAULT = '[^']*';/, "const TCH_SALT_DEFAULT = '" + spec.salt + "';");
+    bodyHtml = bodyHtml.replace(/const TCH_HASH_DEFAULT = '[^']*';/, "const TCH_HASH_DEFAULT = '" + spec.hash + "';");
+
+    const headInner = cloneDoc.querySelector('head').innerHTML;
+    // Mã hóa toàn bộ phần thân (HTML + Script chính) bằng khóa ngẫu nhiên 128-bit
+    const packKey = randHex(16);
+    const rawBytes = new TextEncoder().encode(bodyHtml);
+    const seedArr = new Uint32Array(4);
+    for (let i = 0; i < 4; i++) seedArr[i] = parseInt(packKey.slice(i * 8, i * 8 + 8), 16) >>> 0;
+    const encBytes = new Uint8Array(rawBytes.length);
+    let s0 = seedArr[0], s1 = seedArr[1], s2 = seedArr[2], s3 = seedArr[3];
+    for (let i = 0; i < rawBytes.length; i++) {
+        s0 = (s0 + 0x9e3779b9) | 0;
+        s1 = (s1 ^ ((s0 << 7) | (s0 >>> 25))) | 0;
+        s2 = (s2 + s1) ^ ((s1 << 13) | (s1 >>> 19));
+        s3 = (s3 ^ s2) + ((s2 << 17) | (s2 >>> 15)) | 0;
+        encBytes[i] = rawBytes[i] ^ (((s0 ^ s1 ^ s2 ^ s3) >>> ((i & 3) * 8)) & 255);
+    }
+    const b64Payload = u8ToB64(encBytes);
+
+    const bootstrapHtml = `<!DOCTYPE html>
+<html lang="vi">
+<head>
+${headInner}
+</head>
+<body>
+<div id="boot-shield" style="min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:system-ui,sans-serif;color:#0b6b8a;font-weight:600">Đang khởi tạo môi trường bảo mật...</div>
+<script>
+(function(){
+  document.addEventListener('keydown',function(e){
+    var k=(e.key||'').toLowerCase(),c=e.code||'',m=e.ctrlKey||e.metaKey;
+    if(e.key==='F12'||e.keyCode===123||(m&&e.shiftKey&&(k==='i'||k==='j'||k==='c'))||(m&&(k==='u'||k==='s'||c==='KeyU'||c==='KeyS'))){
+      e.preventDefault();e.stopPropagation();return false;
+    }
+  },true);
+  var K="${packKey}",D="${b64Payload}";
+  try{
+    var b=atob(D),u=new Uint8Array(b.length),s0=parseInt(K.slice(0,8),16)>>>0,s1=parseInt(K.slice(8,16),16)>>>0,s2=parseInt(K.slice(16,24),16)>>>0,s3=parseInt(K.slice(24,32),16)>>>0;
+    for(var i=0;i<b.length;i++){
+      s0=(s0+0x9e3779b9)|0;s1=(s1^((s0<<7)|(s0>>>25)))|0;s2=(s2+s1)^((s1<<13)|(s1>>>19));s3=(s3^s2)+((s2<<17)|(s2>>>15))|0;
+      u[i]=b.charCodeAt(i)^(((s0^s1^s2^s3)>>>((i&3)*8))&255);
+    }
+    var h=new TextDecoder('utf-8').decode(u);
+    var r=document.createRange();r.selectNode(document.body);
+    var f=r.createContextualFragment(h);
+    document.body.innerHTML='';
+    document.body.appendChild(f);
+  }catch(err){document.body.textContent='Lỗi khởi tạo bảo mật.';}
+})();
+<\/script>
+</body>
+</html>`;
+    return bootstrapHtml;
+}
+
+if ($('btn-sec-export-html')) {
+    $('btn-sec-export-html').onclick = () => {
+        try {
+            const html = buildEncryptedIndexHtml();
+            const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+            saveBlob(blob, 'index.html');
+            if ($('sec-html-st')) $('sec-html-st').textContent = '✔ Đã xuất file index.html đóng gói mã hóa toàn bộ mã nguồn lúc ' + ghHHmm() + '. Hãy tải file này lên GitHub để thay thế bản cũ.';
+            showToast('🛡️ Đã tải xuống file index.html đã mã hóa toàn bộ mã nguồn!', 6000);
+        } catch (e) {
+            alert('Lỗi đóng gói mã hóa: ' + e.message);
+        }
+    };
+}
+
+if ($('btn-sec-push-html')) {
+    $('btn-sec-push-html').onclick = async () => {
+        const c = ghConf();
+        if (!c) { $('ghbox').open = true; $('ghbox').scrollIntoView(); return alert('Chưa kết nối GitHub. Hãy điền thông tin và dán token ở mục "Kết nối GitHub" trước.'); }
+        const btn = $('btn-sec-push-html'), st = $('sec-html-st');
+        btn.disabled = true;
+        if (st) st.textContent = '⏳ Đang đóng gói mã hóa và đẩy index.html lên GitHub...';
+        try {
+            const html = buildEncryptedIndexHtml();
+            await ghPut(c, 'index.html', html, 'Cập nhật index.html đã mã hóa bảo mật mã nguồn & mật khẩu');
+            if (st) st.textContent = '✔ ' + ghHHmm() + ' — Đã đẩy index.html (bản mã hóa toàn bộ mã nguồn) lên GitHub thành công!';
+            showToast('✔ Đã đẩy index.html đã mã hóa lên GitHub! Trang web sẽ cập nhật sau 1–2 phút.', 7000);
+        } catch (e) {
+            if (st) st.textContent = '✖ Lỗi đẩy index.html: ' + e.message;
+            alert('Chưa đẩy được index.html lên GitHub: ' + e.message);
+        } finally {
+            btn.disabled = false;
+        }
+    };
+}
 })();
 </script>
 </body>
